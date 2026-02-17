@@ -90,3 +90,59 @@ Nous utilisons les **Conventional Commits** pour faciliter la lecture de l'histo
 ---
 
 ## **Roadmap et questions ouvertes**
+
+## **Structure des données MQTT**
+
+Nous utilisons deux topics distincts pour séparer les flux entrants (capteurs) des flux sortants (actionneurs haptiques).
+
+### **1. Flux Entrant (ESP32 → Serveur)**
+
+*   **Topic** : `pinball/input/state`
+*   **Description** : Ce JSON est envoyé par l'ESP32 dès qu'un état change ou de manière périodique pour les données analogiques (Nudge/Plunger).
+
+```json
+{
+  "timestamp": 1708182000,
+  "buttons": {
+    "left_flipper": false,
+    "right_flipper": false,
+    "start": false,
+    "coin_slot": false,
+    "launch_ball": false
+  },
+  "analog": {
+    "plunger": 0.0,
+    "nudge": {
+      "x": 0.02,
+      "y": -0.01,
+      "z": 9.81
+    }
+  }
+}
+```
+
+*   **`coin_slot`** : État du monnayeur (Pièce entrée).
+*   **`nudge`** : Données de l'accéléromètre (X, Y, Z) permettant au moteur Rapier de simuler l'inclinaison ou la secousse de la table.
+
+### **2. Flux Sortant (Serveur → ESP32)**
+
+*   **Topic** : `pinball/output/actuators`
+*   **Description** : Ce JSON est envoyé par le serveur (déclenché par la logique du Playfield) pour piloter les relais des 10 solénoïdes listés dans la documentation.
+
+```json
+{
+  "timestamp": 1708182500,
+  "solenoids": {
+    "back_left": 0,
+    "back_center": 0,
+    "back_right": 0,
+    "middle_left": 40,
+    "middle_center": 0,
+    "middle_right": 0,
+    "left_slingshot": 25,
+    "right_slingshot": 0,
+    "left_flipper": 0,
+    "right_flipper": 0
+  }
+}
+```
