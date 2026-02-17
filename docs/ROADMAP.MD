@@ -24,7 +24,8 @@ Notre état actuel du projet (16/02/2026)
 **Livrable fin S1 (semaine actuelle)**
 
 * Cahier des charges
-* Monorepo ou 3 apps + package commun
+* Diagramme de classes et des Uses Case
+* Architecture du projet
 * Broker (Mosquitto/Aedes) + client MQTT/WS
 * **Playfield** minimal (scène R3F + Rapier) qui tourne (sans gameplay complet)
 
