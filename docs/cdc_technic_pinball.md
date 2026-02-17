@@ -2,7 +2,7 @@
 
 **Auteurs**: 
 - [Adiren Allard]
-- [Christopher DE PASQUAL]
+- Christopher DE PASQUAL
 
 
 ---
@@ -33,7 +33,7 @@
 
 ## **Risques et contraintes**
 
-Les risques et contraintes principaux de l'intégration de ce projet seront tant virtuel (dévéloppement web) que physique (Intégragir avec le matériel)
+Les risques et contraintes principaux de l'intégration de ce projet seront tant dévéloppement web que physique (Intéractiuon avec le matériel)
 
 ### Les Risques :
 #### Risque Physique (matériel)
@@ -76,7 +76,7 @@ Les risques et contraintes principaux de l'intégration de ce projet seront tant
 #### Contraintes logicielles (3D + apps) : 
 - Réactivité ressentie : actions (flippers/nudge) doivent être visibles immédiatement (latence faible)
 - Playfield / Backglass / DMD doivent rester cohérents via une source de vérité et des events.
-- Delai : 10 semaines
+- Delai : 6 semaines environs
 - Equipe : 4 personnes
 
 
