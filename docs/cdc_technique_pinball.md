@@ -1,6 +1,6 @@
 # Cahier des charges Technique pour le projet de Pinball
 
-**Auteur**: [Adiren Allard]
+**Auteur**: [Adrien Allard]
 
 ---
 
