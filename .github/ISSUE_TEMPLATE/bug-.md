@@ -2,7 +2,7 @@
 name: 'Bug '
 about: Explain the bug.
 title: "[BUG](scope) Title of the issue"
-labels: bug
+labels: bug, Test
 assignees: ''
 
 ---
