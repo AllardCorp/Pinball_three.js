@@ -1,6 +1,6 @@
 # Cahier des charges Technique pour le projet de Pinball
 
-**Auteur**: [Adrien Allard, Stéphane Descarpentries]
+**Auteur**: [Adrien Allard, Stéphane Descarpentries, Amaury Sanchez, Christopher De Pasqual]
 
 
 ---
