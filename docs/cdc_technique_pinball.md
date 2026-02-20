@@ -362,7 +362,11 @@ Extensions :
 
 ## **Diagrammes UML**
 
-![Diagramme de classes](assets/Pinball_diagramme_de_classes.png)
+Diagrame de classes
+![Diagramme de classes](assets/Pinball_diagramme_de_classe.png)
+
+Diagrame de base de données
+![Diagramme de base de données](assets/Pinball_diagramme_de_base_de_donnees.png)
 
 ---
 
