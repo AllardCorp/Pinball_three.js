@@ -2,7 +2,6 @@
 
 **Auteur**: [Adrien Allard, Stéphane Descarpentries, Amaury Sanchez, Christopher De Pasqual]
 
-
 ---
 
 ## **Vision**
@@ -27,18 +26,20 @@ Ce projet est réalisé dans le cadre validation de la troisième année de _Bac
 
 ## **Objectifs et perimetre**
 
-### Objectifs 
+### Objectifs
+
 1. Créer un pinball 3D avec pour objectif d'avoir un jeu fonctionnel et agréable à jouer.
 2. Pouvoir controller des elements du jeu via des boutons physiques (ESP32).
 3. Avoir un écran pour l'affichage du score et des informations du jeu.
 4. Avoir un système de score et de vies.
 5. Avoir un système de sauvegarde de la partie.
 
-### Non-objectifs 
+### Non-objectifs
+
 1. Pas de bot contre joueur.
 2. Pas d'éditeur de pinball.
 
-### Personas 
+### Personas
 
 **Stéphanie**, 48 ans, passionnée de flipper, cherche à retrouver les sensations de son enfance avec un jeu moderne et personnalisable.
 
@@ -339,33 +340,37 @@ Extensions :
 
 ## **Architecture technique**
 
-<!-- link image -->
 ![Architecture technique](assets/architecture_technique.png)
+
 ### **Cœur du Système**
 
-*   **Serveur Central (Node.js/WS)** : Il agit comme le "chef d'orchestre" et le pont (bridge) entre tous les composants. Il centralise les événements et synchronise les applications en temps réel.
+- **Serveur Central (Node.js/WS)** : Il agit comme le "chef d'orchestre" et le pont (bridge) entre tous les composants. Il centralise les événements et synchronise les applications en temps réel.
 
 ### **Interfaces Utilisateurs (Frontend)**
+
 **Écrans de jeu (via WebSockets)** :
-*   **Playfield (R3F + Rapier)** : Gère la simulation physique 3D et le rendu de la table.
-*   **Backglass (Next.js/Canvas)** : Affiche le score et les animations thématiques.
-*   **DMD (Next.js/HTML)** : Affiche les messages textuels et les scores en style rétro**Accès Distant (via HTTP/WS)** :
-*   **Mobile (Client)** : Permet l'authentification et le login à distance pour démarrer la partie.
+
+- **Playfield (R3F + Rapier)** : Gère la simulation physique 3D et le rendu de la table.
+- **Backglass (Next.js/Canvas)** : Affiche le score et les animations thématiques.
+- **DMD (Next.js/HTML)** : Affiche les messages textuels et les scores en style rétro**Accès Distant (via HTTP/WS)** :
+- **Mobile (Client)** : Permet l'authentification et le login à distance pour démarrer la partie.
 
 ### **Partie Matérielle (IoT)**
 
 **Communication Réseau (via MQTT / Broker Mosquitto)** :
-*   L'ESP32 reçoit et envoie les données de contrôle au serveur central avec une latence minimale.
+
+- L'ESP32 reçoit et envoie les données de contrôle au serveur central avec une latence minimale.
 
 **Contrôle Physique (via Liaison Serial)** :
-*   L'ESP32 est relié directement aux Contrôleurs pour détecter l'appui sur les boutons (flippers, start) et actionner les solénoïdes pour le retour haptique.
+
+- L'ESP32 est relié directement aux Contrôleurs pour détecter l'appui sur les boutons (flippers, start) et actionner les solénoïdes pour le retour haptique.
 
 ## **Diagrammes UML**
 
-Diagrame de classes
+**Diagrame de classes**
 ![Diagramme de classes](assets/Pinball_diagramme_de_classe.png)
 
-Diagrame de base de données
+**Diagrame de base de données**
 ![Diagramme de base de données](assets/Pinball_diagramme_de_base_de_donnees.png)
 
 ---
@@ -393,32 +398,32 @@ Diagrame de base de données
 Les risques et contraintes principaux de l'intégration de ce projet seront tant dévéloppement web que physique (Intéractiuon avec le matériel)
 
 ### Les Risques :
+
 #### Risque Physique (matériel)
 
-| Risque | Probabilité | Impact | Mitigation |
-|--------|-------------|--------|------------|
-|Accès à la machine pour les tests | Elevée | Fort | Planifier des sessions de test, préparer une checklist, créer un mode simulation (MQTT events mock) pour avancer sans la machine.
-| Surchage des solénoïdes | Moyenne | Critique |Mettre en place un arrêt des solénoïdes après x temps |
-| Connectique instable (vibrations ou et faux contacts) | Moyenne | faible | En cas de beug vérifier si le problème n'est pas côté materiel |
-| Bruits/parasites | Moyenne | Fort | Eviter les sons de collisions trop forts ou les filtrés pour éviter qu'ils ne soient pas confondus à de la triche (neudge) |
-
+| Risque                                                | Probabilité | Impact   | Mitigation                                                                                                                        |
+| ----------------------------------------------------- | ----------- | -------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Accès à la machine pour les tests                     | Elevée      | Fort     | Planifier des sessions de test, préparer une checklist, créer un mode simulation (MQTT events mock) pour avancer sans la machine. |
+| Surchage des solénoïdes                               | Moyenne     | Critique | Mettre en place un arrêt des solénoïdes après x temps                                                                             |
+| Connectique instable (vibrations ou et faux contacts) | Moyenne     | faible   | En cas de beug vérifier si le problème n'est pas côté materiel                                                                    |
+| Bruits/parasites                                      | Moyenne     | Fort     | Eviter les sons de collisions trop forts ou les filtrés pour éviter qu'ils ne soient pas confondus à de la triche (neudge)        |
 
 #### Risuques Virtuel ( côté code )
 
-|Risque | Probabilité | Impact | Mitigation |
-|-------|-------------|--------|------------|
-| 3D (Colission, Physique, réactivité) | élevée | Critique | Fixed timestep (ex 60Hz), CCD sur la balle, colliders simples/épais (pas mesh high-poly), réglages friction/restitution, debug colliders. | 
-| Performances WebGL insuffisantes | Moyenne | Fort | Optimiser scène : instancing, limiter lights/ombres, textures compressées, LOD, réduire re-renders (selectors Zustand), profiling |
-| Désynchronisation entre Playfield, Backglass et DMD | Moyenne | Critique | Définir une source de vérité (serveur ou “game state” central). Envoyer des events (pas des états “calculés partout”). Ajouter un eventId + timestamp + version de state. Prévoir “state snapshot” périodique pour resync.
-| Double déclenchement (rebond électrique / bounce) sur boutons | Elevée | Critique | Garder l’input “local-first” côté Playfield : l’action visuelle/physique part immédiatement puis on réconcilie via events. Optimiser payloads MQTT (petits messages). WebSocket/MQTT sur LAN, éviter surcharges. |
-| State management instable (Zustand + flux MQTT) | Moyenne | Moyenne | Séparer state temps réel (events, score, flags) et state UI. Utiliser selectors Zustand + shallow compare. Bufferiser certains events (batch).|
-| Reconnexion Wifi mal gérée | Elevée | Fort | Reconnect + backoff, handshake, demander snapshot, mode “degraded/offline”, timeouts + retry contrôlés. |
+| Risque                                                        | Probabilité | Impact   | Mitigation                                                                                                                                                                                                                 |
+| ------------------------------------------------------------- | ----------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 3D (Colission, Physique, réactivité)                          | élevée      | Critique | Fixed timestep (ex 60Hz), CCD sur la balle, colliders simples/épais (pas mesh high-poly), réglages friction/restitution, debug colliders.                                                                                  |
+| Performances WebGL insuffisantes                              | Moyenne     | Fort     | Optimiser scène : instancing, limiter lights/ombres, textures compressées, LOD, réduire re-renders (selectors Zustand), profiling                                                                                          |
+| Désynchronisation entre Playfield, Backglass et DMD           | Moyenne     | Critique | Définir une source de vérité (serveur ou “game state” central). Envoyer des events (pas des états “calculés partout”). Ajouter un eventId + timestamp + version de state. Prévoir “state snapshot” périodique pour resync. |
+| Double déclenchement (rebond électrique / bounce) sur boutons | Elevée      | Critique | Garder l’input “local-first” côté Playfield : l’action visuelle/physique part immédiatement puis on réconcilie via events. Optimiser payloads MQTT (petits messages). WebSocket/MQTT sur LAN, éviter surcharges.           |
+| State management instable (Zustand + flux MQTT)               | Moyenne     | Moyenne  | Séparer state temps réel (events, score, flags) et state UI. Utiliser selectors Zustand + shallow compare. Bufferiser certains events (batch).                                                                             |
+| Reconnexion Wifi mal gérée                                    | Elevée      | Fort     | Reconnect + backoff, handshake, demander snapshot, mode “degraded/offline”, timeouts + retry contrôlés.                                                                                                                    |
 
 #### Autres risques
 
-|Risque | Probabilité | Impact | Mitigation |
-|-------|-------------|--------|------------|
-| Intégration IoT “trop tard” → démo cassée | Elevée | Critique | Intégrer IoT plus tôt possible en version minimale : recevoir X/C/D/F et déclencher 1 solénoïde “dummy”. Itérer ensuite.
+| Risque                                    | Probabilité | Impact   | Mitigation                                                                                                               |
+| ----------------------------------------- | ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Intégration IoT “trop tard” → démo cassée | Elevée      | Critique | Intégrer IoT plus tôt possible en version minimale : recevoir X/C/D/F et déclencher 1 solénoïde “dummy”. Itérer ensuite. |
 
 ### Les contraintes :
 
@@ -430,7 +435,8 @@ Les risques et contraintes principaux de l'intégration de ce projet seront tant
 
 - Le temps de test sur machine physique est contraint (cours, disponibilités, transport).
 
-#### Contraintes logicielles (3D + apps) : 
+#### Contraintes logicielles (3D + apps) :
+
 - Réactivité ressentie : actions (flippers/nudge) doivent être visibles immédiatement (latence faible)
 - Playfield / Backglass / DMD doivent rester cohérents via une source de vérité et des events.
 - Delai : 6 semaines environs
@@ -439,43 +445,80 @@ Les risques et contraintes principaux de l'intégration de ce projet seront tant
 ---
 
 ## **Conventions equipe**
+
 Afin de garantir une base de code saine et une collaboration fluide, l'équipe s'engage à respecter les règles suivantes :
 
 ### **Gestion des Branches**
 
 Le nommage des branches suit la structure : `type/id-issue-slug` (ex: `feature/42-physics-engine`).
 
-*   **Types autorisés** : `main` (production), `feature/` (nouvelle fonctionnalité), `bugfix/` (correction), `hotfix/` (urgence), `release/` (préparation version), ou `docs/` (maintenance/docs).
-*   **Règles de formatage** : Minuscules uniquement, chiffres et tirets autorisés. Pas de tirets ou points consécutifs, ni au début/fin du nom.
+- **Types autorisés** : `main` (production), `feature/` (nouvelle fonctionnalité), `bugfix/` (correction), `hotfix/` (urgence), `release/` (préparation version), ou `docs/` (maintenance/docs).
+- **Règles de formatage** : Minuscules uniquement, chiffres et tirets autorisés. Pas de tirets ou points consécutifs, ni au début/fin du nom.
 
 **Workflow des branches**
 
 Nous utilisons une branche de transition pour garantir la stabilité du projet :
 
-*   **Branche `develop`** : C'est la branche d'intégration principale. Toutes les fonctionnalités y sont regroupées pour les tests.
-*   **Branche `main`** : Branche de production. On n'y merge `develop` qu'après s'être assuré de la stabilité globale du projet.
-*   **Cycle de vie** : `feature/*` ➔ merge dans `develop` ➔ tests de stabilité ➔ merge final dans `main`.
+- **Branche `develop`** : C'est la branche d'intégration principale. Toutes les fonctionnalités y sont regroupées pour les tests.
+- **Branche `main`** : Branche de production. On n'y merge `develop` qu'après s'être assuré de la stabilité globale du projet.
+- **Cycle de vie** : `feature/*` ➔ merge dans `develop` ➔ tests de stabilité ➔ merge final dans `main`.
 
 ### **Convention des Commits**
 
 Nous utilisons les **Conventional Commits** pour faciliter la lecture de l'historique :
 
-*   **Format** : `<type>: <description>` (ex: `feat: add rapier collision detection`).
-*   **Types principaux** : `feat` (nouveau), `fix` (correctif), `docs` (documentation), `style` (formatage), `refactor` (code), `test` (tests).
+- **Format** : `<type>: <description>` (ex: `feat: add rapier collision detection`).
+- **Types principaux** : `feat` (nouveau), `fix` (correctif), `docs` (documentation), `style` (formatage), `refactor` (code), `test` (tests).
 
 ### **Workflow de Pull Request (PR)**
 
-*   **Cible par défaut** : Toute modification du code doit passer par une PR ciblée vers la branche `develop`.
-*   **Validation** : Chaque PR nécessite au minimum **1 review approuvée**.
-*   **Pair Review** : Pour favoriser la montée en compétence, les PR complexes sont revues en direct lors des Daily meetings.
+- **Cible par défaut** : Toute modification du code doit passer par une PR ciblée vers la branche `develop`.
+- **Validation** : Chaque PR nécessite au minimum **1 review approuvée**.
+- **Pair Review** : Pour favoriser la montée en compétence, les PR complexes sont revues en direct lors des Daily meetings.
 
 ### **Gestion des Conflits**
 
-*   **Prévention** : Avant de soumettre une PR, l'auteur doit effectuer un `rebase` sur `develop` (et non directement sur `main`) pour intégrer les derniers changements des autres membres.
-*   **Résolution** : Les conflits critiques sont résolus en binôme (auteur + reviewer) pour garantir l'intégrité du code fusionné.
+- **Prévention** : Avant de soumettre une PR, l'auteur doit effectuer un `rebase` sur `develop` (et non directement sur `main`) pour intégrer les derniers changements des autres membres.
+- **Résolution** : Les conflits critiques sont résolus en binôme (auteur + reviewer) pour garantir l'intégrité du code fusionné.
+
 ---
 
 ## **Roadmap et questions ouvertes**
+
+Le MVP est découpé en 4 sprints de 1 semaine chacun, avec des objectifs clairs pour chaque phase.
+
+### Sprint 1 - Initialisation & Setup
+
+- Feat (chore) Initialisation du frontend #1
+- Feat (chore) Initialisation du serveur central (node.js & Websocket) #2
+- Feat (chore) Initialisation de la base de données #3
+- Feat (chore) Initialisation du Broket MQTT & Bridge #4
+- Test (chore) Initialisation Validation de la communication globale #5
+
+### Sprint 2
+
+- Feat (chore) Pipeline CI/CD & Qualité de code #6
+- Feat (iot) Bridge MQTT & Broker Mosquitto #8
+- Feat (orm) Schéma de données & ORM #9
+- Feat (blender) Modélisation 3D du plateau et des éléments #11
+- Feat (ci/cd) Garantie du code coverage (85% sur les modèles) #21
+
+### Sprint 3
+
+- Feat (chore) Serveur de communication en temps réel (Socket.io) #7
+- Feat (blender) Baking des textures et des ombres #12
+- Feat (experience) Intégration rapier.js et R3F #13
+- Feat (display) Application Backglass et score #17
+- Feat (display) Simulateur DMD rétro #18
+- Feat (iot) Firmware ESP32 - Inputs #19
+
+### Sprint 4
+
+- Feat (auth) Système d'authentification (Auth.js) #10
+- Feat (experience) Logique des batteurs #14
+- Feat (experience) Logique des bumpers & Slingshot #15
+- Feat (experience) Composants de score (Bumpers & Slingshot) #16
+- Feat (iot) Firmware ESP32 - Feedback Haptique Solénoïdes #20
 
 ## **Structure des données MQTT**
 
@@ -483,8 +526,8 @@ Nous utilisons deux topics distincts pour séparer les flux entrants (capteurs) 
 
 ### **1. Flux Entrant (ESP32 → Serveur)**
 
-*   **Topic** : `pinball/input/state`
-*   **Description** : Ce JSON est envoyé par l'ESP32 dès qu'un état change ou de manière périodique pour les données analogiques (Nudge/Plunger).
+- **Topic** : `pinball/input/state`
+- **Description** : Ce JSON est envoyé par l'ESP32 dès qu'un état change ou de manière périodique pour les données analogiques (Nudge/Plunger).
 
 ```json
 {
@@ -507,13 +550,13 @@ Nous utilisons deux topics distincts pour séparer les flux entrants (capteurs) 
 }
 ```
 
-*   **`coin_slot`** : État du monnayeur (Pièce entrée).
-*   **`nudge`** : Données de l'accéléromètre (X, Y, Z) permettant au moteur Rapier de simuler l'inclinaison ou la secousse de la table.
+- **`coin_slot`** : État du monnayeur (Pièce entrée).
+- **`nudge`** : Données de l'accéléromètre (X, Y, Z) permettant au moteur Rapier de simuler l'inclinaison ou la secousse de la table.
 
 ### **2. Flux Sortant (Serveur → ESP32)**
 
-*   **Topic** : `pinball/output/actuators`
-*   **Description** : Ce JSON est envoyé par le serveur (déclenché par la logique du Playfield) pour piloter les relais des 10 solénoïdes listés dans la documentation.
+- **Topic** : `pinball/output/actuators`
+- **Description** : Ce JSON est envoyé par le serveur (déclenché par la logique du Playfield) pour piloter les relais des 10 solénoïdes listés dans la documentation.
 
 ```json
 {
@@ -532,3 +575,4 @@ Nous utilisons deux topics distincts pour séparer les flux entrants (capteurs) 
   }
 }
 ```
+
