@@ -59,11 +59,8 @@ Préconditions : Base de données accessible.
 Scénario nominal :
 
 - Le joueur saisit son pseudo, email et mot de passe.
-
 - Le système vérifie l'unicité du pseudo/email.
-
 - Le compte est créé et une session est ouverte.
-
 - Le système initialise les statistiques à zéro (parties jouées, score max, temps total).
 
 #### UCA2 : Consultation des Statistiques et Historique
@@ -74,11 +71,8 @@ Préconditions : Joueur connecté.
 Scénario nominal :
 
 - Le joueur accède à son profil.
-
 - Le système récupère l'historique des 10 dernières parties.
-
 - Le système calcule et affiche : Score moyen, Score maximum, Temps de jeu cumulé.
-
 - Le système affiche le classement (Leaderboard) mondial.
 
 ### 2. Gameplay & Interactions (Playfield)
@@ -91,15 +85,10 @@ Préconditions : Serveur WS démarré, Playfield connecté, Crédit ≥ 1 OU mod
 Scénario nominal :
 
 - Le joueur appuie sur le bouton Start (Touche D ou Bouton IoT).
-
 - Le système réinitialise le score à 0.
-
 - Le nombre de billes est initialisé (ex : 3).
-
 - La bille est placée dans le lanceur via le moteur physique (Cannon.js).
-
 - Le Backglass affiche le score initial et le pseudo du joueur.
-
 - Le DMD affiche "GAME START".
 
 Extensions :
@@ -114,12 +103,10 @@ Préconditions : Partie en cours.
 Scénario nominal :
 
 - Le joueur appuie/relâche la touche Gauche (X) ou Droite (C).
-
-- Le signal est reçu par le Playfield via Socket.io.
-
-- Le moteur physique applique une rotation angulaire immédiate au batteur 3D.
-
-- Le serveur envoie une commande à l'IoT (Relais) pour faire claquer le solénoïde physique correspondant.
+- L’ESP32 publie un message MQTT sur le topic pinball/input/state.
+- Le Playfield reçoit l’événement via le broker MQTT.
+- Le Playfield applique immédiatement la rotation au batteur.
+- Si nécessaire, le Playfield publie une commande sur pinball/output/actuators.
 
 #### UCJ3 : Secouer la table (Nudge / Tilt)
 
@@ -129,9 +116,7 @@ Préconditions : Partie en cours, bille sur le plateau.
 Scénario nominal :
 
 - Le joueur utilise une commande de secousse (Touche espace ou accéléromètre IoT).
-
 - Le Playfield applique une force latérale impulsionnelle à la bille.
-
 - Le système incrémente un "compteur de secousses".
 
 Extensions :
@@ -149,17 +134,11 @@ Préconditions : Bille en mouvement.
 
 Scénario nominal :
 
-- La bille entre en collision avec un objet (Bumper, Slingshot).
-
-- Le moteur physique calcule le rebond.
-
-- Le Playfield envoie l'événement collision_event au serveur avec l'ID de l'objet.
-
-- Le serveur ajoute les points au score total.
-
-- Le serveur ordonne au Backglass de mettre à jour l'affichage.
-
-- Le serveur ordonne à l'IoT de faire claquer le solénoïde de l'objet touché pour un retour haptique.
+- Le Playfield détecte la collision.
+- Il met à jour le score localement (source de vérité).
+- Il publie un événement MQTT (score_update, collision_event).
+- Le Backglass et le DMD reçoivent l’événement et mettent à jour l’affichage.
+- Le Playfield publie un message MQTT vers pinball/output/actuators si un solénoïde doit être activé.
 
 #### UCS2 : Perte de bille et Fin de partie
 
@@ -169,14 +148,10 @@ Préconditions : Partie en cours.
 Scénario nominal :
 
 - La bille entre en collision avec la zone "Outhole" (bas du plateau).
-
 - Le système décrémente le nombre de billes restantes.
-
 - Si billes > 0 : Une nouvelle bille est générée dans le lanceur.
-
 - Si billes = 0 :
   - Le DMD affiche "GAME OVER".
-
   - Le système déclenche l'UCA3 (Enregistrement du score).
 
 #### UCS3 : Enregistrement et Archivage du Score
@@ -187,13 +162,9 @@ Préconditions : Fin de partie détectée, Joueur connecté.
 Scénario nominal :
 
 - Le serveur récupère le score final et l'ID du joueur.
-
 - Le système enregistre la partie en base de données (Score, Date, Durée).
-
 - Le système vérifie si c'est un nouveau "High Score" personnel.
-
 - Le Backglass affiche une animation spéciale si le record est battu.
-
 - Le DMD affiche le classement mis à jour.
 
 #### UCS5 : Validation anti-triche
@@ -202,9 +173,7 @@ Acteurs : Système
 Scénario :
 
 - À la fin de la partie, le serveur compare le score reçu avec la durée de la partie et le nombre de collisions enregistrées.
-
 - Si le score est cohérent, il est validé en base de données.
-
 - Sinon, le score est rejeté et l'admin est alerté.
 
 ### 4. Infrastructure IoT & Communication (MQTT/WebSockets)
@@ -217,13 +186,9 @@ Préconditions : Firmware flashé sur l'ESP32, Broker MQTT lancé (ex: Mosquitto
 Scénario nominal :
 
 - L'ESP32 démarre et se connecte au Wi-Fi.
-
 - L'ESP32 s'enregistre auprès du Broker MQTT (Client ID unique).
-
 - L'ESP32 "souscrit" (Subscribe) aux topics de feedback (ex: flipper/solenoids/#).
-
 - Le Playfield (via le serveur Node.js) confirme la connexion.
-
 - Le DMD affiche un pictogramme "IoT Ready".
 
 Extensions :
@@ -238,13 +203,9 @@ Préconditions : Partie lancée, Connexion MQTT active.
 Scénario nominal :
 
 - Le joueur appuie sur un bouton physique (ex: Flipper Droit).
-
 - L'ESP32 détecte le changement d'état (Interrupt) sur le PIN GPIO.
-
 - L'ESP32 publie (Publish) un message sur le topic flipper/input/right.
-
-- Le serveur Node.js reçoit le message et le relaie au Playfield via WebSockets.
-
+- Le Playfield est abonné au topic et agit directement.
 - Le Playfield active le batteur 3D.
 
 #### UCI4 : Appairage des écrans
@@ -253,11 +214,9 @@ Acteurs : Système (Navigateurs)
 
 Scénario :
 
-- Chaque écran se connecte au serveur Socket.io.
-
-- Le serveur identifie quel client est le "DMD", lequel est le "Backglass".
-
-- Le serveur confirme que le "trio" est complet avant de permettre le lancement d'une partie.
+- Chaque interface s’identifie via un clientId MQTT.
+- Le Playfield publie périodiquement un "state snapshot".
+- Les écrans affichent l’état courant dès réception.
 
 #### UCI3 : Commande de Feedback Haptique (Jeu vers Solénoïdes)
 
@@ -267,13 +226,9 @@ Préconditions : Collision détectée dans le moteur physique.
 Scénario nominal :
 
 - Une collision est détectée sur un "Bumper" dans Three.js.
-
 - Le Playfield envoie l'ID du bumper au serveur.
-
-- Le serveur publie un message MQTT sur le topic flipper/output/solenoid/3.
-
+- Le MQTT publie sur le topic flipper/output/solenoid/3.
 - L'ESP32 reçoit le message, active le relais correspondant pendant 50ms.
-
 - Le solénoïde physique "claque", créant une vibration et un bruit réel.
 
 ### 5. Administration et Maintenance
@@ -286,11 +241,8 @@ Préconditions : Accès à l'interface de gestion.
 Scénario nominal :
 
 - L'admin se connecte au dashboard.
-
 - Le système affiche l'état de santé de chaque module (Playfield: OK, Backglass: OK, IoT: CONNECTED).
-
 - L'admin peut tester un solénoïde à distance en cliquant sur un bouton virtuel.
-
 - Le système affiche le nombre de messages MQTT/WebSockets par seconde (Load balancing).
 
 #### UCAD2 : Ajout de crédit virtuel (Admin / Free Play)
@@ -301,7 +253,6 @@ Préconditions : Accès au Dashboard Admin.
 Scénario nominal :
 
 - L’admin clique sur "Add Credit".
-
 - Le système ajoute un crédits à l'utilisateur.
 
 Extensions :
@@ -318,17 +269,10 @@ Préconditions : Connexion MQTT active, système en état IDLE ou GAME_OVER.
 Scénario nominal :
 
 - Le joueur insère une pièce dans le monnayeur (ou l'appuie d'un bouton).
-
 - L’ESP32 détecte l’impulsion électrique sur le GPIO.
-
 - L’ESP32 publie un message MQTT sur le topic flipper/input/coin.
-
-- Le serveur reçoit le message.
-
 - Le nombre de crédits disponibles est incrémenté.
-
 - Le Backglass met à jour l’affichage "CREDITS : X".
-
 - Le DMD affiche "CREDIT ADDED".
 
 Extensions :
@@ -340,19 +284,21 @@ Extensions :
 
 ## **Architecture technique**
 
-![Architecture technique](assets/architecture_technique.png)
+![Architecture technique](assets/architecture-technique.png)
 
 ### **Cœur du Système**
 
-- **Serveur Central (Node.js/WS)** : Il agit comme le "chef d'orchestre" et le pont (bridge) entre tous les composants. Il centralise les événements et synchronise les applications en temps réel.
+- **Broker MQTT (Mosquitto)** : Assure la communication temps réel entre les différents modules via un modèle Publish/Subscribe.
+- **Playfield (Autorité du jeu)** : Source de vérité du game state. Il calcule la physique, le score et publie les événements.
+- **Serveur Node.js (API + BDD)** : Gère uniquement la persistance (comptes, statistiques, sauvegarde des scores).
 
-### **Interfaces Utilisateurs (Frontend)**
+### Interfaces Utilisateurs (Frontend - React + Vite)
 
-**Écrans de jeu (via WebSockets)** :
+Les différentes interfaces sont des applications React indépendantes construites avec Vite.
 
-- **Playfield (R3F + Rapier)** : Gère la simulation physique 3D et le rendu de la table.
-- **Backglass (Next.js/Canvas)** : Affiche le score et les animations thématiques.
-- **DMD (Next.js/HTML)** : Affiche les messages textuels et les scores en style rétro**Accès Distant (via HTTP/WS)** :
+- **Playfield (React + R3F + Rapier)** : Simulation 3D et logique du jeu (autorité).
+- **Backglass (React)** : Abonné MQTT, affiche le score et les animations.
+- **DMD (React)** : Abonné MQTT, affiche les messages textuels rétro.
 - **Mobile (Client)** : Permet l'authentification et le login à distance pour démarrer la partie.
 
 ### **Partie Matérielle (IoT)**
@@ -377,21 +323,18 @@ Extensions :
 
 ## **Stack technique**
 
-| Composant               | Techno                                 | Justification                                                                                                                    |
-| ----------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| **Framework Principal** | **Next.js 16+** (App Router)           | Centralise le Frontend, l'API et le SSR. Idéal pour la gestion des comptes et le SEO du projet.                                  |
-| **Playfield (3D)**      | **Three.js + React Three Fiber (R3F)** | Intégration déclarative de la 3D dans React. Facilite la gestion des composants (Bumper.js, Ball.js).                            |
-| **Moteur Physique**     | **Rapier.js (@react-three/rapier)**    | Moteur haute performance (WASM). Meilleure gestion des collisions continues (CCD) pour éviter que la bille ne traverse les murs. |
-| **Base de données**     | **PostgreSQL + Prisma or Drizzle**     | Base relationnelle robuste pour les scores, les stats et les relations utilisateurs. L'ORM facilite les requêtes en TypeScript.  |
-| **Temps Réel (Web)**    | **Socket.io**                          | Communication bidirectionnelle à faible latence entre le Playfield, le Backglass et le DMD.                                      |
-| **Communication IoT**   | **MQTT (Mosquitto)**                   | Protocole standard IoT "Publish/Subscribe". Ultra-léger, parfait pour la réactivité des solénoïdes.                              |
-| **Authentification**    | **NextAuth.js (Auth.js)**              | Gestion sécurisée des sessions, connexion via Google/GitHub ou Email/Password.                                                   |
-| **Gestion d'État**      | **Zustand**                            | Pour synchroniser l'état du score et du jeu entre les composants React sans la complexité de Redux.                              |
-| **Styles / UI**         | **Tailwind CSS + Shadcn/UI**           | Développement rapide d'interfaces modernes et responsives pour le Dashboard et le Backglass.                                     |
+| Composant       | Techno                    | Justification                         |
+| --------------- | ------------------------- | ------------------------------------- |
+| Frontend        | React + Vite              | Applications légères et indépendantes |
+| 3D              | Three.js + R3F            | Simulation immersive                  |
+| Physique        | Rapier.js                 | Collisions précises                   |
+| Temps réel      | MQTT (Mosquitto)          | Backbone distribué                    |
+| API             | Node.js + Express         | Persistance et comptes                |
+| Base de données | PostgreSQL + Drizzle      | Gestion des scores                    |
+| Auth            | JWT custom ou Auth simple | Plus besoin de NextAuth               |
+| State client    | Zustand                   | Gestion locale UI                     |
 
 ---
-
-## **Risques et contraintes**
 
 ## **Risques et contraintes**
 
@@ -430,9 +373,7 @@ Les risques et contraintes principaux de l'intégration de ce projet seront tant
 #### Contraintes physiques et matérielles :
 
 - Matériel existant non modifiable (ou modifications minimales)
-
 - L’intégration ne pas dégrader le flipper d’origine
-
 - Le temps de test sur machine physique est contraint (cours, disponibilités, transport).
 
 #### Contraintes logicielles (3D + apps) :
@@ -490,22 +431,21 @@ Le MVP est découpé en 4 sprints de 1 semaine chacun, avec des objectifs clairs
 ### Sprint 1 - Initialisation & Setup
 
 - Feat (chore) Initialisation du frontend #1
-- Feat (chore) Initialisation du serveur central (node.js & Websocket) #2
+- Feat (chore) Initialisation du Backend API & Base de Données #2
 - Feat (chore) Initialisation de la base de données #3
-- Feat (chore) Initialisation du Broket MQTT & Bridge #4
+- Feat (chore) Initialisation du Broket MQTT (Mosquitto) & Test de communication #4
 - Test (chore) Initialisation Validation de la communication globale #5
 
 ### Sprint 2
 
 - Feat (chore) Pipeline CI/CD & Qualité de code #6
 - Feat (iot) Bridge MQTT & Broker Mosquitto #8
-- Feat (orm) Schéma de données & ORM #9
 - Feat (blender) Modélisation 3D du plateau et des éléments #11
 - Feat (ci/cd) Garantie du code coverage (85% sur les modèles) #21
 
 ### Sprint 3
 
-- Feat (chore) Serveur de communication en temps réel (Socket.io) #7
+- Feat (chore) Implémentation du client MQTT côté Playfield & Implémentation des abonnements Backglass / DMD #7
 - Feat (blender) Baking des textures et des ombres #12
 - Feat (experience) Intégration rapier.js et R3F #13
 - Feat (display) Application Backglass et score #17
@@ -575,4 +515,3 @@ Nous utilisons deux topics distincts pour séparer les flux entrants (capteurs) 
   }
 }
 ```
-
