@@ -14,7 +14,7 @@
 
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
-import Scene from "../experience/Experience";
+import Experience from "../experience/Experience";
 import { Perf } from "r3f-perf";
 import { Leva, useControls } from "leva";
 
@@ -29,10 +29,11 @@ export default function Playfield() {
   return (
     <div className="w-screen h-screen">
       <Leva collapsed />
-      <Canvas camera={{ position: [0, 8, 15], fov: 50 }}>
+      <Canvas shadows camera={{ position: [0, 8, 15], fov: 50 }}>
+        <color attach="background" args={["skyblue"]} />
         {perfVisible && <Perf position="top-left" showGraph />}
         <Physics debug={rapierDebug} gravity={[0, -9.81, 0]}>
-          <Scene />
+          <Experience />
         </Physics>
       </Canvas>
     </div>

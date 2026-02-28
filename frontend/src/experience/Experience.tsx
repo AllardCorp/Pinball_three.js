@@ -1,6 +1,8 @@
 import { RigidBody } from "@react-three/rapier";
-import { OrbitControls } from "@react-three/drei";
+import { OrbitControls, useHelper } from "@react-three/drei";
 import { useControls } from "leva";
+import { useRef } from "react";
+import * as THREE from "three";
 
 export default function Experience() {
   const { groundColor } = useControls("ground", {
@@ -10,12 +12,19 @@ export default function Experience() {
     ballColor: "crimson",
     ballPosition: { value: [0, 5, 0], step: 0.5, min: -10, max: 10 },
   });
+
+  const directionalLightRef = useRef<THREE.DirectionalLight>(null!);
+  useHelper(directionalLightRef, THREE.DirectionalLightHelper, 1, "red");
   return (
     <>
       <OrbitControls />
 
       <ambientLight />
-      <directionalLight position={[2, 5, 2]} />
+      <directionalLight
+        castShadow
+        ref={directionalLightRef}
+        position={[2, 5, 2]}
+      />
 
       {/* Sol */}
       <RigidBody type="fixed" restitution={1}>

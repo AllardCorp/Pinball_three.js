@@ -1,0 +1,13 @@
+services:
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Protège les modules du conteneur
+    ports:
+      - "5173:5173"
+    # Active pnpm via Corepack pour le développement
+    command: sh -c "corepack enable && pnpm install && pnpm dev"
+    environment:
+      - NODE_ENV=development
