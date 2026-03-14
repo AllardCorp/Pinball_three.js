@@ -1,8 +1,0 @@
-{
-	"name": "pinball-threejs",
-	"version": "1.0.0",
-	"type": "module",
-	"dependencies": {
-		"mqtt": "^5.15.0"
-	}
-}
