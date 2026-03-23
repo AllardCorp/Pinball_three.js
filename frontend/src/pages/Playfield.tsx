@@ -17,13 +17,14 @@ import { Physics } from "@react-three/rapier";
 import Experience from "../experience/Experience";
 import { Perf } from "r3f-perf";
 import { Leva, useControls } from "leva";
+import { Environment } from "@react-three/drei";
 
 export default function Playfield() {
   const { perfVisible } = useControls({
     perfVisible: true,
   });
   const { rapierDebug } = useControls("rapier", {
-    rapierDebug: false,
+    rapierDebug: true,
   });
 
   return (
@@ -32,6 +33,7 @@ export default function Playfield() {
       <Canvas shadows camera={{ position: [0, 8, 15], fov: 50 }}>
         <color attach="background" args={["skyblue"]} />
         {perfVisible && <Perf position="top-left" showGraph />}
+        <Environment preset="city" />
         <Physics debug={rapierDebug} gravity={[0, -9.81, 0]}>
           <Experience />
         </Physics>
