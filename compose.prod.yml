@@ -15,6 +15,7 @@ services:
       - "9001:9001"
     volumes:
       - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mqtt/password_file.txt:/mosquitto/config/password_file.txt
       - mosquitto_data:/mosquitto/data
       - mosquitto_log:/mosquitto/log
     restart: always
