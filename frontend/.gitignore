@@ -25,7 +25,7 @@ dist-ssr
 *.sw?
 
 # Models
-models/
+public/models/
 
 # OS
 .DS_Store
