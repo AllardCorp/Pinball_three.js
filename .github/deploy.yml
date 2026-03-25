@@ -1,0 +1,35 @@
+name: Déploiement VPS Production
+
+# La pipeline se lance automatiquement à chaque push sur la branche principale
+on:
+  push:
+    branches:
+      - main # (ou 'master' si c'est le nom de ta branche)
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupération du code source
+        uses: actions/checkout@v4
+
+      - name: Transfert des fichiers vers le VPS (sans SSH manuel !)
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "."
+          target: "/flipper-project" # Dossier de destination sur le VPS (à adapter si besoin)
+
+      - name: Lancement de l'environnement de Prod sur le VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /flipper-project
+            # On demande à Docker de reconstruire l'image Nginx avec les nouveaux fichiers et de (re)démarrer
+            docker compose -f compose.prod.yml up -d --build
