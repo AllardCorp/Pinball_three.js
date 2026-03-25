@@ -34,7 +34,7 @@ export default function Playfield() {
         <color attach="background" args={["skyblue"]} />
         {perfVisible && <Perf position="top-left" showGraph />}
         <Environment preset="city" />
-        <Physics debug={rapierDebug} gravity={[0, -9.81, 0]}>
+        <Physics debug={rapierDebug} gravity={[0, -9.81, 8]}>
           <Experience />
         </Physics>
       </Canvas>
