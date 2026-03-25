@@ -22,6 +22,9 @@ pnpm-lock.yaml
 *.swp
 *.swo
 
+# Vite
+.vite/
+
 # Project specific
 dist/
 build/

@@ -1,0 +1,16 @@
+FROM node:20-alpine
+
+RUN corepack enable
+
+WORKDIR /app
+
+# Install dependencies (cached in Docker layer)
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+# Copy source files into the image
+COPY . .
+
+EXPOSE 5173
+
+CMD ["pnpm", "dev"]
