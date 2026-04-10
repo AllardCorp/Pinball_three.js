@@ -1,6 +1,9 @@
 import mqtt from 'mqtt';
 
-const client = mqtt.connect('mqtt://localhost:1883');
+const client = mqtt.connect('mqtt://localhost:1883', {
+  username: process.env.MQTT_USERNAME || 'pinball_user',
+  password: process.env.MQTT_PASSWORD || 'change_me',
+});
 
 client.on('connect', () => {
     console.log('✅ Connected to Mosquitto');

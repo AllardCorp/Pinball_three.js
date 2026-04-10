@@ -31,5 +31,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /flipper-project
+            echo "MQTT_USERNAME=${{ secrets.MQTT_USERNAME }}" > .env
+            echo "MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }}" >> .env
             # On demande à Docker de reconstruire l'image Nginx avec les nouveaux fichiers et de (re)démarrer
             docker compose -f compose.prod.yml up -d --build
