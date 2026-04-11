@@ -4,25 +4,27 @@ name: Déploiement VPS Production
 on:
   push:
     branches:
-      - main # (ou 'master' si c'est le nom de ta branche)
+      # - main
+      - feature/35-ci-cd-pipeline
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: VPS_ENV
 
     steps:
       - name: Récupération du code source
         uses: actions/checkout@v4
 
-      - name: Transfert des fichiers vers le VPS (sans SSH manuel !)
-        uses: appleboy/scp-action@v0.1.7
+      - name: Synchronisation des fichiers vers le VPS (rsync)
+        uses: burnett01/rsync-deployments@7.0.1 # ne modif que les fichiers modifier dans le dépot, évite un "downtime"
         with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "."
-          target: "/flipper-project" # Dossier de destination sur le VPS (à adapter si besoin)
-          rm: true
+          switches: -avz --delete --exclude='.env' --exclude='.git' --exclude='node_modules'
+          path: ./
+          remote_path: /flipper-project/
+          remote_host: ${{ secrets.VPS_HOST }}
+          remote_user: ${{ secrets.VPS_USERNAME }}
+          remote_key: ${{ secrets.VPS_SSH_KEY }}
       - name: Lancement de l'environnement de Prod sur le VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -30,8 +32,23 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            # Création du dossier s'il n'existe pas (sécurité au premier déploiement)
+            sudo mkdir -p /flipper-project
+            sudo chown -R ${{ secrets.VPS_USERNAME }}:${{ secrets.VPS_USERNAME }} /flipper-project
+            
             cd /flipper-project
+            
+            # Injection des secrets
             echo "MQTT_USERNAME=${{ secrets.MQTT_USERNAME }}" > .env
             echo "MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }}" >> .env
-            # On demande à Docker de reconstruire l'image Nginx avec les nouveaux fichiers et de (re)démarrer
-            docker compose -f compose.prod.yml up -d --build
+            
+            # Déploiement
+            sudo docker compose -f compose.prod.yml up -d --build
+            
+            # Nettoyage des anciennes images inutilisées (libère de la place)
+            sudo docker image prune -f
+            
+            # Vérification de santé
+            echo "Vérification du statut..."
+            sleep 10
+            sudo docker compose -f compose.prod.yml ps
