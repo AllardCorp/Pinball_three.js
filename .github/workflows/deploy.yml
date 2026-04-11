@@ -21,7 +21,7 @@ jobs:
         with:
           switches: -avz --delete --exclude='.env' --exclude='.git' --exclude='node_modules'
           path: ./
-          remote_path: /flipper-project/
+          remote_path: ~/flipper-project/
           remote_host: ${{ secrets.VPS_HOST }}
           remote_user: ${{ secrets.VPS_USERNAME }}
           remote_key: ${{ secrets.VPS_SSH_KEY }}
@@ -33,11 +33,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             # Création du dossier s'il n'existe pas (sécurité au premier déploiement)
-            sudo mkdir -p /flipper-project
-            sudo chown -R ${{ secrets.VPS_USERNAME }}:${{ secrets.VPS_USERNAME }} /flipper-project
-            
-            cd /flipper-project
-            
+            cd ~/flipper-project
+          
             # Injection des secrets
             echo "MQTT_USERNAME=${{ secrets.MQTT_USERNAME }}" > .env
             echo "MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }}" >> .env
