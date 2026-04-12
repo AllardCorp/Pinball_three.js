@@ -8,7 +8,6 @@ on:
       - completed
     branches:
       - main
-      - feature/35-ci-cd-pipeline
 
 
 jobs:
