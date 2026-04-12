@@ -24,6 +24,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# Coverage (Vitest / V8)
+coverage/
+
 # Models
 public/models/
 

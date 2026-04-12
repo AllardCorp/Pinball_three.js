@@ -1,14 +1,20 @@
 name: Déploiement VPS Production
 
-# La pipeline se lance automatiquement à chaque push sur la branche principale
+# Se lance quand le workflow "Tests & Coverage" se termine avec succès sur main
 on:
-  push:
+  workflow_run:
+    workflows: ["Tests & Coverage"]
+    types:
+      - completed
     branches:
-      # - main
+      - main
       - feature/35-ci-cd-pipeline
+
 
 jobs:
   deploy:
+    # N'exécute le déploiement que si les tests ont réussi
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment: VPS_ENV
 
