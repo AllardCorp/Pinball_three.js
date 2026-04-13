@@ -1,24 +1,14 @@
-// const mqtt = useMqtt()
-//
-// useEffect(() => {
-//   if (!mqtt) return
-//
-//   mqtt.subscribe("pinball/flipper")
-//
-//   mqtt.on("message", (topic, message) => {
-//     if (topic === "pinball/flipper") {
-//       // trigger animation rapier
-//     }
-//   })
-// }, [mqtt])
-
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import Experience from "../experience/Experience";
 import { Perf } from "r3f-perf";
 import { Leva, useControls } from "leva";
+import { useKeyboardControls } from "../mqtt/useKeyboardControls";
 
 export default function Playfield() {
+  // Keyboard → MQTT: Q/D/Space/S/C publish to pinball/input/state
+  useKeyboardControls();
+
   const { perfVisible } = useControls({
     perfVisible: true,
   });

@@ -3,14 +3,14 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import App from "./App.tsx";
-// import { MqttProvider } from "./mqtt/mqttContext.tsx";
+import { MqttProvider } from "./mqtt/mqttContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
-  //<StrictMode>
+  // <StrictMode>
   <BrowserRouter>
-    {/* <MqttProvider> */}
-    <App />
-    {/* </MqttProvider> */}
+    <MqttProvider>
+      <App />
+    </MqttProvider>
   </BrowserRouter>,
   //</StrictMode>
 );
