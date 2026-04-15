@@ -23,3 +23,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Coverage (Vitest / V8)
+coverage/
+
+# Models
+public/models/
+
+# OS
+.DS_Store
+Thumbs.db
+*.local

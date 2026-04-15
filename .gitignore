@@ -22,6 +22,8 @@ pnpm-lock.yaml
 *.swp
 *.swo
 
+# MQTT
+mqtt/password_file.txt
 # Vite
 .vite/
 
