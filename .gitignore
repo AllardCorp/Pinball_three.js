@@ -24,6 +24,8 @@ pnpm-lock.yaml
 
 # MQTT
 mqtt/password_file.txt
+# Vite
+.vite/
 
 # Project specific
 dist/
