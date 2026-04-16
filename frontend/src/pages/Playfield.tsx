@@ -33,7 +33,7 @@ export default function Playfield() {
       <Canvas shadows camera={{ position: [0, 8, 15], fov: 50 }}>
         <color attach="background" args={["skyblue"]} />
         {perfVisible && <Perf position="top-left" showGraph />}
-        <Environment preset="city" />
+        <Environment preset="forest" />
         <Physics debug={rapierDebug} gravity={[0, -9.81, 8]}>
           <Experience />
         </Physics>

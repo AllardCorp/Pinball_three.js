@@ -27,6 +27,8 @@
   "include": [
     "src",
     "public/models/PinballMVP-transformed.glb",
-    "public/models/PinballMVP2-transformed.glb"
+    "public/models/PinballMVP2-transformed.glb",
+    "public/models/PinballMVP_OldBase-transformed.glb",
+    "public/models/PinballMVP_Base-transformed.glb"
   ]
 }

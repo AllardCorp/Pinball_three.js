@@ -11,7 +11,7 @@ export default function Slingshot({
     // e.other.rigidBody représente l'objet qui a percuté le slingshot (ta bille)
     if (e.other.rigidBody) {
       // 💥 La puissance du coup (à ajuster selon le poids de ta bille)
-      const forceMultiplier = 8;
+      const forceMultiplier = 6;
 
       // On convertit ta direction en Vecteur mathématique et on y applique la force
       const impulse = new THREE.Vector3(...pushDirection)

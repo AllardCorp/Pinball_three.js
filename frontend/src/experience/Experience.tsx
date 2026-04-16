@@ -27,16 +27,16 @@ import { OrbitControls, Html } from "@react-three/drei";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useControls, button } from "leva";
 import { RigidBody, RapierRigidBody } from "@react-three/rapier";
-import PinballMVP from "@/components/models/PinballMVPResized";
+import PinballMVPBase from "@/components/models/PinballMVP_Base";
 
 // --- COMPOSANT DE LA BILLE ---
-function PinballBall() {
+// 1. On indique que le composant accepte une "prop" position
+function PinballBall({ position }: { position: [number, number, number] }) {
   const ballRef = useRef<RapierRigidBody>(null);
   const chargeStartTime = useRef<number>(0);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Si on appuie sur Espace et qu'on ne chargeait pas déjà
       if (e.code === "Space" && chargeStartTime.current === 0) {
         chargeStartTime.current = performance.now();
       }
@@ -44,24 +44,17 @@ function PinballBall() {
 
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code === "Space" && chargeStartTime.current > 0) {
-        // Calcule le temps passé en millisecondes
         const duration = performance.now() - chargeStartTime.current;
-        chargeStartTime.current = 0; // Réinitialise
+        chargeStartTime.current = 0;
 
-        // Calcule la force (Ajuste le multiplicateur selon le poids de ta bille)
-        // Math.min évite que le joueur ne charge à l'infini et casse la physique
         const maxForce = 50;
         const forceMagnitude = Math.min(duration * 0.05, maxForce);
 
-        // Applique l'impulsion !
-        // ⚠️ ATTENTION : Change l'axe (x, y ou z) selon l'orientation de ton modèle Blender
         if (ballRef.current) {
           ballRef.current.applyImpulse(
             { x: 0, y: 0, z: -forceMagnitude },
             true,
           );
-
-          // Optionnel : "Réveille" la bille si Rapier l'avait mise en veille
           ballRef.current.wakeUp();
         }
       }
@@ -77,17 +70,16 @@ function PinballBall() {
   }, []);
 
   return (
-    // position initiale = là où se trouve ton lance-bille dans Blender
     <RigidBody
       ref={ballRef}
       ccd={true}
-      position={[4.5, 1, 6]}
+      position={position}
       colliders="ball"
-      restitution={0.5}
-      mass={1}
+      restitution={0.2}
+      mass={1.5}
     >
       <mesh>
-        <sphereGeometry args={[0.5, 32, 32]} /> {/* Ajuste la taille (0.5) */}
+        <sphereGeometry args={[0.6, 32, 32]} />
         <meshStandardMaterial color="silver" metalness={1} roughness={0.1} />
       </mesh>
     </RigidBody>
@@ -96,11 +88,15 @@ function PinballBall() {
 
 // --- COMPOSANT PRINCIPAL ---
 export default function Experience() {
-  // État pour savoir si la bille est dans le jeu ou non
   const [ballSpawned, setBallSpawned] = useState(false);
 
-  // Configuration du GUI Leva
-  useControls("Flipper Controls", {
+  // 3. On ajoute les coordonnées de départ au GUI Leva
+  // On récupère directement startX, startY et startZ de l'objet renvoyé par useControls
+  const { startX, startY, startZ } = useControls("Flipper Controls", {
+    // Tu peux ajuster les valeurs 'min', 'max' et 'step' selon la taille de ton flipper !
+    startX: { value: 4, min: -20, max: 20, step: 0.1 },
+    startY: { value: 1, min: -20, max: 20, step: 0.1 },
+    startZ: { value: 6, min: -20, max: 80, step: 0.1 },
     "Créer Bille": button(() => setBallSpawned(true)),
     "Supprimer Bille": button(() => setBallSpawned(false)),
   });
@@ -119,10 +115,10 @@ export default function Experience() {
           </Html>
         }
       >
-        <PinballMVP />
+        <PinballMVPBase />
 
-        {/* On affiche la bille uniquement si on a cliqué sur le bouton du GUI */}
-        {ballSpawned && <PinballBall />}
+        {/* 4. On passe les variables du GUI au composant PinballBall sous forme de tableau [x, y, z] */}
+        {ballSpawned && <PinballBall position={[startX, startY, startZ]} />}
       </Suspense>
     </>
   );
