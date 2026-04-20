@@ -1,4 +1,58 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pinball-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  backend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    command: sh -c "corepack enable && pnpm install && pnpm dev"
+
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: always
+
+  drizzle-studio:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "4983:4983"
+    command: sh -c "corepack enable && pnpm install && pnpm db:studio"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: always
+
+
   frontend:
     image: node:20-alpine
     working_dir: /app
@@ -19,12 +73,12 @@ services:
       - MQTT_PASSWORD=${MQTT_PASSWORD}
     # On génère le fichier dans /config/ et on donne les droits à l'utilisateur mosquitto
     entrypoint: >
-      sh -c "touch /mosquitto/config/password_file.txt && 
-             mosquitto_passwd -b /mosquitto/config/password_file.txt $$MQTT_USERNAME $$MQTT_PASSWORD && 
-             chown 1883:1883 /mosquitto/config/password_file.txt &&
-             chmod 600 /mosquitto/config/password_file.txt &&
-             echo 'MQTT user created' && 
-             exec mosquitto -c /mosquitto/config/mosquitto.conf"
+        sh -c "touch /mosquitto/config/password_file.txt && 
+              mosquitto_passwd -b /mosquitto/config/password_file.txt $$MQTT_USERNAME $$MQTT_PASSWORD && 
+              chown 1883:1883 /mosquitto/config/password_file.txt &&
+              chmod 600 /mosquitto/config/password_file.txt &&
+              echo 'MQTT user created' && 
+              exec mosquitto -c /mosquitto/config/mosquitto.conf"
     ports:
       - "1883:1883"
       - "9001:9001"
@@ -35,5 +89,6 @@ services:
     restart: always
 
 volumes:
+  postgres_data:
   mosquitto_data:
   mosquitto_log:
