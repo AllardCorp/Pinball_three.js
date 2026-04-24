@@ -76,10 +76,14 @@ export const useGameStore = create<GameState>()((set, get) => ({
   loseBall: () => {
     const currentBalls = get().ballsRemaining;
     if (currentBalls > 1) {
-      set({ ballsRemaining: currentBalls - 1 });
-      // Réinitialisation des rubis à la perte de la bille
-      set({ rubiesActive: [false, false, false] });
+      set({
+        ballsRemaining: currentBalls - 1,
+        ballInLauncher: true,
+        rubiesActive: [false, false, false],
+        scoreMultiplier: 1,
+      });
     } else {
+      // S'il n'y a plus de billes, Game Over
       get().gameOver();
     }
   },

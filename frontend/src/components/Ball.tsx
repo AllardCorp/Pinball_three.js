@@ -52,7 +52,6 @@ export default function Ball({ position }: BallProps) {
         }
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
 
@@ -61,6 +60,23 @@ export default function Ball({ position }: BallProps) {
       window.removeEventListener("keyup", handleKeyUp);
     };
   }, [isPlaying, ballInLauncher]); // 👈 N'oublie pas de mettre les variables Zustand dans le tableau de dépendances !
+
+  useEffect(() => {
+    // Si la partie est en cours ET qu'on nous dit que la bille est dans le lanceur
+    if (isPlaying && ballInLauncher && ballRef.current) {
+      // 1. On téléporte la bille à ses coordonnées de départ (position = prop du composant)
+      ballRef.current.setTranslation(
+        { x: position[0], y: position[1], z: position[2] },
+        true,
+      );
+
+      // 2. On "tue" toute son énergie cinétique pour ne pas qu'elle rebondisse bizarrement
+      ballRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      ballRef.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
+
+      console.log("Bille replacée dans le lanceur !");
+    }
+  }, [ballInLauncher, isPlaying, position]); // Ce code s'exécute dès que ces variables changent
 
   // On garde tes contrôles Leva (très pratique pour les tests)
   const { mass, restitution, size } = useControls("Ball Controls", {
@@ -74,6 +90,7 @@ export default function Ball({ position }: BallProps) {
 
   return (
     <RigidBody
+      name="ball"
       ref={ballRef}
       ccd={true}
       position={position}
