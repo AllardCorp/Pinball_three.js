@@ -24,86 +24,26 @@
 // }
 
 import { OrbitControls, Html } from "@react-three/drei";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense } from "react";
 import { useControls, button } from "leva";
-import { RigidBody, RapierRigidBody } from "@react-three/rapier";
 import PinballMVPBase from "@/components/models/PinballMVP_Base";
+import Ball from "@/components/Ball"; // Adapte le chemin
+import { useGameStore } from "@/store/useGameStore"; // Adapte le chemin
 
-// --- COMPOSANT DE LA BILLE ---
-// 1. On indique que le composant accepte une "prop" position
-function PinballBall({ position }: { position: [number, number, number] }) {
-  const ballRef = useRef<RapierRigidBody>(null);
-  const chargeStartTime = useRef<number>(0);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Space" && chargeStartTime.current === 0) {
-        chargeStartTime.current = performance.now();
-      }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === "Space" && chargeStartTime.current > 0) {
-        const duration = performance.now() - chargeStartTime.current;
-        chargeStartTime.current = 0;
-
-        const maxForce = 70;
-        const forceMagnitude = Math.min(duration * 0.05, maxForce);
-
-        if (ballRef.current) {
-          ballRef.current.applyImpulse(
-            { x: 0, y: 0, z: -forceMagnitude },
-            true,
-          );
-          ballRef.current.wakeUp();
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
-  }, []);
-  const { mass, restitution, size } = useControls("Ball Controls", {
-    // Tu peux ajuster les valeurs 'min', 'max' et 'step' selon la taille de ton flipper !
-    mass: { value: 3.5, min: -20, max: 20, step: 0.1 },
-    restitution: { value: 0.2, min: 0, max: 1, step: 0.1 },
-    size: { value: 0.6, min: 0.1, max: 5, step: 0.05 },
-  });
-  return (
-    <RigidBody
-      ref={ballRef}
-      ccd={true}
-      position={position}
-      colliders="ball"
-      restitution={restitution}
-      mass={mass}
-    >
-      <mesh>
-        <sphereGeometry args={[size, 32, 32]} />
-        <meshStandardMaterial color="silver" metalness={1} roughness={0.1} />
-      </mesh>
-    </RigidBody>
-  );
-}
-
-// --- COMPOSANT PRINCIPAL ---
 export default function Experience() {
-  const [ballSpawned, setBallSpawned] = useState(false);
+  // On récupère juste la fonction startGame (temporairement pour nos tests Leva)
+  const startGame = useGameStore((state) => state.startGame);
 
-  // 3. On ajoute les coordonnées de départ au GUI Leva
-  // On récupère directement startX, startY et startZ de l'objet renvoyé par useControls
-  const { startX, startY, startZ } = useControls("Ball Controls", {
-    // Tu peux ajuster les valeurs 'min', 'max' et 'step' selon la taille de ton flipper !
-    startX: { value: 4, min: -20, max: 20, step: 0.1 },
-    startY: { value: 1, min: -20, max: 20, step: 0.1 },
-    startZ: { value: 6, min: -20, max: 80, step: 0.1 },
-    "Créer Bille": button(() => setBallSpawned(true)),
-    "Supprimer Bille": button(() => setBallSpawned(false)),
+  // On garde Leva pour ajuster la position de départ
+  const { startX, startY, startZ } = useControls("Ball Position", {
+    startX: { value: 12.75, min: -20, max: 20, step: 0.1 },
+    startY: { value: -2.3, min: -20, max: 20, step: 0.1 },
+    startZ: { value: 30.46, min: -20, max: 80, step: 0.1 },
+  });
+
+  // 👇 BOUTON DE TEST TEMPORAIRE : Pour démarrer la partie depuis l'écran 3D sans interface HTML
+  useControls("Game Controls", {
+    "Démarrer Partie": button(() => startGame()),
   });
 
   return (
@@ -122,8 +62,8 @@ export default function Experience() {
       >
         <PinballMVPBase />
 
-        {/* 4. On passe les variables du GUI au composant PinballBall sous forme de tableau [x, y, z] */}
-        {ballSpawned && <PinballBall position={[startX, startY, startZ]} />}
+        {/* Le composant Ball se gère tout seul grâce à Zustand (il s'affiche que si isPlaying === true) */}
+        <Ball position={[startX, startY, startZ]} />
       </Suspense>
     </>
   );
