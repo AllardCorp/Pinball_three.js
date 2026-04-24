@@ -6,11 +6,15 @@ import {
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { useGameStore } from "@/store/useGameStore";
 
 type BumperProps = {
-  colliderGeometry: THREE.BufferGeometry; // La géométrie pour la physique
-  visualGeometry: THREE.BufferGeometry; // La géométrie pour le visuel
-  visualMaterial: THREE.Material; // Le matériau du bumper
+  id: 0 | 1 | 2;
+  colliderGeometry: THREE.BufferGeometry;
+  visualGeometry: THREE.BufferGeometry;
+  visualMaterial: THREE.Material;
+  rubyGeometry: THREE.BufferGeometry;
+  rubyMaterial: THREE.Material;
   position: [number, number, number];
   strength?: number;
 };
@@ -18,14 +22,25 @@ type BumperProps = {
 const targetScale = new THREE.Vector3(1, 1, 1);
 
 export default function Bumper({
+  id,
   colliderGeometry,
   visualGeometry,
   visualMaterial,
+  rubyGeometry,
+  rubyMaterial,
   position,
   strength = 15,
 }: BumperProps) {
   const rigidBodyRef = useRef<RapierRigidBody>(null);
-  const visualMeshRef = useRef<THREE.Mesh>(null); // Ref sur le mesh VISUEL
+  const visualMeshRef = useRef<THREE.Mesh>(null);
+
+  // 🛡️ 1. LE CHRONOMÈTRE DE SÉCURITÉ
+  const lastHitTime = useRef<number>(0);
+
+  // --- ZUSTAND : Connexion au Cerveau ---
+  const addScore = useGameStore((state) => state.addScore);
+  const toggleRuby = useGameStore((state) => state.toggleRuby);
+  const isRubyActive = useGameStore((state) => state.rubiesActive[id]);
 
   // Animation de retour à la taille normale
   useFrame((_, delta) => {
@@ -35,7 +50,20 @@ export default function Bumper({
   });
 
   const handleCollision = (e: CollisionEnterPayload) => {
-    if (e.other.rigidBody) {
+    if (e.other.rigidBodyObject?.name === "ball") {
+      // ⏱️ 2. VÉRIFICATION DU TEMPS
+      const now = performance.now();
+      // Si la dernière collision a eu lieu il y a moins de 250 millisecondes...
+      if (now - lastHitTime.current < 250) {
+        // ... on annule tout ! On l'ignore.
+        return;
+      }
+
+      // Si on est ici, c'est un vrai "nouveau" coup. On met le chrono à jour.
+      lastHitTime.current = now;
+      if (!rigidBodyRef.current || !e.other.rigidBody) return;
+      console.log("VRAIE collision pour l'ID :", id);
+
       if (!rigidBodyRef.current) return;
 
       const ballPos = e.other.rigidBody.translation();
@@ -50,10 +78,14 @@ export default function Bumper({
       const impulse = direction.multiplyScalar(strength);
       e.other.rigidBody.applyImpulse(impulse, true);
 
-      // 💥 On fait grossir uniquement le mesh VISUEL
+      // 💥 Animation visuelle du tonneau
       if (visualMeshRef.current) {
         visualMeshRef.current.scale.set(1.4, 1.4, 1.4);
       }
+
+      // 🎮 LOGIQUE DU JEU
+      addScore(100);
+      toggleRuby(id);
     }
   };
 
@@ -64,18 +96,23 @@ export default function Bumper({
       colliders="hull"
       position={position}
       onCollisionEnter={handleCollision}
-      includeInvisible // Pour que le mesh invisible génère quand même le collider
+      includeInvisible
     >
-      {/* 1. MESH DE COLLISION (Invisible et fixe) */}
       <mesh geometry={colliderGeometry} visible={false}>
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* 2. MESH VISUEL (Visible et animé) */}
       <mesh
         ref={visualMeshRef}
         geometry={visualGeometry}
         material={visualMaterial}
+      />
+
+      <mesh
+        visible={isRubyActive}
+        geometry={rubyGeometry}
+        material={rubyMaterial}
+        position={[0, 2.012, 0]}
       />
     </RigidBody>
   );

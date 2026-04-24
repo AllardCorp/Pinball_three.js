@@ -16,7 +16,6 @@ import Bumper from "@/components/Bumper";
 import Ball from "@/components/Ball";
 import LauncherGate from "@/components/LauncherGate";
 import DeathZone from "@/components/DeathZone";
-
 type GLTFResult = GLTF & {
   nodes: {
     screws_LOD0: THREE.Mesh;
@@ -177,25 +176,34 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
       <Ball position={[startX, startY, startZ]} />
       <DeathZone />
       <Bumper
+        id={0}
         colliderGeometry={nodes.coll_bumpers001.geometry}
         visualGeometry={nodes.visual_barrel_bumpers001.geometry}
         visualMaterial={materials["barrel.001"]}
+        rubyGeometry={nodes.visual_ruby001.geometry} // Rubis correspondant
+        rubyMaterial={materials.PaletteMaterial003}
         position={[1.112, -1.6, -11.134]}
         strength={20}
       />
 
       <Bumper
+        id={1}
         colliderGeometry={nodes.coll_bumpers002.geometry}
         visualGeometry={nodes.visual_barrel_bumpers002.geometry}
         visualMaterial={materials["barrel.001"]}
+        rubyGeometry={nodes.visual_ruby002.geometry} // Rubis correspondant
+        rubyMaterial={materials.PaletteMaterial003}
         position={[-4.744, -1.6, -6.463]}
         strength={20}
       />
 
       <Bumper
+        id={2}
         colliderGeometry={nodes.coll_bumpers003.geometry}
         visualGeometry={nodes.visual_barrel_bumpers003.geometry}
         visualMaterial={materials["barrel.001"]}
+        rubyGeometry={nodes.visual_ruby003.geometry} // Rubis correspondant
+        rubyMaterial={materials.PaletteMaterial003}
         position={[-6.635, -1.6, -12.845]}
         strength={20}
       />
@@ -549,21 +557,21 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           material={materials.plywood}
           position={[-9.978, -1.495, 5.084]}
         />
-        <mesh
-          geometry={nodes.visual_ruby001.geometry}
-          material={materials.PaletteMaterial003}
-          position={[-4.739, 0.412, -6.466]}
-        />
-        <mesh
-          geometry={nodes.visual_ruby002.geometry}
-          material={materials.PaletteMaterial003}
-          position={[-6.642, 0.412, -12.848]}
-        />
-        <mesh
-          geometry={nodes.visual_ruby003.geometry}
-          material={materials.PaletteMaterial003}
-          position={[1.11, 0.412, -11.152]}
-        />
+        {/* <mesh */}
+        {/*   geometry={nodes.visual_ruby001.geometry} */}
+        {/*   material={materials.PaletteMaterial003} */}
+        {/*   position={[-4.739, 0.412, -6.466]} */}
+        {/* /> */}
+        {/* <mesh */}
+        {/*   geometry={nodes.visual_ruby002.geometry} */}
+        {/*   material={materials.PaletteMaterial003} */}
+        {/*   position={[-6.642, 0.412, -12.848]} */}
+        {/* /> */}
+        {/* <mesh */}
+        {/*   geometry={nodes.visual_ruby003.geometry} */}
+        {/*   material={materials.PaletteMaterial003} */}
+        {/*   position={[1.11, 0.412, -11.152]} */}
+        {/* /> */}
         {/* <mesh */}
         {/*   geometry={nodes.coll_flipper_left_bottom.geometry} */}
         {/*   material={nodes.coll_flipper_left_bottom.material} */}

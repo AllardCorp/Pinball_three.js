@@ -1,18 +1,20 @@
 import { create } from "zustand";
 
+// 📡 Canal partagé entre onglets
+const channel =
+  typeof window !== "undefined" ? new BroadcastChannel("pinball-game") : null;
+
 // 1. On définit la "forme" de nos données (TypeScript)
 interface GameState {
-  // --- ÉTAT DU JEU ---
   score: number;
   ballsRemaining: number;
   isPlaying: boolean;
   scoreMultiplier: number;
   ballInLauncher: boolean;
-  // --- ÉTAT DES MÉCANISMES ---
+
   mineHits: number;
   rubiesActive: [boolean, boolean, boolean];
 
-  // --- ACTIONS ---
   startGame: () => void;
   addScore: (points: number) => void;
   removeScore: (points: number) => void;
@@ -26,107 +28,150 @@ interface GameState {
   toggleRuby: (id: 0 | 1 | 2) => void;
 }
 
-// 2. On crée le Store
-export const useGameStore = create<GameState>()((set, get) => ({
-  // --- VALEURS INITIALES ---
-  score: 0,
-  ballsRemaining: 0,
-  ballInLauncher: true,
-  isPlaying: false,
-  scoreMultiplier: 1,
-  mineHits: 0,
-  rubiesActive: [false, false, false],
-  // --- LOGIQUE DES ACTIONS ---
+// 🧠 Helper : synchronise vers les autres onglets
+const syncState = (state: Partial<GameState>) => {
+  if (channel) {
+    channel.postMessage(state);
+  }
+};
 
-  startGame: () => {
-    set({
-      score: 0,
-      ballsRemaining: 3,
-      isPlaying: true,
-      ballInLauncher: true,
-      scoreMultiplier: 1,
-      mineHits: 0,
-      rubiesActive: [false, false, false],
-    });
-  },
-  setBallInLauncher: (inLauncher) => set({ ballInLauncher: inLauncher }),
+// 2. Création du store
+export const useGameStore = create<GameState>()((set, get) => {
+  // 📥 Réception depuis autres onglets
+  if (channel) {
+    channel.onmessage = (event) => {
+      set(event.data);
+    };
+  }
 
-  addScore: (points) => {
-    // On ne compte les points que si la partie est en cours
-    if (get().isPlaying) {
-      set({ score: get().score + points * get().scoreMultiplier });
-    }
-  },
+  // 🔧 Helper local qui sync automatiquement
+  const setAndSync = (newState: Partial<GameState>) => {
+    set(newState);
+    syncState(newState);
+  };
 
-  removeScore: (points) => {
-    if (get().isPlaying) {
-      set({ score: Math.max(0, get().score - points) }); // On évite les scores négatifs
-    }
-  },
-  addScoreMultiplier: () => {
-    if (get().isPlaying) {
-      set({ scoreMultiplier: Math.max(10, get().scoreMultiplier + 1) });
-    }
-  },
-  removeScoreMultiplier: () => {
-    if (get().isPlaying) {
-      set({ scoreMultiplier: Math.max(1, get().scoreMultiplier - 1) });
-    }
-  },
-  loseBall: () => {
-    const currentBalls = get().ballsRemaining;
-    if (currentBalls > 1) {
-      set({
-        ballsRemaining: currentBalls - 1,
+  return {
+    // --- VALEURS INITIALES ---
+    score: 0,
+    ballsRemaining: 0,
+    ballInLauncher: true,
+    isPlaying: false,
+    scoreMultiplier: 1,
+    mineHits: 0,
+    rubiesActive: [false, false, false],
+
+    // --- ACTIONS ---
+
+    startGame: () => {
+      setAndSync({
+        score: 0,
+        ballsRemaining: 3,
+        isPlaying: true,
         ballInLauncher: true,
-        rubiesActive: [false, false, false],
         scoreMultiplier: 1,
+        mineHits: 0,
+        rubiesActive: [false, false, false],
       });
-    } else {
-      // S'il n'y a plus de billes, Game Over
-      get().gameOver();
-    }
-  },
 
-  gameOver: () => {
-    set({ ballsRemaining: 0, isPlaying: false });
-  },
+      console.log(`Début de la partie ! Avec ${get().ballsRemaining} billes.`);
+    },
 
-  // --- MÉCANISME : LA MINE D'OR ---
-  incrementMine: () => {
-    const currentHits = get().mineHits;
-    if (currentHits < 3) {
-      set({ mineHits: currentHits + 1 });
-    }
-  },
+    setBallInLauncher: (inLauncher) =>
+      setAndSync({ ballInLauncher: inLauncher }),
 
-  resetMine: () => {
-    set({ mineHits: 0 });
-  },
+    addScore: (points) => {
+      if (get().isPlaying) {
+        setAndSync({
+          score: get().score + points * get().scoreMultiplier,
+        });
+      }
+    },
 
-  // --- MÉCANISME : LES RUBIS ---
-  toggleRuby: (id) => {
-    const currentRubies = [...get().rubiesActive] as [
-      boolean,
-      boolean,
-      boolean,
-    ];
+    removeScore: (points) => {
+      if (get().isPlaying) {
+        setAndSync({
+          score: Math.max(0, get().score - points),
+        });
+      }
+    },
 
-    // On inverse l'état du rubi touché (allumé <-> éteint)
-    currentRubies[id] = !currentRubies[id];
-    set({ rubiesActive: currentRubies });
+    addScoreMultiplier: () => {
+      if (get().isPlaying) {
+        setAndSync({
+          scoreMultiplier: Math.min(10, get().scoreMultiplier + 1),
+        });
+      }
+    },
 
-    // LA MAGIE DE ZUSTAND : On vérifie le combo directement ici !
-    // Si tous les rubis sont 'true'
-    if (currentRubies.every((ruby) => ruby === true)) {
-      // 1. On donne le méga bonus
-      get().addScore(5000);
+    removeScoreMultiplier: () => {
+      if (get().isPlaying) {
+        setAndSync({
+          scoreMultiplier: Math.max(1, get().scoreMultiplier - 1),
+        });
+      }
+    },
 
-      // 2. On éteint tous les rubis après un tout petit délai pour que
-      // le joueur ait le temps de voir les 3 allumés en même temps
-      setTimeout(() => {
-        set({ rubiesActive: [false, false, false] });
-      }, 500);
-    }
-  },
-}));
+    loseBall: () => {
+      const currentBalls = get().ballsRemaining;
+
+      if (currentBalls > 1) {
+        setAndSync({
+          ballsRemaining: currentBalls - 1,
+          ballInLauncher: true,
+          rubiesActive: [false, false, false],
+          scoreMultiplier: 1,
+        });
+
+        console.log("Bille restante : " + get().ballsRemaining);
+      } else {
+        get().gameOver();
+      }
+    },
+
+    gameOver: () => {
+      console.log("Game Over !");
+      setAndSync({
+        ballsRemaining: 0,
+        isPlaying: false,
+      });
+    },
+
+    incrementMine: () => {
+      const currentHits = get().mineHits;
+
+      if (currentHits < 3) {
+        setAndSync({
+          mineHits: currentHits + 1,
+        });
+      }
+    },
+
+    resetMine: () => {
+      setAndSync({
+        mineHits: 0,
+      });
+    },
+
+    toggleRuby: (id) => {
+      const currentRubies = [...get().rubiesActive] as [
+        boolean,
+        boolean,
+        boolean,
+      ];
+
+      currentRubies[id] = !currentRubies[id];
+
+      setAndSync({
+        rubiesActive: currentRubies,
+      });
+
+      if (currentRubies.every((ruby) => ruby === true)) {
+        get().addScore(2500);
+        setAndSync({
+          rubiesActive: [false, false, false],
+        });
+        console.log("Tous les rubis activés + 5000");
+      }
+    },
+  };
+});
