@@ -47,7 +47,7 @@ function PinballBall({ position }: { position: [number, number, number] }) {
         const duration = performance.now() - chargeStartTime.current;
         chargeStartTime.current = 0;
 
-        const maxForce = 50;
+        const maxForce = 70;
         const forceMagnitude = Math.min(duration * 0.05, maxForce);
 
         if (ballRef.current) {
@@ -68,18 +68,23 @@ function PinballBall({ position }: { position: [number, number, number] }) {
       window.removeEventListener("keyup", handleKeyUp);
     };
   }, []);
-
+  const { mass, restitution, size } = useControls("Ball Controls", {
+    // Tu peux ajuster les valeurs 'min', 'max' et 'step' selon la taille de ton flipper !
+    mass: { value: 3.5, min: -20, max: 20, step: 0.1 },
+    restitution: { value: 0.2, min: 0, max: 1, step: 0.1 },
+    size: { value: 0.6, min: 0.1, max: 5, step: 0.05 },
+  });
   return (
     <RigidBody
       ref={ballRef}
       ccd={true}
       position={position}
       colliders="ball"
-      restitution={0.2}
-      mass={1.5}
+      restitution={restitution}
+      mass={mass}
     >
       <mesh>
-        <sphereGeometry args={[0.6, 32, 32]} />
+        <sphereGeometry args={[size, 32, 32]} />
         <meshStandardMaterial color="silver" metalness={1} roughness={0.1} />
       </mesh>
     </RigidBody>
@@ -92,7 +97,7 @@ export default function Experience() {
 
   // 3. On ajoute les coordonnées de départ au GUI Leva
   // On récupère directement startX, startY et startZ de l'objet renvoyé par useControls
-  const { startX, startY, startZ } = useControls("Flipper Controls", {
+  const { startX, startY, startZ } = useControls("Ball Controls", {
     // Tu peux ajuster les valeurs 'min', 'max' et 'step' selon la taille de ton flipper !
     startX: { value: 4, min: -20, max: 20, step: 0.1 },
     startY: { value: 1, min: -20, max: 20, step: 0.1 },

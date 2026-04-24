@@ -1,10 +1,18 @@
-// Dans Flipper.tsx (ou là où se trouve ta fonction Flipper)
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { RigidBody } from "@react-three/rapier";
+import { useControls } from "leva";
+import { RigidBody, type RapierRigidBody } from "@react-three/rapier"; // 👈 1. Import du type
 import * as THREE from "three";
 
-// 👇 On ajoute visualGeometry et visualMaterial
+type FlipperProps = {
+  colliderGeometry: THREE.BufferGeometry;
+  visualGeometry: THREE.BufferGeometry;
+  visualMaterial: THREE.Material;
+  position: [number, number, number];
+  rotation: [number, number, number];
+  side: "left" | "right";
+};
+
 export default function Flipper({
   colliderGeometry,
   visualGeometry,
@@ -12,17 +20,29 @@ export default function Flipper({
   position,
   rotation,
   side,
-}) {
-  const flipperRef = useRef(null);
+}: FlipperProps) {
+  const { upForce, downForce } = useControls("Vitesse des flippers", {
+    upForce: { value: 55, min: 10, max: 80, step: 0.1 },
+    downForce: { value: 35, min: 10, max: 60, step: 0.1 },
+  });
+  // 👈 2. On indique à TypeScript le type exact de la référence
+  const flipperRef = useRef<RapierRigidBody>(null);
   const [isActive, setIsActive] = useState(false);
   const animProgress = useRef(0);
 
+  const initialPosition = useMemo(
+    () => new THREE.Vector3(...position),
+    [position],
+  );
+
   useEffect(() => {
     const key = side === "left" ? ["q", "a"] : ["d"];
-    const onKeyDown = (e) => {
+
+    // 👈 Bonus TS : On remplace "any" par "KeyboardEvent"
+    const onKeyDown = (e: KeyboardEvent) => {
       if (key.includes(e.key.toLowerCase())) setIsActive(true);
     };
-    const onKeyUp = (e) => {
+    const onKeyUp = (e: KeyboardEvent) => {
       if (key.includes(e.key.toLowerCase())) setIsActive(false);
     };
 
@@ -34,9 +54,10 @@ export default function Flipper({
     };
   }, [side]);
 
-  useFrame((state, delta) => {
+  // 👈 3. On remplace "state" par "_" pour indiquer qu'on ignore le premier paramètre
+  useFrame((_, delta) => {
     if (!flipperRef.current) return;
-    const speed = isActive ? 25 : 15;
+    const speed = isActive ? upForce : downForce; // Vitesse de levée | Vitesse de descente du flipper
     const target = isActive ? 1 : 0;
     animProgress.current = THREE.MathUtils.lerp(
       animProgress.current,
@@ -58,6 +79,9 @@ export default function Flipper({
     const quaternion = new THREE.Quaternion().setFromEuler(euler);
 
     flipperRef.current.setNextKinematicRotation(quaternion);
+
+    // On utilise la position initialisée plus haut
+    flipperRef.current.setNextKinematicTranslation(initialPosition);
   });
 
   return (
@@ -67,8 +91,10 @@ export default function Flipper({
       ccd={true}
       colliders="hull"
       position={position} // Le RigidBody se place aux bonnes coordonnées
-      restitution={0.8}
+      restitution={0.2}
       friction={0.2}
+      // Sécurité supplémentaire pour empêcher toute glissade physique
+      enabledTranslations={[false, false, false]}
     >
       {/* 1. Le mesh de collision (invisible) */}
       <mesh geometry={colliderGeometry}>
