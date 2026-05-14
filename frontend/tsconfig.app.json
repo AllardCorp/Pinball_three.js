@@ -7,22 +7,29 @@
     "module": "ESNext",
     "types": ["vite/client", "@testing-library/jest-dom"],
     "skipLibCheck": true,
-
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-
-    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
-  "include": ["src"]
+  "include": [
+    "src",
+    "public/models/PinballMVP-transformed.glb",
+    "public/models/PinballMVP2-transformed.glb",
+    "public/models/PinballMVP_OldBase-transformed.glb",
+    "public/models/PinballMVP_Base_old-transformed.glb",
+    "public/models/PinballMVP_Base-transformed.glb"
+  ]
 }
