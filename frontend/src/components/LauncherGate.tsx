@@ -1,7 +1,6 @@
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import { useControls } from "leva";
-// import * as THREE from "three";
-import { useGameStore } from "@/store/useGameStore"; // Ajuste le chemin
+import { useGameStore } from "@/store/useGameStore";
 type LuncherGateProps = {
   nodes: any;
   materials: any;
@@ -19,7 +18,7 @@ export default function LauncherGate({ nodes, materials }: LuncherGateProps) {
   );
   return (
     <group>
-      {/* 1. LE SENSOR INVISIBLE (La ligne d'arrivée du lanceur) */}
+      {/* 1. LE SENSOR INVISIBLE (Ligne d'arrivée du lanceur) */}
       <RigidBody
         type="fixed"
         sensor
@@ -32,26 +31,23 @@ export default function LauncherGate({ nodes, materials }: LuncherGateProps) {
             console.log("Bille confirmé !");
             setTimeout(() => {
               setBallInLauncher(false);
-            }, 500); // Petit délai pour être sûr que la bille soit bien passée
+            }, 500); // Délai pour être sûr que la bille soit bien passée
           }
         }}
-        // 👇 ATTENTION : Il faudra ajuster cette position pour qu'elle soit
-        // placée juste *APRÈS* la gate, pour que la bille ait le temps de passer.
         position={[gateStartX, gateStartY, gateStartZ]}
         rotation={[0, Math.PI / 2.6, 0]}
       >
-        {/* Un rectangle assez large pour être sûr que la bille le touche */}
         <CuboidCollider args={[1, 1, 0.2]} />
       </RigidBody>
 
-      {/* 2. LE VISUEL DE LA GATE (Toujours visible) */}
+      {/* VISUEL DE LA GATE) */}
       <mesh
         geometry={nodes.visual_obj_gate_5.geometry}
         material={materials.PaletteMaterial001}
         position={[8.733, -1.018, 5.992]}
       />
 
-      {/* 3. LE COLLIDER PHYSIQUE (N'existe que si la bille a passé le sensor) */}
+      {/* COLLIDER PHYSIQUE (N'existe que si la bille a passé le sensor) */}
       {!ballInLauncher && (
         <RigidBody
           includeInvisible

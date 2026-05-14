@@ -1,7 +1,7 @@
 import { RigidBody } from "@react-three/rapier";
 import * as THREE from "three";
 import { useControls } from "leva";
-
+import { useGameStore } from "@/store/useGameStore";
 type SlingshotProps = {
   geometry: THREE.BufferGeometry;
   position: [number, number, number];
@@ -14,23 +14,24 @@ export default function Slingshot({
   rotation,
   pushDirection,
 }: SlingshotProps) {
+  const addScore = useGameStore((state) => state.addScore);
   const { restitution, force } = useControls("Slingshot Controls", {
-    // Tu peux ajuster les valeurs 'min', 'max' et 'step' selon la taille de ton flipper !
     restitution: { value: 0.2, min: 0, max: 1, step: 0.1 },
     force: { value: 12, min: 0, max: 30, step: 0.1 },
   });
   const handleCollision = (e: any) => {
-    // e.other.rigidBody représente l'objet qui a percuté le slingshot (ta bille)
+    // e.other.rigidBody = la bille qui a touché le slingshot
     if (e.other.rigidBody) {
-      // 💥 La puissance du coup (à ajuster selon le poids de ta bille)
+      // La puissance du coup
       const forceMultiplier = force;
 
-      // On convertit ta direction en Vecteur mathématique et on y applique la force
+      // Convertion de la direction en Vecteur mathématique et on applique la force
       const impulse = new THREE.Vector3(...pushDirection)
         .normalize() // S'assure que la direction est pure
         .multiplyScalar(forceMultiplier);
 
-      // On frappe la bille ! (le "true" sert à réveiller la bille si elle dormait)
+      addScore(100);
+      // Frappe la bille ! ("true" sert à réveiller la bille si elle dormait)
       e.other.rigidBody.applyImpulse(impulse, true);
     }
   };
@@ -39,8 +40,8 @@ export default function Slingshot({
     <RigidBody
       type="fixed"
       colliders="hull"
-      restitution={restitution} // Un tout petit rebond naturel de base
-      position={position} // 👈 Comme pour les flippers, on déplace le RigidBody
+      restitution={restitution}
+      position={position}
       rotation={rotation}
       onCollisionEnter={handleCollision}
     >

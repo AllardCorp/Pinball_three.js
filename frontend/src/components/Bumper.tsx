@@ -34,10 +34,10 @@ export default function Bumper({
   const rigidBodyRef = useRef<RapierRigidBody>(null);
   const visualMeshRef = useRef<THREE.Mesh>(null);
 
-  // 🛡️ 1. LE CHRONOMÈTRE DE SÉCURITÉ
+  // 1. LE CHRONOMÈTRE DE SÉCURITÉ
   const lastHitTime = useRef<number>(0);
 
-  // --- ZUSTAND : Connexion au Cerveau ---
+  // --- ZUSTAND ---
   const addScore = useGameStore((state) => state.addScore);
   const toggleRuby = useGameStore((state) => state.toggleRuby);
   const isRubyActive = useGameStore((state) => state.rubiesActive[id]);
@@ -51,15 +51,15 @@ export default function Bumper({
 
   const handleCollision = (e: CollisionEnterPayload) => {
     if (e.other.rigidBodyObject?.name === "ball") {
-      // ⏱️ 2. VÉRIFICATION DU TEMPS
+      // 2. VÉRIFICATION DU TEMPS
       const now = performance.now();
       // Si la dernière collision a eu lieu il y a moins de 250 millisecondes...
       if (now - lastHitTime.current < 250) {
-        // ... on annule tout ! On l'ignore.
+        // ... on annule tout ! On l'ignore. Corrige le bug de "multi-hit" quand la bille reste collée au bumper.
         return;
       }
 
-      // Si on est ici, c'est un vrai "nouveau" coup. On met le chrono à jour.
+      // Vrai coup. On met le chrono à jour.
       lastHitTime.current = now;
       if (!rigidBodyRef.current || !e.other.rigidBody) return;
       console.log("VRAIE collision pour l'ID :", id);
@@ -78,13 +78,13 @@ export default function Bumper({
       const impulse = direction.multiplyScalar(strength);
       e.other.rigidBody.applyImpulse(impulse, true);
 
-      // 💥 Animation visuelle du tonneau
+      // Animation visuelle du tonneau
       if (visualMeshRef.current) {
         visualMeshRef.current.scale.set(1.4, 1.4, 1.4);
       }
 
-      // 🎮 LOGIQUE DU JEU
-      addScore(100);
+      // LOGIQUE DU JEU
+      addScore(500);
       toggleRuby(id);
     }
   };
