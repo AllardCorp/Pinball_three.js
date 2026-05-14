@@ -222,25 +222,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         rotation={[0, 0, 0]}
         pushDirection={[-1, 0, -1]}
       />
-      {/* Flippers */}
-      {/* --- LEFT FLIPPER --- */}
-      <Flipper
-        side="left"
-        position={[-5.001, -2.901, 26.34]}
-        rotation={[0, 0, 0]}
-        colliderGeometry={nodes.coll_flipper_left_bottom.geometry}
-        visualGeometry={nodes.visual_obj_flipper_left_bottom.geometry}
-        visualMaterial={materials.M_flipper_arm_left}
-      />
-      {/* --- RIGHT FLIPPER --- */}
-      <Flipper
-        side="right"
-        position={[2.787, -2.901, 26.34]}
-        rotation={[0, 0, 0]}
-        colliderGeometry={nodes.coll_flipper_right_bottom.geometry}
-        visualGeometry={nodes.visual_obj_flipper_right_bottom.geometry}
-        visualMaterial={materials.M_flipper_arm_right}
-      />
+
       {/* Flippers */}
       {/* --- LEFT FLIPPER --- */}
       <Flipper
@@ -488,11 +470,11 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           material={materials.PaletteMaterial001}
           position={[0.143, -4.465, -2.19]}
         />
-        <mesh
-          geometry={nodes.visual_barrel_bumpers003.geometry}
-          material={materials["barrel.001"]}
-          position={[-6.632, -1.561, -12.833]}
-        />
+        {/* <mesh */}
+        {/*   geometry={nodes.visual_barrel_bumpers003.geometry} */}
+        {/*   material={materials["barrel.001"]} */}
+        {/*   position={[-6.632, -1.561, -12.833]} */}
+        {/* /> */}
         <mesh
           geometry={nodes.visual_rollover_top_1001.geometry}
           material={materials.PaletteMaterial001}
@@ -934,4 +916,4 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
   );
 }
 
-useGLTF.preload("/PinballMVP_Base-transformed.glb");
+useGLTF.preload("/public/PinballMVP_Base-transformed.glb");

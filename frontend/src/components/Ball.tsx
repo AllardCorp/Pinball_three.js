@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { RigidBody, RapierRigidBody } from "@react-three/rapier";
+import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import { useControls } from "leva";
 import { useGameStore } from "@/store/useGameStore"; // Adapte le chemin vers ton store
 
