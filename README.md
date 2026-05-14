@@ -20,8 +20,30 @@ Ce projet est contenu dans un conteneur Docker. Pour le lancer, utilisez la comm
 **Développement :**
 
 ```bash
-docker compose up -d
+docker compose -f compose.dev.yml up -d
 ```
+
+---
+
+## Tests
+
+Les tests sont situés dans `frontend/src/tests/` et s'exécutent depuis le dossier `frontend/`.
+
+**Lancer les tests :**
+
+```bash
+cd frontend
+pnpm test
+```
+
+**Vérifier la couverture de code (seuil minimum : 80%) :**
+
+```bash
+cd frontend
+pnpm coverage
+```
+
+Le rapport de couverture HTML est généré dans `frontend/coverage/` (ignoré par git).
 
 ---
 

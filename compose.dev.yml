@@ -1,0 +1,39 @@
+services:
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    command: sh -c "corepack enable && pnpm install && pnpm dev"
+    environment:
+      - NODE_ENV=development
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0.18
+    container_name: mosquitto
+    environment:
+      - MQTT_USERNAME=${MQTT_USERNAME}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
+    # On génère le fichier dans /config/ et on donne les droits à l'utilisateur mosquitto
+    entrypoint: >
+      sh -c "touch /mosquitto/config/password_file.txt && 
+             mosquitto_passwd -b /mosquitto/config/password_file.txt $$MQTT_USERNAME $$MQTT_PASSWORD && 
+             chown 1883:1883 /mosquitto/config/password_file.txt &&
+             chmod 600 /mosquitto/config/password_file.txt &&
+             echo 'MQTT user created' && 
+             exec mosquitto -c /mosquitto/config/mosquitto.conf"
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    restart: always
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
