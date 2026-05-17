@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import { useControls } from "leva";
 import { useGameStore } from "@/store/useGameStore"; // Adapte le chemin vers ton store
+import ObjectSound from "./ObjectSound";
 
 type BallProps = {
   position: [number, number, number];
@@ -11,6 +12,8 @@ export default function Ball({ position }: BallProps) {
   const ballRef = useRef<RapierRigidBody>(null);
   const chargeStartTime = useRef<number>(0);
 
+  const [launchCount, setLaunchCount] = useState(0);
+  const [launchVolume, setLaunchVolume] = useState(1);
   const { isPlaying, ballInLauncher } = useGameStore();
 
   useEffect(() => {
@@ -50,6 +53,12 @@ export default function Ball({ position }: BallProps) {
             true,
           );
           ballRef.current.wakeUp();
+
+          const forceRatio = forceMagnitude / maxForce;
+
+          const calculatedVolume = 0.2 + (forceRatio * 0.8);
+          setLaunchVolume(calculatedVolume);
+          setLaunchCount((prev) => prev + 1);
         }
       }
     };
@@ -99,13 +108,19 @@ export default function Ball({ position }: BallProps) {
       colliders="ball"
       restitution={restitution}
       mass={mass}
-      //      linearDamping={linearDamping}
-      //     angularDamping={angularDamping}
+    //      linearDamping={linearDamping}
+    //     angularDamping={angularDamping}
     >
       <mesh>
         <sphereGeometry args={[size, 32, 32]} />
         <meshStandardMaterial color="silver" metalness={1} roughness={0.1} />
       </mesh>
+
+      <ObjectSound
+        url="/sounds/plunger/plungerlaunch.ogg"
+        playTrigger={launchCount}
+        volume={launchVolume}
+      />
     </RigidBody>
   );
 }

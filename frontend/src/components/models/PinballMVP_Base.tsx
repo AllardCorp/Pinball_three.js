@@ -14,6 +14,7 @@ import LauncherGate from "@/components/LauncherGate";
 import DeathZone from "@/components/DeathZone";
 import GoldMine from "@/components/GoldMine";
 import ScoreTarget from "@/components/ScoreTarget";
+import RampSensor from "@/components/RampSensor";
 
 type GLTFResult = GLTF & {
   nodes: {
@@ -176,6 +177,16 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
       <LauncherGate nodes={nodes} materials={materials} />
       <Ball position={[startX, startY, startZ]} />
       <DeathZone />
+
+      {/* Sensor pour la rampe */}
+      <RampSensor
+        id="MainRamp"
+        soundUrl="/sounds/rampes/LOOP_rolling_plastik.ogg" // Mettez le bon chemin du son
+        pointsPerFrame={5}
+        entryConfig={{ pos: [7, 2.5, -16.5], rot: [1.5, 0, 0], size: [4.2, 1.0] }}
+        exit1Config={{ pos: [-11.7, 0.5, 16.0], rot: [1.5, 0, 0], size: [1.5, 1.5] }}
+        exit2Config={{ pos: [7.4, 0.5, 16.0], rot: [1.5, 0, 0], size: [1.5, 1.5] }}
+      />
       <Bumper
         id={0}
         colliderGeometry={nodes.coll_bumpers001.geometry}
