@@ -21,10 +21,17 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: ["npm", "run", "db:migrate"]
+    command: ["pnpm", "run", "db:migrate"]
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-change_me_with_a_long_random_secret}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -39,6 +46,13 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-change_me_with_a_long_random_secret}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
     depends_on:
       migrate:
         condition: service_completed_successfully

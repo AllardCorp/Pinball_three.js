@@ -28,6 +28,7 @@ Services principaux disponibles en développement :
 - Drizzle Studio backend : `localhost:4983`
 - PostgreSQL : `localhost:5432`
 - Mosquitto : `localhost:1883`
+- Login frontend : `http://localhost:5173/login`
 
 ---
 
@@ -42,12 +43,15 @@ La base de données du projet repose sur :
 Tables actuellement initialisées :
 
 - `users`
+- `accounts`
+- `sessions`
+- `verifications`
 - `games`
 - `scores`
 
 ### Exécuter les migrations en développement
 
-Démarrer les services nécessaires :
+Démarrer les services nécessaires si c'est pas encore fait :
 
 ```bash
 docker compose -f compose.dev.yml up -d postgres backend drizzle-studio
@@ -74,6 +78,28 @@ Ouvrir `https://local.drizzle.studio`.
 
 Le service `drizzle-studio` est disponible uniquement en développement.
 Le port `4983` correspond au backend local utilisé par Drizzle Studio.
+
+## Authentification
+
+L'authentification est gérée par Better Auth sur le backend Express.
+
+Fonctionnalités branchées :
+
+- credentials email / mot de passe
+- OAuth GitHub
+- OAuth Google
+- session utilisateur accessible dans le `Playfield`
+- session utilisateur accessible dans le `Dashboard`
+
+Variables à renseigner dans `.env` :
+
+- `BETTER_AUTH_SECRET`
+- `BETTER_AUTH_URL`
+- `FRONTEND_URL`
+- `GITHUB_CLIENT_ID`
+- `GITHUB_CLIENT_SECRET`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
 
 ### Production
 
