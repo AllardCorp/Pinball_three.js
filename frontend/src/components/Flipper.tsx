@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useControls } from "leva";
 import { RigidBody, type RapierRigidBody } from "@react-three/rapier"; // 👈 1. Import du type
 import * as THREE from "three";
+import { useInputStore } from "@/store/useInputStore";
 
 type FlipperProps = {
   colliderGeometry: THREE.BufferGeometry;
@@ -27,32 +28,17 @@ export default function Flipper({
   });
   // 👈 2. On indique à TypeScript le type exact de la référence
   const flipperRef = useRef<RapierRigidBody>(null);
-  const [isActive, setIsActive] = useState(false);
+
+  const isActive = useInputStore((state) =>
+    side === "left" ? state.buttons.left_flipper : state.buttons.right_flipper,
+  );
+
   const animProgress = useRef(0);
 
   const initialPosition = useMemo(
     () => new THREE.Vector3(...position),
     [position],
   );
-
-  useEffect(() => {
-    const key = side === "left" ? ["q", "a"] : ["d"];
-
-    // 👈 Bonus TS : On remplace "any" par "KeyboardEvent"
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (key.includes(e.key.toLowerCase())) setIsActive(true);
-    };
-    const onKeyUp = (e: KeyboardEvent) => {
-      if (key.includes(e.key.toLowerCase())) setIsActive(false);
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-    };
-  }, [side]);
 
   // 👈 3. On remplace "state" par "_" pour indiquer qu'on ignore le premier paramètre
   useFrame((_, delta) => {

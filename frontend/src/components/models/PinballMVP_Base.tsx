@@ -916,4 +916,4 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
   );
 }
 
-useGLTF.preload("/public/PinballMVP_Base-transformed.glb");
+useGLTF.preload("/models/PinballMVP_Base-transformed.glb");
