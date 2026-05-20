@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import { useControls } from "leva";
-import { useGameStore } from "@/store/useGameStore"; // Adapte le chemin vers ton store
+import { useGameStore } from "@/store/useGameStore";
 import ObjectSound from "./ObjectSound";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -15,7 +15,21 @@ type BallProps = {
 export default function Ball({ position }: BallProps) {
   const ballRef = useRef<RapierRigidBody>(null);
   const chargeStartTime = useRef<number>(0);
-  const rollingSoundRef = useRef<THREE.PositionalAudio>(null);
+  const rollingSoundRef = useRef<THREE.PositionalAudio | null>(null);
+
+  /** Arrête le roulement sur l'instance démontée (changement isPlaying / swap de branche). */
+  const bindRollingSound = useCallback((node: THREE.PositionalAudio | null) => {
+    const prev = rollingSoundRef.current;
+    if (prev && prev !== node) {
+      try {
+        if (prev.isPlaying) prev.stop();
+      } catch {
+        /* ignore */
+      }
+      prev.setVolume(0);
+    }
+    rollingSoundRef.current = node;
+  }, []);
 
   const [launchCount, setLaunchCount] = useState(0);
   const [launchVolume, setLaunchVolume] = useState(1);
@@ -101,50 +115,70 @@ export default function Ball({ position }: BallProps) {
     angularDamping: { value: 0.1, min: 0, max: 1, step: 0.01 },
   });
 
-  // Pour le son de roulement continu
-  useFrame((_, delta) => {
-    if (ballRef.current && rollingSoundRef.current && !ballInLauncher) {
-      const audio = rollingSoundRef.current;
-      const vel = ballRef.current.linvel();
-      const pos = ballRef.current.translation();
-      
-      // Vitesse linéaire
-      const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z);
-      
-      // On considère que la bille roule si sa vitesse est > 0.5
-      // Et qu'elle est sur le plateau (hauteur Y < 2, Z < 28 pour éviter la zone de lancement)
-      const isRollingOnPlayfield = speed > 0.5 && pos.y < 2.0 && pos.z < 28;
-
-      if (!audio.isPlaying && isRollingOnPlayfield) {
-        audio.setVolume(0);
-        audio.setLoop(true);
-        try {
-          audio.play();
-        } catch (e) {
-          console.warn(e);
-        }
+  const fadeOutRollingSound = (audio: THREE.PositionalAudio, delta: number) => {
+    if (!audio.isPlaying) return;
+    const currentVol = audio.getVolume();
+    if (currentVol > 0.05) {
+      audio.setVolume(THREE.MathUtils.lerp(currentVol, 0, delta * 20));
+    } else {
+      try {
+        audio.stop();
+      } catch (e) {
+        /* ignore */
       }
+    }
+  };
 
-      if (audio.isPlaying) {
-        if (isRollingOnPlayfield) {
-          // Volume plus fort même à basse vitesse (max 3)
-          const targetVol = Math.min(speed / 10, 1) * 3;
-          // Pitch entre 0.4 (très grave) et 0.8 (grave) pour éviter les bugs audio du navigateur
-          const targetPitch = 0.5 + Math.min(speed / 10, 1) * 0.4;
-          
-          audio.setVolume(THREE.MathUtils.lerp(audio.getVolume(), targetVol, delta * 10));
-          audio.setPlaybackRate(THREE.MathUtils.lerp(audio.playbackRate, targetPitch, delta * 10));
-        } else {
-          // Fade out rapide si elle s'arrête ou saute
-          const currentVol = audio.getVolume();
-          if (currentVol > 0.05) {
-            audio.setVolume(THREE.MathUtils.lerp(currentVol, 0, delta * 20));
-          } else {
-            try {
-              audio.stop();
-            } catch (e) {}
-          }
-        }
+  // Son de roulement : ne pas lire la physique Rapier quand la bille n'est pas "en jeu"
+  // (lanceur, partie arrêtée, RigidBody démonté) — mais toujours traiter le fade/stop.
+  useFrame((_, delta) => {
+    const audio = rollingSoundRef.current;
+    if (!audio) return;
+
+    const canUsePhysics =
+      isPlaying && !ballInLauncher && ballRef.current !== null;
+
+    if (!canUsePhysics) {
+      fadeOutRollingSound(audio, delta);
+      return;
+    }
+
+    const body = ballRef.current!;
+    const vel = body.linvel();
+    const pos = body.translation();
+
+    // Vitesse linéaire
+    const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z);
+
+    // On considère que la bille roule si sa vitesse est > 0.5
+    // Et qu'elle est sur le plateau (hauteur Y < 2, Z < 28 pour éviter la zone de lancement)
+    const isRollingOnPlayfield = speed > 0.5 && pos.y < 2.0 && pos.z < 28;
+
+    if (!audio.isPlaying && isRollingOnPlayfield) {
+      audio.setVolume(0);
+      audio.setLoop(true);
+      try {
+        audio.play();
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    if (audio.isPlaying) {
+      if (isRollingOnPlayfield) {
+        // Volume plus fort même à basse vitesse (max 3)
+        const targetVol = Math.min(speed / 10, 1) * 3;
+        // Pitch entre 0.4 (très grave) et 0.8 (grave) pour éviter les bugs audio du navigateur
+        const targetPitch = 0.5 + Math.min(speed / 10, 1) * 0.4;
+
+        audio.setVolume(
+          THREE.MathUtils.lerp(audio.getVolume(), targetVol, delta * 10),
+        );
+        audio.setPlaybackRate(
+          THREE.MathUtils.lerp(audio.playbackRate, targetPitch, delta * 10),
+        );
+      } else {
+        fadeOutRollingSound(audio, delta);
       }
     }
   });
@@ -162,6 +196,7 @@ export default function Ball({ position }: BallProps) {
         />
         <AudioErrorBoundary url="/sounds/ball/small-metal-ball-rolling.ogg">
           <PositionalAudio
+            ref={bindRollingSound}
             url="/sounds/ball/small-metal-ball-rolling.ogg"
             volume={0}
             loop={false}
@@ -195,9 +230,9 @@ export default function Ball({ position }: BallProps) {
       />
       
       <AudioErrorBoundary url="/sounds/ball/small-metal-ball-rolling.ogg">
-        <PositionalAudio 
-          ref={rollingSoundRef} 
-          url="/sounds/ball/small-metal-ball-rolling.ogg" 
+        <PositionalAudio
+          ref={bindRollingSound}
+          url="/sounds/ball/small-metal-ball-rolling.ogg"
           distance={15}
         />
       </AudioErrorBoundary>

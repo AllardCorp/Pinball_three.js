@@ -2,6 +2,7 @@ import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import { useControls } from "leva";
 import * as THREE from "three";
 import { useGameStore } from "@/store/useGameStore";
+import { useState } from "react";
 import ObjectSound from "./ObjectSound";
 
 type KickbackProps = {
@@ -29,6 +30,7 @@ export default function Kickback({
     side === "left" ? state.leftKickbackActive : state.rightKickbackActive,
   );
   const useKickback = useGameStore((state) => state.useKickback);
+  const [kickCount, setKickCount] = useState(0);
   const addScore = useGameStore((state) => state.addScore);
   const { leftOrientation, rightOrientation } = useControls("Kickbacks", {
     leftOrientation: { value: 6, min: -100, max: 100, step: 1 },
@@ -60,10 +62,10 @@ export default function Kickback({
                 { x: xDirection, y: 0, z: -kickStrength },
                 true,
               );
+              setKickCount((prev) => prev + 1);
             }, 1000);
 
             addScore(2500);
-
             // Fermeture de la porte après 300ms
             setTimeout(() => {
               useKickback(side);
@@ -73,6 +75,11 @@ export default function Kickback({
       >
         {/* Dimensions du capteur */}
         <CuboidCollider args={[1, 0.5, 0.5]} />
+
+        <ObjectSound
+          url={["/sounds/plunger/plungerlaunch.ogg"]}
+          playTrigger={kickCount}
+        />
       </RigidBody>
 
       {/* PORTE DE CONDAMNATION */}
@@ -95,15 +102,6 @@ export default function Kickback({
             ]}
           />
           <mesh visible={false} geometry={colliderGeometry} />
-
-          <ObjectSound
-            url={[
-              "/sounds/bumper/bumper_01.ogg",
-              "/sounds/bumper/bumper_02.ogg",
-              "/sounds/bumper/bumper_03.ogg"
-            ]}
-            playTrigger={hitCount}
-          />
         </RigidBody>
       )}
     </group>
