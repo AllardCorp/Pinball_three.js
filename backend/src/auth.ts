@@ -3,33 +3,45 @@ import { betterAuth } from "better-auth";
 import { username } from "better-auth/plugins";
 
 import { db } from "./db/client.js";
-import { env } from "./env.js";
 import * as schema from "./db/schema.js";
+import { env } from "./env.js";
 
-const socialProviders = {
-  ...(env.githubClientId && env.githubClientSecret
-    ? {
-        github: {
-          clientId: env.githubClientId,
-          clientSecret: env.githubClientSecret,
-        },
-      }
-    : {}),
-  ...(env.googleClientId && env.googleClientSecret
-    ? {
-        google: {
-          clientId: env.googleClientId,
-          clientSecret: env.googleClientSecret,
-        },
-      }
-    : {}),
+type BetterAuthOptions = Parameters<typeof betterAuth>[0];
+
+// On garde un objet typé pour éviter un typage trop permissif sur une zone sensible.
+const socialProviders: NonNullable<BetterAuthOptions["socialProviders"]> = {};
+
+if (env.githubClientId && env.githubClientSecret) {
+  socialProviders.github = {
+    clientId: env.githubClientId,
+    clientSecret: env.githubClientSecret,
+  };
+}
+
+if (env.googleClientId && env.googleClientSecret) {
+  socialProviders.google = {
+    clientId: env.googleClientId,
+    clientSecret: env.googleClientSecret,
+  };
+}
+
+
+const modelMapping = {
+  user: "users" as const,
+  session: "sessions" as const,
+  account: "accounts" as const,
+  verification: "verifications" as const,
 };
 
 export const auth = betterAuth({
   appName: "Pinball Three.js",
   baseURL: env.betterAuthUrl,
   secret: env.betterAuthSecret,
-  trustedOrigins: [...env.frontendOrigins, env.betterAuthUrl],
+
+  trustedOrigins: Array.from(
+    new Set([...env.frontendOrigins, env.betterAuthOrigin]),
+  ),
+
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
@@ -40,28 +52,43 @@ export const auth = betterAuth({
       verification: schema.verifications,
     },
   }),
-  user: {
-    modelName: "users",
-  },
+
+  // Le mapping et les options de sécurité doivent rester dans le même objet,
+  // sinon une deuxième clé `session` écrase la première en JavaScript.
+  user: { modelName: modelMapping.user },
   session: {
-    modelName: "sessions",
+    modelName: modelMapping.session,
+    expiresIn: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
   },
   account: {
-    modelName: "accounts",
+    modelName: modelMapping.account,
+    // Les tokens OAuth ne doivent pas rester lisibles en base.
+    encryptOAuthTokens: true,
   },
-  verification: {
-    modelName: "verifications",
+  verification: { modelName: modelMapping.verification },
+
+  advanced: {
+    useSecureCookies: env.isProduction,
   },
+
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
     minPasswordLength: 8,
+    requireEmailVerification: false,
   },
+
   socialProviders,
+
   plugins: [
     username({
       minUsernameLength: 3,
       maxUsernameLength: 30,
     }),
   ],
+
+  onInit: () => {
+    console.log("Better Auth initialisé avec succès");
+  },
 });

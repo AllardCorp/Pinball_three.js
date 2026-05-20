@@ -1,7 +1,7 @@
 import "dotenv/config";
 
 function requireEnv(name: string): string {
-  const value = process.env[name];
+  const value = process.env[name]?.trim();
 
   if (!value) {
     throw new Error(`${name} is required.`);
@@ -11,13 +11,49 @@ function requireEnv(name: string): string {
 }
 
 function optionalEnv(name: string): string | undefined {
-  const value = process.env[name];
+  const value = process.env[name]?.trim();
 
-  if (!value || value.trim() === "") {
+  if (!value) {
     return undefined;
   }
 
   return value;
+}
+
+function parsePort(value: string): number {
+  const port = Number.parseInt(value, 10);
+
+  if (!Number.isInteger(port) || port < 1 || port > 65_535) {
+    throw new Error("PORT must be an integer between 1 and 65535.");
+  }
+
+  return port;
+}
+
+function parseUrl(name: string, value: string): string {
+  try {
+    return new URL(value).toString();
+  } catch {
+    throw new Error(`${name} must be a valid absolute URL.`);
+  }
+}
+
+function parseOrigin(name: string, value: string): string {
+  return new URL(parseUrl(name, value)).origin;
+}
+
+function readUrlEnv(name: string, defaultValue?: string): string {
+  const value = optionalEnv(name);
+
+  if (value) {
+    return parseUrl(name, value);
+  }
+
+  if (defaultValue) {
+    return parseUrl(name, defaultValue);
+  }
+
+  throw new Error(`${name} is required.`);
 }
 
 function listEnv(name: string): string[] {
@@ -29,18 +65,38 @@ function listEnv(name: string): string[] {
   );
 }
 
-const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:5173";
+const nodeEnv = optionalEnv("NODE_ENV") ?? "development";
+const isProduction = nodeEnv === "production";
+
+// En production, ces URLs doivent être explicites pour éviter un démarrage
+// silencieux avec des callbacks ou des origins incorrectes.
+const frontendUrl = readUrlEnv(
+  "FRONTEND_URL",
+  isProduction ? undefined : "http://localhost:5173",
+);
+const betterAuthUrl = readUrlEnv(
+  "BETTER_AUTH_URL",
+  isProduction ? undefined : "http://localhost:3000",
+);
+const frontendOrigins = Array.from(
+  new Set([
+    new URL(frontendUrl).origin,
+    ...listEnv("FRONTEND_ORIGINS").map((value, index) =>
+      parseOrigin(`FRONTEND_ORIGINS[${index}]`, value),
+    ),
+  ]),
+);
 
 export const env = {
-  nodeEnv: process.env.NODE_ENV ?? "development",
-  port: Number.parseInt(process.env.PORT ?? "3000", 10),
-  databaseUrl: requireEnv("DATABASE_URL"),
+  nodeEnv,
+  isProduction,
+  port: parsePort(process.env.PORT ?? "3000"),
+  databaseUrl: parseUrl("DATABASE_URL", requireEnv("DATABASE_URL")),
   betterAuthSecret: requireEnv("BETTER_AUTH_SECRET"),
-  betterAuthUrl: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+  betterAuthUrl,
+  betterAuthOrigin: new URL(betterAuthUrl).origin,
   frontendUrl,
-  frontendOrigins: Array.from(
-    new Set([frontendUrl, ...listEnv("FRONTEND_ORIGINS")]),
-  ),
+  frontendOrigins,
   githubClientId: optionalEnv("GITHUB_CLIENT_ID"),
   githubClientSecret: optionalEnv("GITHUB_CLIENT_SECRET"),
   googleClientId: optionalEnv("GOOGLE_CLIENT_ID"),

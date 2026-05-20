@@ -32,7 +32,7 @@ export default function Home() {
         {session && (
           <div className="space-y-1">
             <p>
-              Connecte en tant que <strong>{session.user.email}</strong>
+              Connecté en tant que <strong>{session.user.email}</strong>
             </p>
             <p className="text-slate-500">
               Username: {session.user.username ?? "non defini"}
@@ -44,7 +44,7 @@ export default function Home() {
               }}
               type="button"
             >
-              Se deconnecter
+              Se déconnecter
             </button>
           </div>
         )}

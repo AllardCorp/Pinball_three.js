@@ -59,7 +59,7 @@ export default function DeviceLogin() {
       }
 
       setIsApproved(true);
-      setFeedback("Le flipper est connecte a votre compte.");
+      setFeedback("Connexion au flipper réussie, amusez-vous !");
     } finally {
       setIsApproving(false);
     }
@@ -71,7 +71,7 @@ export default function DeviceLogin() {
         <h1 className="text-2xl font-semibold">Connexion du flipper</h1>
 
         {isPending && (
-          <p className="mt-4 text-sm text-slate-500">Verification de la session...</p>
+          <p className="mt-4 text-sm text-slate-500">Vérification de la session...</p>
         )}
 
         {session && (
@@ -90,7 +90,7 @@ export default function DeviceLogin() {
               type="button"
             >
               {isApproved
-                ? "Flipper connecte"
+                ? "Flipper connecté"
                 : isApproving
                   ? "Connexion..."
                   : "Connecter ce flipper"}

@@ -4,6 +4,7 @@ import { Pool } from "pg";
 import { env } from "../env.js";
 import * as schema from "./schema.js";
 
+// Connexion à la base de données
 export const pool = new Pool({
   connectionString: env.databaseUrl,
 });

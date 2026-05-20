@@ -3,6 +3,7 @@ import {
   doublePrecision,
   index,
   integer,
+  pgEnum,
   pgTable,
   serial,
   text,
@@ -51,8 +52,9 @@ export const sessions = pgTable(
   }),
 );
 
-
-// Table account qui servira à stocker les informations d'authentification, y compris les tokens d'accès pour les fournisseurs sociaux et les mots de passe pour l'authentification par email.
+// Table account qui servira à stocker les informations d'authentification,
+// y compris les tokens d'accès pour les fournisseurs sociaux et les mots de
+// passe pour l'authentification par email.
 export const accounts = pgTable(
   "accounts",
   {
@@ -65,8 +67,12 @@ export const accounts = pgTable(
     accessToken: text("access_token"),
     refreshToken: text("refresh_token"),
     idToken: text("id_token"),
-    accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
-    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", {
+      withTimezone: true,
+    }),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", {
+      withTimezone: true,
+    }),
     scope: text("scope"),
     password: text("password"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -81,7 +87,9 @@ export const accounts = pgTable(
   }),
 );
 
-// Table de vérification utilisée pour vérifier les si les conditions d'authentification sont remplies, comme la vérification de l'email ou les tokens de réinitialisation de mot de passe.
+// Table de vérification utilisée pour vérifier les conditions
+// d'authentification, comme la vérification de l'email ou les tokens
+// de réinitialisation de mot de passe.
 export const verifications = pgTable(
   "verifications",
   {
@@ -98,12 +106,26 @@ export const verifications = pgTable(
   }),
 );
 
+export const deviceLoginStatusValues = [
+  "pending",
+  "approved",
+  "expired",
+] as const;
+
+export type DeviceLoginStatus = (typeof deviceLoginStatusValues)[number];
+
+export const deviceLoginStatusEnum = pgEnum(
+  "device_login_status",
+  deviceLoginStatusValues,
+);
+
 export const deviceLoginRequests = pgTable(
   "device_login_requests",
   {
     id: text("id").primaryKey(),
     deviceCode: text("device_code").notNull(),
-    status: text("status").notNull().default("pending"),
+    // On borne explicitement les états métier pour éviter les valeurs libres.
+    status: deviceLoginStatusEnum("status").notNull().default("pending"),
     userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
