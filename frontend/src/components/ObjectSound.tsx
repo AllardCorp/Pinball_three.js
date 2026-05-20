@@ -9,13 +9,15 @@ type ObjectSoundProps = {
   playTrigger: boolean | number;
   volume?: number;
   distance?: number;
+  playbackRate?: number;
 };
 
 export default function ObjectSound({
   url,
   playTrigger,
   volume = 3,
-  distance = 15
+  distance = 15,
+  playbackRate = 1
 }: ObjectSoundProps) {
   const urls = Array.isArray(url) ? url : [url];
   const soundRefs = useRef<(THREE.PositionalAudio | null)[]>([]);
@@ -57,6 +59,7 @@ export default function ObjectSound({
         });
 
         try {
+          chosenSound.setPlaybackRate(playbackRate);
           chosenSound.play();
         } catch (err) {
           console.warn(`Impossible de jouer le son (${chosenSound.name || "inconnu"}) :`, err);

@@ -2,6 +2,8 @@ import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import { useControls } from "leva";
 import * as THREE from "three";
 import { useGameStore } from "@/store/useGameStore";
+import ObjectSound from "./ObjectSound";
+
 type KickbackProps = {
   side: "left" | "right";
   visualGeometry: THREE.BufferGeometry;
@@ -93,6 +95,15 @@ export default function Kickback({
             ]}
           />
           <mesh visible={false} geometry={colliderGeometry} />
+
+          <ObjectSound
+            url={[
+              "/sounds/bumper/bumper_01.ogg",
+              "/sounds/bumper/bumper_02.ogg",
+              "/sounds/bumper/bumper_03.ogg"
+            ]}
+            playTrigger={hitCount}
+          />
         </RigidBody>
       )}
     </group>

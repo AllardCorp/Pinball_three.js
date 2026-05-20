@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { CuboidCollider, IntersectionEnterPayload } from "@react-three/rapier";
+import { RigidBody, CuboidCollider, IntersectionEnterPayload } from "@react-three/rapier";
 import { useFrame } from "@react-three/fiber";
 import { PositionalAudio } from "@react-three/drei";
 import * as THREE from "three";
@@ -17,6 +17,7 @@ type RampSensorProps = {
   id: string; // Identifiant pour Leva
   soundUrl: string;
   pointsPerFrame?: number;
+  playbackRate?: number;
   entryConfig?: PlaneConfig;
   exit1Config?: PlaneConfig;
   exit2Config?: PlaneConfig;
@@ -26,6 +27,7 @@ export default function RampSensor({
   id,
   soundUrl,
   pointsPerFrame = 1,
+  playbackRate = 1,
   entryConfig = { pos: [0, 0, 0], rot: [0, 0, 0], size: [1, 1] },
   exit1Config = { pos: [-2, 0, -2], rot: [0, 0, 0], size: [1, 1] },
   exit2Config = { pos: [2, 0, -2], rot: [0, 0, 0], size: [1, 1] },
@@ -81,6 +83,7 @@ export default function RampSensor({
         if (!audio.isPlaying) {
           audio.setVolume(0); // On commence à 0
           audio.setLoop(true);
+          audio.setPlaybackRate(playbackRate);
           try {
             audio.play();
           } catch (err) {
@@ -123,11 +126,15 @@ export default function RampSensor({
   const renderPlane = (pos: [number, number, number], rot: [number, number, number], size: [number, number], color: string, isEntry: boolean) => (
     <group position={pos} rotation={rot}>
       {/*args: half-extents, we use 0.05 for height to make it a thin plane */}
-      <CuboidCollider
-        args={[size[0] / 2, 0.05, size[1] / 2]}
+      <RigidBody
+        type="fixed"
         sensor
         onIntersectionEnter={isEntry ? handleEntry : handleExit}
-      />
+      >
+        <CuboidCollider
+          args={[size[0] / 2, 0.05, size[1] / 2]}
+        />
+      </RigidBody>
       {rapierDebug && (
         <mesh>
           <boxGeometry args={[size[0], 0.1, size[1]]} />

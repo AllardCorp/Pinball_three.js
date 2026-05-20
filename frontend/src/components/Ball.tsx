@@ -3,6 +3,10 @@ import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import { useControls } from "leva";
 import { useGameStore } from "@/store/useGameStore"; // Adapte le chemin vers ton store
 import ObjectSound from "./ObjectSound";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
+import { PositionalAudio } from "@react-three/drei";
+import { AudioErrorBoundary } from "@/components/AudioErrorBoundary";
 
 type BallProps = {
   position: [number, number, number];
@@ -11,6 +15,7 @@ type BallProps = {
 export default function Ball({ position }: BallProps) {
   const ballRef = useRef<RapierRigidBody>(null);
   const chargeStartTime = useRef<number>(0);
+  const rollingSoundRef = useRef<THREE.PositionalAudio>(null);
 
   const [launchCount, setLaunchCount] = useState(0);
   const [launchVolume, setLaunchVolume] = useState(1);
@@ -96,8 +101,75 @@ export default function Ball({ position }: BallProps) {
     angularDamping: { value: 0.1, min: 0, max: 1, step: 0.01 },
   });
 
+  // Pour le son de roulement continu
+  useFrame((_, delta) => {
+    if (ballRef.current && rollingSoundRef.current && !ballInLauncher) {
+      const audio = rollingSoundRef.current;
+      const vel = ballRef.current.linvel();
+      const pos = ballRef.current.translation();
+      
+      // Vitesse linéaire
+      const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z);
+      
+      // On considère que la bille roule si sa vitesse est > 0.5
+      // Et qu'elle est sur le plateau (hauteur Y < 2, Z < 28 pour éviter la zone de lancement)
+      const isRollingOnPlayfield = speed > 0.5 && pos.y < 2.0 && pos.z < 28;
+
+      if (!audio.isPlaying && isRollingOnPlayfield) {
+        audio.setVolume(0);
+        audio.setLoop(true);
+        try {
+          audio.play();
+        } catch (e) {
+          console.warn(e);
+        }
+      }
+
+      if (audio.isPlaying) {
+        if (isRollingOnPlayfield) {
+          // Volume plus fort même à basse vitesse (max 3)
+          const targetVol = Math.min(speed / 10, 1) * 3;
+          // Pitch entre 0.4 (très grave) et 0.8 (grave) pour éviter les bugs audio du navigateur
+          const targetPitch = 0.5 + Math.min(speed / 10, 1) * 0.4;
+          
+          audio.setVolume(THREE.MathUtils.lerp(audio.getVolume(), targetVol, delta * 10));
+          audio.setPlaybackRate(THREE.MathUtils.lerp(audio.playbackRate, targetPitch, delta * 10));
+        } else {
+          // Fade out rapide si elle s'arrête ou saute
+          const currentVol = audio.getVolume();
+          if (currentVol > 0.05) {
+            audio.setVolume(THREE.MathUtils.lerp(currentVol, 0, delta * 20));
+          } else {
+            try {
+              audio.stop();
+            } catch (e) {}
+          }
+        }
+      }
+    }
+  });
+
   // SÉCURITÉ : Si la partie n'est pas lancée, la bille n'existe pas dans le monde 3D
-  if (!isPlaying) return null;
+  // On render tout de même le son pour qu'il soit préchargé au démarrage de l'app,
+  // évitant ainsi un retour du loading screen au clic sur "Démarrer".
+  if (!isPlaying) {
+    return (
+      <group position={position}>
+        <ObjectSound
+          url="/sounds/plunger/plungerlaunch.ogg"
+          playTrigger={launchCount}
+          volume={0}
+        />
+        <AudioErrorBoundary url="/sounds/ball/small-metal-ball-rolling.ogg">
+          <PositionalAudio
+            url="/sounds/ball/small-metal-ball-rolling.ogg"
+            volume={0}
+            loop={false}
+          />
+        </AudioErrorBoundary>
+      </group>
+    );
+  }
 
   return (
     <RigidBody
@@ -121,6 +193,14 @@ export default function Ball({ position }: BallProps) {
         playTrigger={launchCount}
         volume={launchVolume}
       />
+      
+      <AudioErrorBoundary url="/sounds/ball/small-metal-ball-rolling.ogg">
+        <PositionalAudio 
+          ref={rollingSoundRef} 
+          url="/sounds/ball/small-metal-ball-rolling.ogg" 
+          distance={15}
+        />
+      </AudioErrorBoundary>
     </RigidBody>
   );
 }
