@@ -1,7 +1,7 @@
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useControls } from "leva";
-import { RigidBody, type RapierRigidBody } from "@react-three/rapier"; // 👈 1. Import du type
+import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import * as THREE from "three";
 import { useInputStore } from "@/store/useInputStore";
 

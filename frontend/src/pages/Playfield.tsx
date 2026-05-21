@@ -16,11 +16,13 @@ export default function Playfield() {
   const startPressed = useInputStore((state) => state.buttons.start);
   const isPlaying = useGameStore((state) => state.isPlaying);
   const startGame = useGameStore((state) => state.startGame);
+  const updateInputs = useInputStore((state) => state.updateInputs);
 
   useEffect(() => {
     if (startPressed && !isPlaying) {
       console.log("🎮 Démarrage de la partie depuis MQTT / Bouton Start !");
       startGame();
+      updateInputs({ buttons: { start: false } });
     }
   }, [startPressed, isPlaying, startGame]);
 
