@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import Experience from "../experience/Experience";
@@ -5,10 +6,25 @@ import { Perf } from "r3f-perf";
 import { Leva, useControls } from "leva";
 import { Environment } from "@react-three/drei";
 import { useKeyboardControls } from "../mqtt/useKeyboardControls";
+import { useGameStore } from "@/store/useGameStore";
+import { useInputStore } from "@/store/useInputStore";
 
 export default function Playfield() {
   // Keyboard → MQTT: Q/D/Space/S/C publish to pinball/input/state
   useKeyboardControls();
+  // Démarre la partie automatiquement si le bouton start est reçu
+  const startPressed = useInputStore((state) => state.buttons.start);
+  const isPlaying = useGameStore((state) => state.isPlaying);
+  const startGame = useGameStore((state) => state.startGame);
+  const updateInputs = useInputStore((state) => state.updateInputs);
+
+  useEffect(() => {
+    if (startPressed && !isPlaying) {
+      console.log("🎮 Démarrage de la partie depuis MQTT / Bouton Start !");
+      startGame();
+      updateInputs({ buttons: { start: false } });
+    }
+  }, [startPressed, isPlaying, startGame]);
 
   const { perfVisible } = useControls({
     perfVisible: true,

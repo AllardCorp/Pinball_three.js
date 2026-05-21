@@ -2,65 +2,41 @@ import { useEffect, useRef } from "react";
 import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import { useControls } from "leva";
 import { useGameStore } from "@/store/useGameStore"; // Adapte le chemin vers ton store
-
+import { useInputStore } from "@/store/useInputStore";
 type BallProps = {
   position: [number, number, number];
 };
 
 export default function Ball({ position }: BallProps) {
   const ballRef = useRef<RapierRigidBody>(null);
-  const chargeStartTime = useRef<number>(0);
 
   const { isPlaying, ballInLauncher } = useGameStore();
+  // Écoute des contrôles de lancement provenant de MQTT ou du clavier
+  const launchBall = useInputStore((state) => state.buttons.launch_ball);
+  const plungerForce = useInputStore((state) => state.analog.plunger);
+
+  // Référence pour détecter la transition de launch_ball (front montant: false -> true)
+  const prevLaunchBall = useRef(false);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // 2. SÉCURITÉ : On ne peut charger le tir QUE si la partie est en cours
-      // ET que la bille est bien dans la zone de lancement
-      if (
-        e.code === "Space" &&
-        chargeStartTime.current === 0 &&
-        isPlaying &&
-        ballInLauncher
-      ) {
-        chargeStartTime.current = performance.now();
+    if (launchBall && !prevLaunchBall.current && isPlaying && ballInLauncher) {
+      const maxForce = 120;
+      // Calcul de la force en fonction de la jauge MQTT plungerForce (0.0 à 1.0)
+      const forceMagnitude = plungerForce > 0 ? plungerForce * maxForce : 30; // Force par défaut si lancement immédiat
+
+      if (ballRef.current) {
+        console.log(
+          `🚀 Bille lancée via MQTT ! Force appliquée: ${forceMagnitude.toFixed(2)}`,
+        );
+        ballRef.current.applyImpulse(
+          { x: 0, y: 0, z: -forceMagnitude },
+          true,
+        );
+        ballRef.current.wakeUp();
       }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      // 3. SÉCURITÉ : Même vérification au relâchement
-      if (
-        e.code === "Space" &&
-        chargeStartTime.current > 0 &&
-        isPlaying &&
-        ballInLauncher
-      ) {
-        const duration = performance.now() - chargeStartTime.current;
-        chargeStartTime.current = 0;
-
-        const maxForce = 120;
-        const forceMagnitude = Math.min(duration * 0.1, maxForce);
-
-        if (ballRef.current) {
-          console.log(
-            `Tir lancé avec une force de ${forceMagnitude.toFixed(2)} !`,
-          );
-          ballRef.current.applyImpulse(
-            { x: 0, y: 0, z: -forceMagnitude },
-            true,
-          );
-          ballRef.current.wakeUp();
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
-  }, [isPlaying, ballInLauncher]);
+    }
+    prevLaunchBall.current = launchBall;
+  }, [launchBall, plungerForce, isPlaying, ballInLauncher]);
   useEffect(() => {
     // Si la partie est en cours ET qu'on nous dit que la bille est dans le lanceur
     if (isPlaying && ballInLauncher && ballRef.current) {
