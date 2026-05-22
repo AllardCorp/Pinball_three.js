@@ -10,7 +10,8 @@ type BallProps = {
 export default function Ball({ position }: BallProps) {
   const ballRef = useRef<RapierRigidBody>(null);
 
-  const { isPlaying, ballInLauncher } = useGameStore();
+  const isPlaying = useGameStore((state) => state.isPlaying);
+  const ballInLauncher = useGameStore((state) => state.ballInLauncher);
   // Écoute des contrôles de lancement provenant de MQTT ou du clavier
   const launchBall = useInputStore((state) => state.buttons.launch_ball);
   const plungerForce = useInputStore((state) => state.analog.plunger);
@@ -28,10 +29,7 @@ export default function Ball({ position }: BallProps) {
         console.log(
           `🚀 Bille lancée via MQTT ! Force appliquée: ${forceMagnitude.toFixed(2)}`,
         );
-        ballRef.current.applyImpulse(
-          { x: 0, y: 0, z: -forceMagnitude },
-          true,
-        );
+        ballRef.current.applyImpulse({ x: 0, y: 0, z: -forceMagnitude }, true);
         ballRef.current.wakeUp();
       }
     }
