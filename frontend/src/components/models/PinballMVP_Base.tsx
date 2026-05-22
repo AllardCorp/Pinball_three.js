@@ -14,7 +14,6 @@ import LauncherGate from "@/components/LauncherGate";
 import DeathZone from "@/components/DeathZone";
 import GoldMine from "@/components/GoldMine";
 import ScoreTarget from "@/components/ScoreTarget";
-import RampSensor from "@/components/RampSensor";
 import HoleSensor from "@/components/HoleSensor";
 
 type GLTFResult = GLTF & {
@@ -178,17 +177,6 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
       <LauncherGate nodes={nodes} materials={materials} />
       <Ball position={[startX, startY, startZ]} />
       <DeathZone />
-
-      {/* Sensor pour la rampe */}
-      <RampSensor
-        id="MainRamp"
-        soundUrl="/sounds/rampes/LOOP_rolling_metal.ogg"
-        pointsPerFrame={5}
-        playbackRate={0.5}
-        entryConfig={{ pos: [7, 2.5, -16.5], rot: [1.5, 0, 0], size: [4.2, 1.0] }}
-        exit1Config={{ pos: [-11.7, 0.5, 16.0], rot: [1.5, 0, 0], size: [1.5, 1.5] }}
-        exit2Config={{ pos: [7.4, 0.5, 16.0], rot: [1.5, 0, 0], size: [1.5, 1.5] }}
-      />
 
       {/* Sensor pour le trou */}
       <HoleSensor
@@ -664,11 +652,12 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         </RigidBody>
         <RigidBody
           type="fixed"
-          colliders="trimesh"
+          colliders="hull"
           restitution={0}
           restitutionCombineRule={CoefficientCombineRule.Min}
           friction={0.1}
           includeInvisible
+          name="coll_playfield_collision_left_hole"
         >
           <mesh
             visible={false}
@@ -751,6 +740,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           />
           <mesh
             visible={false}
+            name="coll_standard_collision"
             geometry={nodes.coll_standard_collision.geometry}
             material={nodes.coll_standard_collision.material}
             position={[-0.633, -1.467, 7.78]}
@@ -763,16 +753,18 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           />
           <mesh
             visible={false}
+            name="coll_standard_collision_sidewalls_back"
             geometry={nodes.coll_standard_collision_sidewalls_back.geometry}
             material={nodes.coll_standard_collision_sidewalls_back.material}
             position={[-0.633, -10.856, 7.78]}
           />
-          <mesh
+          {/* <mesh
             visible={false}
+            name="coll_playfield_collision_left_hole"
             geometry={nodes.coll_playfield_collision_left_hole.geometry}
             material={nodes.coll_playfield_collision_left_hole.material}
             position={[-0.609, -2.903, 7.762]}
-          />
+          /> */}
 
           <mesh
             visible={false}
