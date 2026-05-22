@@ -182,8 +182,8 @@ export const useGameStore = create<GameState>()((set, get) => {
       }
     },
     useKickback: (side) => {
-      if (side === "left") set({ leftKickbackActive: false });
-      if (side === "right") set({ rightKickbackActive: false });
+      if (side === "left") setAndSync({ leftKickbackActive: false });
+      if (side === "right") setAndSync({ rightKickbackActive: false });
     },
   };
 });
