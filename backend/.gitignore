@@ -2,3 +2,7 @@ node_modules/
 dist/
 .pnpm-store/*
 .env
+.env.test.local
+coverage/
+.agents/
+.codex/

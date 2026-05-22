@@ -106,49 +106,31 @@ export const verifications = pgTable(
   }),
 );
 
-export const deviceLoginStatusValues = [
+export const scoreClaimStatusValues = [
   "pending",
   "approved",
   "expired",
 ] as const;
 
-export type DeviceLoginStatus = (typeof deviceLoginStatusValues)[number];
+export type ScoreClaimStatus = (typeof scoreClaimStatusValues)[number];
 
-export const deviceLoginStatusEnum = pgEnum(
-  "device_login_status",
-  deviceLoginStatusValues,
-);
-
-export const deviceLoginRequests = pgTable(
-  "device_login_requests",
-  {
-    id: text("id").primaryKey(),
-    deviceCode: text("device_code").notNull(),
-    // On borne explicitement les états métier pour éviter les valeurs libres.
-    status: deviceLoginStatusEnum("status").notNull().default("pending"),
-    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-    approvedAt: timestamp("approved_at", { withTimezone: true }),
-  },
-  (table) => ({
-    deviceCodeUnique: uniqueIndex("device_login_requests_device_code_unique").on(
-      table.deviceCode,
-    ),
-    userIdIndex: index("device_login_requests_user_id_idx").on(table.userId),
-    statusIndex: index("device_login_requests_status_idx").on(table.status),
-  }),
+export const scoreClaimStatusEnum = pgEnum(
+  "score_claim_status",
+  scoreClaimStatusValues,
 );
 
 export const games = pgTable("games", {
   id: serial("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+  // Le score doit pouvoir exister sans compte pour supporter les invités.
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
   playedDurationSeconds: integer("played_duration_seconds").notNull(),
   finalScore: integer("final_score").notNull(),
   playedAt: timestamp("played_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => ({
+  userIdIndex: index("games_user_id_idx").on(table.userId),
+  finalScoreIndex: index("games_final_score_idx").on(table.finalScore),
+  playedAtIndex: index("games_played_at_idx").on(table.playedAt),
+}));
 
 export const scores = pgTable("scores", {
   id: serial("id").primaryKey(),
@@ -159,3 +141,25 @@ export const scores = pgTable("scores", {
   collisionEvent: text("collision_event").notNull(),
   gameTimestamp: doublePrecision("game_timestamp").notNull(),
 });
+
+export const scoreClaimRequests = pgTable(
+  "score_claim_requests",
+  {
+    id: text("id").primaryKey(),
+    gameId: integer("game_id")
+      .notNull()
+      .references(() => games.id, { onDelete: "cascade" }),
+    claimCode: text("claim_code").notNull(),
+    status: scoreClaimStatusEnum("status").notNull().default("pending"),
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+  },
+  (table) => ({
+    gameIdUnique: uniqueIndex("score_claim_requests_game_id_unique").on(table.gameId),
+    claimCodeUnique: uniqueIndex("score_claim_requests_claim_code_unique").on(table.claimCode),
+    statusIndex: index("score_claim_requests_status_idx").on(table.status),
+    userIdIndex: index("score_claim_requests_user_id_idx").on(table.userId),
+  }),
+);

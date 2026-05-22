@@ -1,5 +1,7 @@
 import "dotenv/config";
 
+type TrustProxySetting = boolean | number;
+
 function requireEnv(name: string): string {
   const value = process.env[name]?.trim();
 
@@ -28,6 +30,30 @@ function parsePort(value: string): number {
   }
 
   return port;
+}
+
+function parseTrustProxy(value: string | undefined): TrustProxySetting {
+  if (!value) {
+    return false;
+  }
+
+  const normalizedValue = value.trim().toLowerCase();
+
+  if (normalizedValue === "true") {
+    return true;
+  }
+
+  if (normalizedValue === "false") {
+    return false;
+  }
+
+  const hopCount = Number.parseInt(normalizedValue, 10);
+
+  if (Number.isInteger(hopCount) && hopCount >= 0) {
+    return hopCount;
+  }
+
+  throw new Error("TRUST_PROXY must be `true`, `false` or a non-negative integer.");
 }
 
 function parseUrl(name: string, value: string): string {
@@ -91,6 +117,7 @@ export const env = {
   nodeEnv,
   isProduction,
   port: parsePort(process.env.PORT ?? "3000"),
+  trustProxy: parseTrustProxy(optionalEnv("TRUST_PROXY")),
   databaseUrl: parseUrl("DATABASE_URL", requireEnv("DATABASE_URL")),
   betterAuthSecret: requireEnv("BETTER_AUTH_SECRET"),
   betterAuthUrl,

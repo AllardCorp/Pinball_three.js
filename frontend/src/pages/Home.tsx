@@ -1,28 +1,30 @@
 import { Link } from "react-router-dom";
 
+import { useAppMode } from "../hooks/useAppMode";
 import { signOut, useSession } from "../lib/auth-client";
 
 export default function Home() {
   const { data: session, isPending } = useSession();
+  const { withMode } = useAppMode();
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center gap-6 px-6">
       <h2 className="text-3xl font-semibold">Pinball Three.js</h2>
 
       <div className="flex flex-wrap items-center justify-center gap-4">
-        <Link className="hover:text-blue-600" to="/login">
+        <Link className="hover:text-blue-600" to={withMode("/login")}>
           Login
         </Link>
-        <Link className="hover:text-blue-600" to="/dashboard">
+        <Link className="hover:text-blue-600" to={withMode("/dashboard")}>
           Dashboard
         </Link>
-        <Link className="hover:text-blue-600" to="/playfield">
+        <Link className="hover:text-blue-600" to={withMode("/playfield")}>
           Playfield
         </Link>
-        <Link className="hover:text-blue-600" to="/backglass">
+        <Link className="hover:text-blue-600" to={withMode("/backglass")}>
           Backglass
         </Link>
-        <Link className="hover:text-blue-600" to="/dmd">
+        <Link className="hover:text-blue-600" to={withMode("/dmd")}>
           DMD
         </Link>
       </div>

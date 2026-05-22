@@ -2,6 +2,7 @@ import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { useAppMode } from "../hooks/useAppMode";
 import { authClient, signOut, useSession } from "../lib/auth-client";
 
 type ProfileValues = {
@@ -135,6 +136,7 @@ function getPasswordErrorMessage(errorCode: string | null | undefined, message: 
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { withMode } = useAppMode();
   const { data: session } = useSession();
   const [profileValues, setProfileValues] = useState<ProfileValues>({
     name: "",
@@ -269,7 +271,7 @@ export default function Dashboard() {
           className="rounded bg-slate-900 px-4 py-2 text-white"
           onClick={async () => {
             await signOut();
-            navigate("/login");
+            navigate(withMode("/login"));
           }}
           type="button"
         >
@@ -516,10 +518,10 @@ export default function Dashboard() {
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-medium">Liens utiles</h2>
         <div className="flex flex-wrap gap-4 text-sm">
-          <Link className="text-blue-600" to="/">
+          <Link className="text-blue-600" to={withMode("/")}>
             Retour à l'accueil
           </Link>
-          <Link className="text-blue-600" to="/playfield">
+          <Link className="text-blue-600" to={withMode("/playfield")}>
             Ouvrir le Playfield
           </Link>
         </div>

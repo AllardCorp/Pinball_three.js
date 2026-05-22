@@ -17,79 +17,69 @@ Le backend fournit :
 - `drizzle/` : migrations générées
 - `drizzle.config.ts` : configuration Drizzle Kit
 
-## Scripts
 
-Depuis `backend/` :
+## Tests backend
+
+Le backend utilise deux niveaux de tests :
+
+- `pnpm test` : tests unitaires
+- `pnpm run test:integration` : tests d'intégration HTTP avec une vraie base PostgreSQL jetable
+
+### Configuration locale des tests d'intégration
+
+1. Copier `backend/.env.test.example` vers `backend/.env.test.local`
+2. Vérifier la valeur de `DATABASE_URL_TEST`
+3. Démarrer PostgreSQL localement
+
+Depuis la racine du projet :
 
 ```bash
-pnpm dev
-pnpm build
-pnpm db:generate
-pnpm db:migrate
-pnpm db:studio
+docker compose -f compose.dev.yml up -d postgres
 ```
 
-## Workflow recommande
+Rôle de `DATABASE_URL_TEST` :
 
-1. Modifier le schema dans `src/db/schema.ts`
-2. Générer la migration
-3. Appliquer la migration
-4. Verifier le resultat dans Drizzle Studio
+- cette URL ne pointe pas vers la base de développement du projet
+- elle doit pointer vers une base d'administration PostgreSQL capable de créer des bases temporaires
+- les tests créent ensuite une base dédiée, appliquent les migrations, puis la suppriment à la fin
 
-Exemple via Docker :
 
+## Commandes utiles pour la db : 
 ```bash
-docker compose -f compose.dev.yml up -d postgres backend drizzle-studio
-docker compose -f compose.dev.yml exec backend pnpm db:generate
-docker compose -f compose.dev.yml exec backend pnpm db:migrate
+docker compose -f ../compose.dev.yml up -d postgres backend drizzle-studio
+docker compose -f ../compose.dev.yml exec backend pnpm db:generate
+docker compose -f ../compose.dev.yml exec backend pnpm db:migrate
 ```
 
 ## Tables actuelles
 
+Tables Better Auth :
 - `users`
 - `accounts`
 - `sessions`
 - `verifications`
+
+Tables métier :
 - `games`
 - `scores`
+- `score_claim_requests`
 
-Relations :
+Énumérations PostgreSQL :
+- `score_claim_status`
 
+Relations principales :
+- `accounts.user_id -> users.id`
+- `sessions.user_id -> users.id`
 - `games.user_id -> users.id`
 - `scores.game_id -> games.id`
-
-## Auth
-
-Better Auth est expose sur `/api/auth/*`.
-
-La session serveur peut aussi etre lue sur :
-
-```text
-GET /api/me
-```
-
-Variables d'environnement attendues :
-
-- `BETTER_AUTH_SECRET`
-- `BETTER_AUTH_URL`
-- `FRONTEND_URL`
-- `GITHUB_CLIENT_ID`
-- `GITHUB_CLIENT_SECRET`
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
-
+- `score_claim_requests.game_id -> games.id`
+- `score_claim_requests.user_id -> users.id`
 ## Verification rapide
 
 Verifier la sante de l'API :
 
 ```bash
 curl http://localhost:3000/health
-```
-
-Lister les tables PostgreSQL :
-
-```bash
-docker compose -f compose.dev.yml exec postgres psql -U pinball_user -d pinball_db -c "\dt"
 ```
 
 Ouvrir Drizzle Studio :
