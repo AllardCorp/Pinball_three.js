@@ -45,6 +45,7 @@ type GLTFResult = GLTF & {
     visual_sidewalls001: THREE.Mesh;
     visual_overlap_bottom_3002: THREE.Mesh;
     visual_standard: THREE.Mesh;
+    visual_sidewalls002: THREE.Mesh;
     visual_ramp_back_test001: THREE.Mesh;
     visual_standard_collision_sidewalls_back001: THREE.Mesh;
     visual_habit_right_9_top: THREE.Mesh;
@@ -151,7 +152,7 @@ type GLTFResult = GLTF & {
 
 export default function Model(props: JSX.IntrinsicElements["group"]) {
   const { nodes, materials } = useGLTF(
-    "/models/PinballMVP_Base-transformed.glb",
+    "/models/PinballMVP_Base_old-transformed.glb",
   ) as unknown as GLTFResult;
 
   // On récupère juste la fonction startGame (temporairement pour nos tests Leva)
@@ -163,13 +164,12 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
     startY: { value: -2.3, min: -20, max: 20, step: 0.1 },
     startZ: { value: 30.46, min: -40, max: 80, step: 0.1 },
   });
-  const { leftStrength, rightStrength } = useControls("Kickbacks", {
-    leftStrength: { value: 120, min: 0, max: 200, step: 1 },
-    rightStrength: { value: 120, min: 0, max: 200, step: 1 },
-  });
+
+  // 👇 BOUTON DE TEST TEMPORAIRE : Pour démarrer la partie depuis l'écran 3D sans interface HTML
   useControls("Game Controls", {
     "Démarrer Partie": button(() => startGame()),
   });
+
   return (
     <>
       <GoldMine nodes={nodes} materials={materials} />
@@ -222,7 +222,25 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         rotation={[0, 0, 0]}
         pushDirection={[-1, 0, -1]}
       />
-
+      {/* Flippers */}
+      {/* --- LEFT FLIPPER --- */}
+      <Flipper
+        side="left"
+        position={[-5.001, -2.901, 26.34]}
+        rotation={[0, 0, 0]}
+        colliderGeometry={nodes.coll_flipper_left_bottom.geometry}
+        visualGeometry={nodes.visual_obj_flipper_left_bottom.geometry}
+        visualMaterial={materials.M_flipper_arm_left}
+      />
+      {/* --- RIGHT FLIPPER --- */}
+      <Flipper
+        side="right"
+        position={[2.787, -2.901, 26.34]}
+        rotation={[0, 0, 0]}
+        colliderGeometry={nodes.coll_flipper_right_bottom.geometry}
+        visualGeometry={nodes.visual_obj_flipper_right_bottom.geometry}
+        visualMaterial={materials.M_flipper_arm_right}
+      />
       {/* Flippers */}
       {/* --- LEFT FLIPPER --- */}
       <Flipper
@@ -251,7 +269,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         colliderGeometry={nodes.coll_left_kickback_door.geometry}
         colliderPosition={[-13.574, -2.233, 23.626]}
         sensorPosition={[-13.6, -2.3, 26.5]}
-        kickStrength={leftStrength}
+        kickStrength={65}
       />
       {/* --- KICKBACK DROIT --- */}
       <Kickback
@@ -262,7 +280,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         colliderGeometry={nodes.coll_right_kickback_door001.geometry}
         colliderPosition={[8.465, -1.97, 25.481]}
         sensorPosition={[9.4, -2.3, 26.5]}
-        kickStrength={rightStrength}
+        kickStrength={65}
       />
 
       {/* --- CIBLES FAKIR (Donnent des points) --- */}
@@ -437,7 +455,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         />
         <mesh
           geometry={nodes.visual_sidewalls001.geometry}
-          material={materials.PaletteMaterial001}
+          material={materials.M_black}
           position={[-0.609, -2.903, 5.131]}
         />
         <mesh
@@ -449,6 +467,11 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           geometry={nodes.visual_standard.geometry}
           material={materials.PaletteMaterial001}
           position={[-0.633, -1.56, 7.78]}
+        />
+        <mesh
+          geometry={nodes.visual_sidewalls002.geometry}
+          material={materials.PaletteMaterial001}
+          position={[-0.557, -2.233, 8.325]}
         />
         <mesh
           geometry={nodes.visual_ramp_back_test001.geometry}
@@ -470,11 +493,11 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           material={materials.PaletteMaterial001}
           position={[0.143, -4.465, -2.19]}
         />
-        {/* <mesh */}
-        {/*   geometry={nodes.visual_barrel_bumpers003.geometry} */}
-        {/*   material={materials["barrel.001"]} */}
-        {/*   position={[-6.632, -1.561, -12.833]} */}
-        {/* /> */}
+        <mesh
+          geometry={nodes.visual_barrel_bumpers003.geometry}
+          material={materials["barrel.001"]}
+          position={[-6.632, -1.561, -12.833]}
+        />
         <mesh
           geometry={nodes.visual_rollover_top_1001.geometry}
           material={materials.PaletteMaterial001}
@@ -625,6 +648,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         {/*   material={nodes.coll_flipper_right_bottom.material} */}
         {/*   position={[2.787, -2.901, 26.34]} */}
         {/* /> */}
+
         <RigidBody
           type="fixed"
           colliders="trimesh"
@@ -654,21 +678,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             position={[-0.609, -2.903, 7.762]}
           />
         </RigidBody>
-        <RigidBody
-          type="fixed"
-          colliders="trimesh"
-          restitution={0} // Pas de rebond, la bille reste collée à la piste
-          friction={0} // 0 pour une glisse parfaite, ou 0.1 pour un très léger freinage
-          frictionCombineRule={CoefficientCombineRule.Min} // on force la glisse maximale
-          includeInvisible
-        >
-          <mesh
-            visible={false}
-            geometry={nodes.coll_ramp_back_test.geometry}
-            material={nodes.coll_ramp_back_test.material}
-            position={[-0.609, -2.903, 5.131]}
-          />
-        </RigidBody>
+
         <RigidBody type="fixed" colliders="trimesh" includeInvisible>
           {/* <mesh */}
           {/*   geometry={nodes.coll_gate.geometry} */}
@@ -750,7 +760,12 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             material={nodes.coll_playfield_collision_left_hole.material}
             position={[-0.609, -2.903, 7.762]}
           />
-
+          <mesh
+            visible={false}
+            geometry={nodes.coll_ramp_back_test.geometry}
+            material={nodes.coll_ramp_back_test.material}
+            position={[-0.609, -2.903, 5.131]}
+          />
           <mesh
             visible={false}
             geometry={nodes.coll_scoop_hole_left.geometry}
@@ -916,4 +931,4 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
   );
 }
 
-useGLTF.preload("/models/PinballMVP_Base-transformed.glb");
+useGLTF.preload("/models/PinballMVP_Base_old-transformed.glb");
