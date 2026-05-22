@@ -24,7 +24,7 @@ export default function Playfield() {
       startGame();
       updateInputs({ buttons: { start: false } });
     }
-  }, [startPressed, isPlaying, startGame]);
+  }, [startPressed, isPlaying, startGame, updateInputs]);
 
   const { perfVisible } = useControls({
     perfVisible: true,

@@ -8,6 +8,17 @@ COPY pnpm-lock.yaml package.json ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
+
+# --- AJOUT CRUCIAL ICI ---
+# On déclare que le Dockerfile va recevoir ces arguments depuis le docker-compose
+ARG VITE_MQTT_USERNAME
+ARG VITE_MQTT_PASSWORD
+
+# On les transforme en variables d'environnement pour que Vite puisse les lire
+ENV VITE_MQTT_USERNAME=$VITE_MQTT_USERNAME
+ENV VITE_MQTT_PASSWORD=$VITE_MQTT_PASSWORD
+# -------------------------
+
 RUN pnpm build
 
 # Étape 2 : Serveur de production (Nginx)

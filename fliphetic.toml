@@ -1,0 +1,22 @@
+[app]
+id          = "t1-flipper"
+name        = "t1-flipper"
+authors     = ["Adrien ALLARD"] 
+description = "Projet de WEB3"
+
+[deploy]
+strategy = "branch"                 
+ref      = "main"                   
+
+[screens]
+playfield = { service = "frontend", port = 80, path = "/playfield" }
+backglass = { service = "frontend", port = 80, path = "/backglass" }
+dmd       = { service = "frontend", port = 80, path = "/dmd" }
+
+[compose]
+file          = "deploy/docker-compose.yml"
+ready_timeout = 30
+
+[esp32.buttons]
+firmware = "firmware/build/buttons.bin"
+chip     = "esp32"
