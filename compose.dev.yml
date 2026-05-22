@@ -62,7 +62,7 @@ services:
 
 
   frontend:
-    image: node:20-alpine
+    image: node:22-alpine
     working_dir: /app
     volumes:
       - ./frontend:/app
@@ -73,6 +73,8 @@ services:
     environment:
       - NODE_ENV=development
       - VITE_API_URL=${VITE_API_URL:-http://localhost:3000}
+      - VITE_MQTT_USERNAME=${MQTT_USERNAME}
+      - VITE_MQTT_PASSWORD=${MQTT_PASSWORD}
 
   mosquitto:
     image: eclipse-mosquitto:2.0.18

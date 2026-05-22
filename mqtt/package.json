@@ -4,7 +4,8 @@
 	"type": "module",
 	"scripts": {
 		"test": "node scripts/test-mqtt.js",
-		"mock": "node scripts/mock-esp32.js"
+		"mock": "node scripts/mock-esp32.js",
+		"subscribe": "node scripts/subscribe.js"
 	},
 	"dependencies": {
 		"mqtt": "^5.15.0"

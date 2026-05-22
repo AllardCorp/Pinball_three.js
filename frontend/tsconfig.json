@@ -3,5 +3,18 @@
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": [
+    "src",
+    "public/models/PinballMVP2-transformed.glb",
+    "public/models/PinballMVP_OldBase-transformed.glb",
+    "public/models/PinballMVP_Base_old-transformed.glb",
+    "public/models/PinballMVP_Base-transformed.glb"
   ]
 }
