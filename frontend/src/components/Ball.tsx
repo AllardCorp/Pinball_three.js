@@ -1,12 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { RigidBody, type RapierRigidBody, useRapier } from "@react-three/rapier";
+import { useEffect, useRef, useState } from "react";
+import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import { useControls } from "leva";
 import { useGameStore } from "@/store/useGameStore";
 import ObjectSound from "./ObjectSound";
-import { useFrame } from "@react-three/fiber";
-import * as THREE from "three";
-import { PositionalAudio } from "@react-three/drei";
-import { AudioErrorBoundary } from "@/components/AudioErrorBoundary";
+import BallAudio from "./BallAudio";
 
 type BallProps = {
   position: [number, number, number];
@@ -15,24 +12,6 @@ type BallProps = {
 export default function Ball({ position }: BallProps) {
   const ballRef = useRef<RapierRigidBody>(null);
   const chargeStartTime = useRef<number>(0);
-  const rollingSoundRef = useRef<THREE.PositionalAudio | null>(null);
-  const { rapier, world, colliderStates, rigidBodyStates } = useRapier();
-  const debugLineRef = useRef<THREE.Line>(null);
-  const lastHitColliderRef = useRef<string | null>(null);
-
-  /** Arrête le roulement sur l'instance démontée (changement isPlaying / swap de branche). */
-  const bindRollingSound = useCallback((node: THREE.PositionalAudio | null) => {
-    const prev = rollingSoundRef.current;
-    if (prev && prev !== node) {
-      try {
-        if (prev.isPlaying) prev.stop();
-      } catch {
-        /* ignore */
-      }
-      prev.setVolume(0);
-    }
-    rollingSoundRef.current = node;
-  }, []);
 
   const [launchCount, setLaunchCount] = useState(0);
   const [launchVolume, setLaunchVolume] = useState(1);
@@ -118,138 +97,7 @@ export default function Ball({ position }: BallProps) {
     angularDamping: { value: 0.1, min: 0, max: 1, step: 0.01 },
   });
 
-  const fadeOutRollingSound = (audio: THREE.PositionalAudio, delta: number) => {
-    if (!audio.isPlaying) return;
-    const currentVol = audio.getVolume();
-    if (currentVol > 0.05) {
-      audio.setVolume(THREE.MathUtils.lerp(currentVol, 0, delta * 20));
-    } else {
-      try {
-        audio.stop();
-      } catch (e) {
-        /* ignore */
-      }
-    }
-  };
 
-  // Son de roulement : ne pas lire la physique Rapier quand la bille n'est pas "en jeu"
-  // (lanceur, partie arrêtée, RigidBody démonté) — mais toujours traiter le fade/stop.
-  useFrame((_, delta) => {
-    const audio = rollingSoundRef.current;
-    if (!audio) return;
-
-    const canUsePhysics =
-      isPlaying && !ballInLauncher && ballRef.current !== null;
-
-    if (!canUsePhysics) {
-      fadeOutRollingSound(audio, delta);
-      return;
-    }
-
-    const body = ballRef.current!;
-    const vel = body.linvel();
-    const pos = body.translation();
-
-    // Vitesse linéaire
-    const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z);
-
-    // --- RAYCAST DESCENTE ---
-    // On lance le rayon depuis le CENTRE de la bille vers le bas
-    // avec une distance égale au rayon de la bille (size) + 0.15 pour éviter les erreurs de précision aux limites.
-    const rapierRay = new rapier.Ray(
-      { x: pos.x, y: pos.y, z: pos.z },
-      { x: 0, y: -1, z: 0 }
-    );
-    const hit = world.castRay(
-      rapierRay,
-      size + 0.6, // Rayon + 60cm pour détecter la surface en dessous
-      true, // solid
-      undefined,
-      undefined,
-      undefined,
-      body // Exclure le corps physique de la bille elle-même
-    );
-
-    let isOnPlayfield = false;
-    let hitName = "RIEN (Vide/Air)";
-
-    if (hit) {
-      const parentBody = hit.collider.parent();
-      
-      // Récupération dynamique ultra-précise depuis les maps de R3R
-      const rbState = (rigidBodyStates as any)?.get(parentBody?.handle);
-      const bodyName = rbState?.object?.name || "";
-      
-      const colState = (colliderStates as any)?.get(hit.collider.handle);
-      const meshName = colState?.object?.name || "";
-      
-      hitName = bodyName || meshName || `Collider_${hit.collider.handle}`;
-      
-      const isPlayfield =
-        bodyName === "coll_playfield_collision_left_hole";
-      
-      if (isPlayfield) {
-        isOnPlayfield = true;
-      }
-    }
-
-    // Log unique lors du changement d'élément rencontré par le raycast
-    if (hitName !== lastHitColliderRef.current) {
-      const logColor = isOnPlayfield ? "color: #00ff00; font-weight: bold;" : "color: #ff9900; font-weight: bold;";
-      console.log(
-        `%c[Raycast Ball Hit] ${hitName}`,
-        logColor,
-        hit ? { distance: hit.toi, collider: hit.collider } : "Air/Vide"
-      );
-      lastHitColliderRef.current = hitName;
-    }
-
-    // Mise à jour visuelle permanente du rayon de débug
-    if (debugLineRef.current) {
-      const positions = debugLineRef.current.geometry.attributes.position.array as Float32Array;
-      positions[0] = pos.x;
-      positions[1] = pos.y;
-      positions[2] = pos.z;
-      positions[3] = pos.x;
-      positions[4] = pos.y - (size + 0.6);
-      positions[5] = pos.z;
-      debugLineRef.current.geometry.attributes.position.needsUpdate = true;
-      
-      const material = debugLineRef.current.material as THREE.LineBasicMaterial;
-      material.color.set(isOnPlayfield ? "lime" : "red");
-    }
-
-    // On considère que la bille roule si sa vitesse est > 0.5 et qu'elle touche le plateau
-    const isRollingOnPlayfield = speed > 0.5 && isOnPlayfield;
-
-    if (!audio.isPlaying && isRollingOnPlayfield) {
-      audio.setVolume(0);
-      audio.setLoop(true);
-      try {
-        audio.play();
-      } catch (e) {
-        console.warn(e);
-      }
-    }
-
-    if (audio.isPlaying) {
-      if (isRollingOnPlayfield) {
-        // Volume plus fort même à basse vitesse (max 3)
-        const targetVol = Math.min(speed / 10, 1) * 3;
-        // Pitch entre 0.4 (très grave) et 0.8 (grave) pour éviter les bugs audio du navigateur
-        const targetPitch = 0.5 + Math.min(speed / 10, 1) * 0.4;
-
-        audio.setVolume(
-          THREE.MathUtils.lerp(audio.getVolume(), targetVol, delta * 10),
-        );
-        audio.setPlaybackRate(
-          THREE.MathUtils.lerp(audio.playbackRate, targetPitch, delta * 10),
-        );
-      } else {
-        fadeOutRollingSound(audio, delta);
-      }
-    }
-  });
 
   // SÉCURITÉ : Si la partie n'est pas lancée, la bille n'existe pas dans le monde 3D
   // On render tout de même le son pour qu'il soit préchargé au démarrage de l'app,
@@ -262,25 +110,7 @@ export default function Ball({ position }: BallProps) {
           playTrigger={launchCount}
           volume={0}
         />
-        <AudioErrorBoundary url="/sounds/ball/small-metal-ball-rolling.ogg">
-          <PositionalAudio
-            ref={bindRollingSound}
-            url="/sounds/ball/small-metal-ball-rolling.ogg"
-            volume={0}
-            loop={false}
-          />
-        </AudioErrorBoundary>
-
-        {/* Visualiseur de Raycast de Débug */}
-        <line ref={debugLineRef}>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              args={[new Float32Array(6), 3]}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial color="red" depthTest={false} transparent opacity={0.8} />
-        </line>
+        <BallAudio ballRef={ballRef} size={size} isPlaying={isPlaying} ballInLauncher={ballInLauncher} />
       </group>
     );
   }
@@ -308,26 +138,10 @@ export default function Ball({ position }: BallProps) {
           playTrigger={launchCount}
           volume={launchVolume}
         />
-        
-        <AudioErrorBoundary url="/sounds/ball/small-metal-ball-rolling.ogg">
-          <PositionalAudio
-            ref={bindRollingSound}
-            url="/sounds/ball/small-metal-ball-rolling.ogg"
-            distance={15}
-          />
-        </AudioErrorBoundary>
+
       </RigidBody>
 
-      {/* Visualiseur de Raycast de Débug */}
-      <line ref={debugLineRef}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[new Float32Array(6), 3]}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color="red" depthTest={false} transparent opacity={0.8} />
-      </line>
+      <BallAudio ballRef={ballRef} size={size} isPlaying={isPlaying} ballInLauncher={ballInLauncher} />
     </>
   );
 }

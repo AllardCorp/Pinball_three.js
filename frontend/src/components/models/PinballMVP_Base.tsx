@@ -669,6 +669,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         <RigidBody
           type="fixed"
           colliders="trimesh"
+          name="stone_ramp"
           restitution={0} // Pas de rebond, la bille reste collée à la piste
           friction={0} // 0 pour une glisse parfaite, ou 0.1 pour un très léger freinage
           frictionCombineRule={CoefficientCombineRule.Min} // on force la glisse maximale
@@ -681,225 +682,59 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             position={[-0.609, -2.903, 5.131]}
           />
         </RigidBody>
-        <RigidBody type="fixed" colliders="trimesh" includeInvisible>
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_gate.geometry} */}
-          {/*   material={nodes.coll_gate.material} */}
-          {/*   position={[8.733, -1.272, 5.992]} */}
-          {/* /> */}
-          <mesh
-            visible={false}
-            geometry={nodes.coll_metal.geometry}
-            material={nodes.coll_metal.material}
-            position={[0.313, -2.424, 23.779]}
-          />
-          <mesh
-            visible={false}
-            geometry={nodes.coll_ramp_metal.geometry}
-            material={nodes.coll_ramp_metal.material}
-            position={[-1.088, -2.185, 21.588]}
-          />
-          <mesh
-            visible={false}
-            geometry={nodes.coll_left_hole_sidewalls.geometry}
-            material={nodes.coll_left_hole_sidewalls.material}
-            position={[-0.557, -2.233, 8.325]}
-          />
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_left_kickback_door.geometry} */}
-          {/*   material={nodes.coll_left_kickback_door.material} */}
-          {/*   position={[-13.574, -2.233, 23.626]} */}
-          {/* /> */}
-          <mesh
-            visible={false}
-            geometry={nodes.coll_posts_outlane.geometry}
-            material={nodes.coll_posts_outlane.material}
-            position={[-2.08, -2.233, 16.425]}
-          />
-          <mesh
-            visible={false}
-            geometry={nodes.coll_left_hole.geometry}
-            material={nodes.coll_left_hole.material}
-            position={[-12.556, -5.859, 5.794]}
-          />
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_left_sling_collision.geometry} */}
-          {/*   material={nodes.coll_left_sling_collision.material} */}
-          {/*   position={[-7.708, -2.233, 16.596]} */}
-          {/* /> */}
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_right_sling_collision.geometry} */}
-          {/*   material={nodes.coll_right_sling_collision.material} */}
-          {/*   position={[5.493, -2.185, 16.596]} */}
-          {/* /> */}
-          <mesh
-            visible={false}
-            geometry={nodes.coll_super_rubber.geometry}
-            material={nodes.coll_super_rubber.material}
-            position={[-2.105, 0.799, 0.974]}
-          />
-          <mesh
-            visible={false}
-            name="coll_standard_collision"
-            geometry={nodes.coll_standard_collision.geometry}
-            material={nodes.coll_standard_collision.material}
-            position={[-0.633, -1.467, 7.78]}
-          />
-          <mesh
-            visible={false}
-            geometry={nodes.coll_rubber.geometry}
-            material={nodes.coll_rubber.material}
-            position={[-2.097, -0.236, -1.55]}
-          />
-          <mesh
-            visible={false}
-            name="coll_standard_collision_sidewalls_back"
-            geometry={nodes.coll_standard_collision_sidewalls_back.geometry}
-            material={nodes.coll_standard_collision_sidewalls_back.material}
-            position={[-0.633, -10.856, 7.78]}
-          />
-          {/* <mesh
-            visible={false}
-            name="coll_playfield_collision_left_hole"
-            geometry={nodes.coll_playfield_collision_left_hole.geometry}
-            material={nodes.coll_playfield_collision_left_hole.material}
-            position={[-0.609, -2.903, 7.762]}
-          /> */}
-
-          <mesh
-            visible={false}
-            geometry={nodes.coll_scoop_hole_left.geometry}
-            material={nodes.coll_scoop_hole_left.material}
-            position={[-5.444, -4.23, -2.829]}
-          />
-          <mesh
-            visible={false}
-            geometry={nodes.coll_visual_habit_right_9_top.geometry}
-            material={nodes.coll_visual_habit_right_9_top.material}
-            position={[0.143, -4.465, -2.19]}
-          />
-          <mesh
-            visible={false}
-            geometry={nodes.coll_visual_habit_right_left_9_top002.geometry}
-            material={nodes.coll_visual_habit_right_left_9_top002.material}
-            position={[0.143, -4.465, -2.19]}
-          />
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_right_kickback_door001.geometry} */}
-          {/*   material={materials.PaletteMaterial001} */}
-          {/*   position={[8.465, -1.97, 25.481]} */}
-          {/* /> */}
-          <mesh
-            visible={false}
-            geometry={nodes.coll_visual_mpf_metal_wires_11.geometry}
-            material={materials.PaletteMaterial001}
-            position={[2.609, -0.768, 0.974]}
-          />
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_bumpers001.geometry} */}
-          {/*   material={nodes.coll_bumpers001.material} */}
-          {/*   position={[1.112, -1.6, -11.134]} */}
-          {/* /> */}
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_bumpers002.geometry} */}
-          {/*   material={nodes.coll_bumpers002.material} */}
-          {/*   position={[-4.744, -1.6, -6.463]} */}
-          {/* /> */}
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_bumpers003.geometry} */}
-          {/*   material={nodes.coll_bumpers003.material} */}
-          {/*   position={[-6.635, -1.6, -12.845]} */}
-          {/* /> */}
-          <mesh
-            visible={false}
-            geometry={nodes.coll_habit_vuk.geometry}
-            material={nodes.coll_habit_vuk.material}
-            position={[10.186, 5.001, -21.251]}
-          />
-          <mesh
-            visible={false}
-            geometry={nodes.coll_sidewalls001.geometry}
-            material={nodes.coll_sidewalls001.material}
-            position={[-0.557, -2.126, 8.325]}
-          />
-          <mesh
-            visible={false}
-            geometry={nodes.coll_faquir.geometry}
-            material={nodes.coll_faquir.material}
-            position={[10.805, -2.882, -13.695]}
-          />
+        <RigidBody
+          type="fixed"
+          colliders="trimesh"
+          name="coll_hight_playfield"
+          restitution={0}
+          friction={0}
+          frictionCombineRule={CoefficientCombineRule.Min}
+          includeInvisible
+        >
           <mesh
             visible={false}
             geometry={nodes.coll_hight_playfield.geometry}
             material={nodes.coll_hight_playfield.material}
             position={[2.084, -2.882, -17.598]}
           />
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_faquir_plank001.geometry} */}
-          {/*   material={nodes.coll_faquir_plank001.material} */}
-          {/*   position={[10.805, -2.882, -13.695]} */}
-          {/* /> */}
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_faquir_plank003.geometry} */}
-          {/*   material={nodes.coll_faquir_plank003.material} */}
-          {/*   position={[10.217, -0.452, -12.166]} */}
-          {/*   rotation={[0, -0.398, 0]} */}
-          {/* /> */}
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_faquir_plank002.geometry} */}
-          {/*   material={nodes.coll_faquir_plank002.material} */}
-          {/*   position={[10.805, -2.882, -13.695]} */}
-          {/* /> */}
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_faquir_plank004.geometry} */}
-          {/*   material={nodes.coll_faquir_plank004.material} */}
-          {/*   position={[10.805, -2.882, -13.695]} */}
-          {/* /> */}
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_faquir_plank005.geometry} */}
-          {/*   material={nodes.coll_faquir_plank005.material} */}
-          {/*   position={[10.805, -2.882, -13.695]} */}
-          {/* /> */}
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_faquir_plank006.geometry} */}
-          {/*   material={nodes.coll_faquir_plank006.material} */}
-          {/*   position={[10.805, -2.882, -13.695]} */}
-          {/* /> */}
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_faquir_plank007.geometry} */}
-          {/*   material={nodes.coll_faquir_plank007.material} */}
-          {/*   position={[10.805, -2.882, -13.695]} */}
-          {/* /> */}
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_faquir_plank008.geometry} */}
-          {/*   material={nodes.coll_faquir_plank008.material} */}
-          {/*   position={[10.805, -2.882, -13.695]} */}
-          {/* /> */}
-          {/* <mesh */}
-          {/*   geometry={nodes.coll_mine_gate.geometry} */}
-          {/*   material={nodes.coll_mine_gate.material} */}
-          {/*   position={[-11.672, -1.9, 6.777]} */}
-          {/* /> */}
+        </RigidBody>
+        <RigidBody
+          type="fixed"
+          colliders="trimesh"
+          name="coll_standard_collision"
+          restitution={0}
+          friction={0}
+          frictionCombineRule={CoefficientCombineRule.Min}
+          includeInvisible
+        >
           <mesh
             visible={false}
-            geometry={nodes.coll_sidewalls002.geometry}
-            material={nodes.coll_sidewalls002.material}
-            position={[-0.557, -2.233, 8.325]}
+            geometry={nodes.coll_standard_collision.geometry}
+            material={nodes.coll_standard_collision.material}
+            position={[-0.633, -1.467, 7.78]}
           />
-          <mesh
-            visible={false}
-            geometry={nodes.coll_faquir_glass_panel001.geometry}
-            material={nodes.coll_faquir_glass_panel001.material}
-            position={[10.805, -2.882, -13.695]}
-            rotation={[0, 0.017, 0]}
-          />
-          <mesh
-            visible={false}
-            geometry={nodes.coll_glass_panel001.geometry}
-            material={nodes.coll_glass_panel001.material}
-            position={[-2.178, -1.315, 25.471]}
-            scale={[13.446, 0.143, 5.159]}
-          />
+        </RigidBody>
+        <RigidBody type="fixed" colliders="trimesh" includeInvisible>
+          <mesh visible={false} geometry={nodes.coll_metal.geometry} material={nodes.coll_metal.material} position={[0.313, -2.424, 23.779]} />
+          <mesh visible={false} geometry={nodes.coll_ramp_metal.geometry} material={nodes.coll_ramp_metal.material} position={[-1.088, -2.185, 21.588]} />
+          <mesh visible={false} geometry={nodes.coll_left_hole_sidewalls.geometry} material={nodes.coll_left_hole_sidewalls.material} position={[-0.557, -2.233, 8.325]} />
+          <mesh visible={false} geometry={nodes.coll_posts_outlane.geometry} material={nodes.coll_posts_outlane.material} position={[-2.08, -2.233, 16.425]} />
+          <mesh visible={false} geometry={nodes.coll_left_hole.geometry} material={nodes.coll_left_hole.material} position={[-12.556, -5.859, 5.794]} />
+          <mesh visible={false} geometry={nodes.coll_super_rubber.geometry} material={nodes.coll_super_rubber.material} position={[-2.105, 0.799, 0.974]} />
+          <mesh visible={false} geometry={nodes.coll_rubber.geometry} material={nodes.coll_rubber.material} position={[-2.097, -0.236, -1.55]} />
+          <mesh visible={false} geometry={nodes.coll_standard_collision_sidewalls_back.geometry} material={nodes.coll_standard_collision_sidewalls_back.material} position={[-0.633, -10.856, 7.78]} />
+          <mesh visible={false} geometry={nodes.coll_scoop_hole_left.geometry} material={nodes.coll_scoop_hole_left.material} position={[-5.444, -4.23, -2.829]} />
+          <mesh visible={false} geometry={nodes.coll_visual_habit_right_9_top.geometry} material={nodes.coll_visual_habit_right_9_top.material} position={[0.143, -4.465, -2.19]} />
+          <mesh visible={false} geometry={nodes.coll_visual_habit_right_left_9_top002.geometry} material={nodes.coll_visual_habit_right_left_9_top002.material} position={[0.143, -4.465, -2.19]} />
+          <mesh visible={false} geometry={nodes.coll_visual_mpf_metal_wires_11.geometry} material={materials.PaletteMaterial001} position={[2.609, -0.768, 0.974]} />
+          <mesh visible={false} geometry={nodes.coll_habit_vuk.geometry} material={nodes.coll_habit_vuk.material} position={[10.186, 5.001, -21.251]} />
+          <mesh visible={false} geometry={nodes.coll_sidewalls001.geometry} material={nodes.coll_sidewalls001.material} position={[-0.557, -2.126, 8.325]} />
+          <mesh visible={false} geometry={nodes.coll_sidewalls002.geometry} material={nodes.coll_sidewalls002.material} position={[-0.557, -2.233, 8.325]} />
+          <mesh visible={false} geometry={nodes.coll_faquir_glass_panel001.geometry} material={nodes.coll_faquir_glass_panel001.material} position={[10.805, -2.882, -13.695]} rotation={[0, 0.017, 0]} />
+          <mesh visible={false} geometry={nodes.coll_glass_panel001.geometry} material={nodes.coll_glass_panel001.material} position={[-2.178, -1.315, 25.471]} scale={[13.446, 0.143, 5.159]} />
+        </RigidBody>
+        <RigidBody type="fixed" colliders="trimesh" name="coll_faquir" includeInvisible>
+          <mesh visible={false} geometry={nodes.coll_faquir.geometry} material={nodes.coll_faquir.material} position={[10.805, -2.882, -13.695]} />
         </RigidBody>
         <mesh
           geometry={nodes.visual_Tower_Brick_MT_0.geometry}
