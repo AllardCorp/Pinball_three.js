@@ -4,6 +4,7 @@ import { useControls } from "leva";
 import { useGameStore } from "@/store/useGameStore";
 import ObjectSound from "./ObjectSound";
 import BallAudio from "./BallAudio";
+import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
 type BallProps = {
   position: [number, number, number];
@@ -106,7 +107,7 @@ export default function Ball({ position }: BallProps) {
     return (
       <group position={position}>
         <ObjectSound
-          url="/sounds/plunger/plungerlaunch.ogg"
+          {...SOUNDS_CONFIG.ball.launch}
           playTrigger={launchCount}
           volume={0}
         />
@@ -134,7 +135,7 @@ export default function Ball({ position }: BallProps) {
         </mesh>
 
         <ObjectSound
-          url="/sounds/plunger/plungerlaunch.ogg"
+          {...SOUNDS_CONFIG.ball.launch}
           playTrigger={launchCount}
           volume={launchVolume}
         />

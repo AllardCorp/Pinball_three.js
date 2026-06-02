@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { useGameStore } from "@/store/useGameStore";
 import { useState } from "react";
 import ObjectSound from "./ObjectSound";
+import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
 type KickbackProps = {
   side: "left" | "right";
@@ -77,7 +78,7 @@ export default function Kickback({
         <CuboidCollider args={[1, 0.5, 0.5]} />
 
         <ObjectSound
-          url={["/sounds/plunger/plungerlaunch.ogg"]}
+          {...SOUNDS_CONFIG.kickback.trigger}
           playTrigger={kickCount}
         />
       </RigidBody>

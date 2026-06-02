@@ -4,6 +4,7 @@ import { useControls } from "leva";
 import { RigidBody, type RapierRigidBody } from "@react-three/rapier"; // 👈 1. Import du type
 import * as THREE from "three";
 import ObjectSound from "./ObjectSound";
+import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
 type FlipperProps = {
   colliderGeometry: THREE.BufferGeometry;
@@ -107,12 +108,12 @@ export default function Flipper({
       <mesh geometry={visualGeometry} material={visualMaterial} />
       {/* Le son s'active quand isActive devient 'true' (flipper monte) */}
       <ObjectSound
-        url="/sounds/flipper/arm_up.ogg"
+        {...SOUNDS_CONFIG.flipper.up}
         playTrigger={isActive}
       />
       {/* Le son s'active quand isActive devient 'false' (flipper descend) */}
       <ObjectSound
-        url="/sounds/flipper/arm_down.ogg"
+        {...SOUNDS_CONFIG.flipper.down}
         playTrigger={!isActive}
       />
     </RigidBody>

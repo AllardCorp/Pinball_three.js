@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { useControls } from "leva";
 import { useGameStore } from "@/store/useGameStore";
 import ObjectSound from "./ObjectSound";
+import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
 type SlingshotProps = {
   geometry: THREE.BufferGeometry;
@@ -55,11 +56,7 @@ export default function Slingshot({
       </mesh>
 
       <ObjectSound
-        url={[
-          "/sounds/slingshot/slingshot_01.ogg",
-          "/sounds/slingshot/slingshot_02.ogg",
-          "/sounds/slingshot/slingshot_03.ogg"
-        ]}
+        {...SOUNDS_CONFIG.slingshot.hit}
         playTrigger={hitCount}
       />
     </RigidBody>

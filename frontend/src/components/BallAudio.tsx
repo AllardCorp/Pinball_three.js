@@ -5,6 +5,7 @@ import { PositionalAudio } from "@react-three/drei";
 import { useRapier } from "@react-three/rapier";
 import type { RapierRigidBody } from "@react-three/rapier";
 import { AudioErrorBoundary } from "@/components/AudioErrorBoundary";
+import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
 type BallAudioProps = {
   ballRef: React.RefObject<RapierRigidBody | null>;
@@ -22,6 +23,7 @@ export default function BallAudio({
   const groupRef = useRef<THREE.Group>(null);
   const playfieldSoundRef = useRef<THREE.PositionalAudio | null>(null);
   const stoneRampSoundRef = useRef<THREE.PositionalAudio | null>(null);
+  const rampsSoundRef = useRef<THREE.PositionalAudio | null>(null);
 
   const { rapier, world, rigidBodyStates, colliderStates } = useRapier();
   const debugLineRef = useRef<THREE.Line>(null);
@@ -44,6 +46,7 @@ export default function BallAudio({
   useFrame((_, delta) => {
     const playfieldAudio = playfieldSoundRef.current;
     const rockAudio = stoneRampSoundRef.current;
+    const rampsAudio = rampsSoundRef.current;
 
     const canUsePhysics =
       isPlaying && !ballInLauncher && ballRef.current !== null;
@@ -51,6 +54,7 @@ export default function BallAudio({
     if (!canUsePhysics) {
       if (playfieldAudio) fadeOutSound(playfieldAudio, delta);
       if (rockAudio) fadeOutSound(rockAudio, delta);
+      if (rampsAudio) fadeOutSound(rampsAudio, delta);
       return;
     }
 
@@ -82,6 +86,7 @@ export default function BallAudio({
     let hitName = "RIEN (Vide/Air)";
     let isOnPlayfield = false;
     let isOnRockRamp = false;
+    let isOnRamps = false;
 
     if (hit) {
       const parentBody = hit.collider.parent();
@@ -94,10 +99,11 @@ export default function BallAudio({
 
       isOnPlayfield = bodyName === "coll_playfield_collision_left_hole";
       isOnRockRamp = bodyName === "stone_ramp" || bodyName === "coll_faquir";
+      isOnRamps = bodyName === "coll_ramps";
     }
 
     if (hitName !== lastHitColliderRef.current) {
-      const logColor = (isOnPlayfield || isOnRockRamp)
+      const logColor = (isOnPlayfield || isOnRockRamp || isOnRamps)
         ? "color: #00ff00; font-weight: bold;"
         : "color: #ff9900; font-weight: bold;";
       console.log(
@@ -120,7 +126,7 @@ export default function BallAudio({
       debugLineRef.current.geometry.attributes.position.needsUpdate = true;
 
       const material = debugLineRef.current.material as THREE.LineBasicMaterial;
-      material.color.set(isOnRockRamp ? "blue" : isOnPlayfield ? "lime" : "red");
+      material.color.set(isOnRockRamp ? "blue" : isOnRamps ? "yellow" : isOnPlayfield ? "lime" : "red");
     }
 
     const isRollingFastEnough = speed > 0.5;
@@ -145,8 +151,18 @@ export default function BallAudio({
 
       if (audio.isPlaying) {
         if (shouldPlay) {
-          const targetVol = Math.min(speed / 10, 1) * 3;
-          const targetPitch = 0.5 + Math.min(speed / 10, 1) * 0.4;
+          // Utilisation de la configuration pour le son actif
+          const conf = (isActiveSurface && isOnRockRamp) ? SOUNDS_CONFIG.ball.rollingRock : 
+                       (isActiveSurface && isOnRamps) ? SOUNDS_CONFIG.ball.rollingRamps :
+                       SOUNDS_CONFIG.ball.rollingPlayfield;
+          const div = conf.speedDivisor || 10;
+          
+          const targetVol = Math.min(speed / div, 1) * conf.volume;
+          
+          // Le pitch interpole entre pitchMin et pitchMax
+          const pMin = conf.pitchMin || 0.5;
+          const pMax = conf.pitchMax || 1;
+          const targetPitch = pMin + Math.min(speed / div, 1) * (pMax - pMin);
 
           audio.setVolume(THREE.MathUtils.lerp(audio.getVolume(), targetVol, delta * 10));
           audio.setPlaybackRate(THREE.MathUtils.lerp(audio.playbackRate, targetPitch, delta * 10));
@@ -158,24 +174,34 @@ export default function BallAudio({
 
     updateAudio(playfieldAudio, isOnPlayfield);
     updateAudio(rockAudio, isOnRockRamp);
+    updateAudio(rampsAudio, isOnRamps);
   });
 
   return (
     <group ref={groupRef}>
       {/* Son par défaut pour le plateau */}
-      <AudioErrorBoundary url="/sounds/ball/LOOP_metal_ball_rolling.ogg">
+      <AudioErrorBoundary url={SOUNDS_CONFIG.ball.rollingPlayfield.url as string}>
         <PositionalAudio
           ref={playfieldSoundRef}
-          url="/sounds/ball/LOOP_metal_ball_rolling.ogg"
+          url={SOUNDS_CONFIG.ball.rollingPlayfield.url as string}
           distance={15}
         />
       </AudioErrorBoundary>
 
       {/* Son pour la rampe en pierre */}
-      <AudioErrorBoundary url="/sounds/ball/LOOP_metal_ball_rolling.ogg">
+      <AudioErrorBoundary url={SOUNDS_CONFIG.ball.rollingRock.url as string}>
         <PositionalAudio
           ref={stoneRampSoundRef}
-          url="/sounds/ball/LOOP_metal_ball_rolling.ogg"
+          url={SOUNDS_CONFIG.ball.rollingRock.url as string}
+          distance={15}
+        />
+      </AudioErrorBoundary>
+
+      {/* Son pour les rampes métalliques */}
+      <AudioErrorBoundary url={SOUNDS_CONFIG.ball.rollingRamps.url as string}>
+        <PositionalAudio
+          ref={rampsSoundRef}
+          url={SOUNDS_CONFIG.ball.rollingRamps.url as string}
           distance={15}
         />
       </AudioErrorBoundary>

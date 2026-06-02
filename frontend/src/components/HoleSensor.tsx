@@ -3,9 +3,11 @@ import { RigidBody, CuboidCollider, IntersectionEnterPayload } from "@react-thre
 import { useControls, folder } from "leva";
 import ObjectSound from "./ObjectSound";
 
+import { SoundConfig } from "@/config/soundsConfig";
+
 type HoleSensorProps = {
   id: string;
-  soundUrl: string;
+  config: SoundConfig;
   defaultPos?: [number, number, number];
   defaultRot?: [number, number, number];
   defaultSize?: [number, number];
@@ -13,13 +15,12 @@ type HoleSensorProps = {
 
 export default function HoleSensor({
   id,
-  soundUrl,
+  config,
   defaultPos = [0, -3, 0],
   defaultRot = [0, 0, 0],
   defaultSize = [1, 1],
 }: HoleSensorProps) {
   const [playCount, setPlayCount] = useState(0);
-  const [pitch, setPitch] = useState(1);
 
   // Pour afficher la zone d'intersection si on veut voir où elle est
   const { rapierDebug } = useControls("rapier", { rapierDebug: true });
@@ -39,10 +40,6 @@ export default function HoleSensor({
       e.other.rigidBodyObject?.name === "ball" ||
       !e.other.rigidBodyObject?.name
     ) {
-      // Variation de pitch faible : entre 0.95 et 1.05
-      const randomPitch = 0.95 + Math.random() * 0.1;
-      setPitch(randomPitch);
-      
       // On incrémente le compteur pour déclencher l'effet (useEffect) dans ObjectSound
       setPlayCount((prev) => prev + 1);
     }
@@ -63,12 +60,10 @@ export default function HoleSensor({
         </mesh>
       )}
 
-      {/* Le son "one-shot" avec le pitch aléatoire */}
+      {/* Le son "one-shot" avec le pitch géré par ObjectSound */}
       <ObjectSound
-        url={soundUrl}
+        {...config}
         playTrigger={playCount}
-        playbackRate={pitch}
-        volume={2}
       />
     </group>
   );

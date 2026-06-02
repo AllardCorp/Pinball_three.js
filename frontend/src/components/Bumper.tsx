@@ -8,6 +8,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useGameStore } from "@/store/useGameStore";
 import ObjectSound from "./ObjectSound";
+import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
 
 type BumperProps = {
@@ -121,11 +122,7 @@ export default function Bumper({
       />
 
       <ObjectSound
-        url={[
-          "/sounds/bumper/bumper_01.ogg",
-          "/sounds/bumper/bumper_02.ogg",
-          "/sounds/bumper/bumper_03.ogg"
-        ]}
+        {...SOUNDS_CONFIG.bumper.hit}
         playTrigger={hitCount}
       />
     </RigidBody>

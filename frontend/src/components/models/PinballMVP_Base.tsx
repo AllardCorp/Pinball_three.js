@@ -15,6 +15,7 @@ import DeathZone from "@/components/DeathZone";
 import GoldMine from "@/components/GoldMine";
 import ScoreTarget from "@/components/ScoreTarget";
 import HoleSensor from "@/components/HoleSensor";
+import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
 type GLTFResult = GLTF & {
   nodes: {
@@ -181,7 +182,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
       {/* Sensor pour le trou */}
       <HoleSensor
         id="MainHole"
-        soundUrl="/sounds/hole/hole.ogg"
+        config={SOUNDS_CONFIG.hole.enter}
         defaultPos={[-1.1, -2.2, 31.8]}
         defaultRot={[1.5, 0, 0]}
         defaultSize={[2.5, 1.3]}
@@ -724,14 +725,16 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           <mesh visible={false} geometry={nodes.coll_rubber.geometry} material={nodes.coll_rubber.material} position={[-2.097, -0.236, -1.55]} />
           <mesh visible={false} geometry={nodes.coll_standard_collision_sidewalls_back.geometry} material={nodes.coll_standard_collision_sidewalls_back.material} position={[-0.633, -10.856, 7.78]} />
           <mesh visible={false} geometry={nodes.coll_scoop_hole_left.geometry} material={nodes.coll_scoop_hole_left.material} position={[-5.444, -4.23, -2.829]} />
-          <mesh visible={false} geometry={nodes.coll_visual_habit_right_9_top.geometry} material={nodes.coll_visual_habit_right_9_top.material} position={[0.143, -4.465, -2.19]} />
-          <mesh visible={false} geometry={nodes.coll_visual_habit_right_left_9_top002.geometry} material={nodes.coll_visual_habit_right_left_9_top002.material} position={[0.143, -4.465, -2.19]} />
           <mesh visible={false} geometry={nodes.coll_visual_mpf_metal_wires_11.geometry} material={materials.PaletteMaterial001} position={[2.609, -0.768, 0.974]} />
-          <mesh visible={false} geometry={nodes.coll_habit_vuk.geometry} material={nodes.coll_habit_vuk.material} position={[10.186, 5.001, -21.251]} />
           <mesh visible={false} geometry={nodes.coll_sidewalls001.geometry} material={nodes.coll_sidewalls001.material} position={[-0.557, -2.126, 8.325]} />
           <mesh visible={false} geometry={nodes.coll_sidewalls002.geometry} material={nodes.coll_sidewalls002.material} position={[-0.557, -2.233, 8.325]} />
           <mesh visible={false} geometry={nodes.coll_faquir_glass_panel001.geometry} material={nodes.coll_faquir_glass_panel001.material} position={[10.805, -2.882, -13.695]} rotation={[0, 0.017, 0]} />
           <mesh visible={false} geometry={nodes.coll_glass_panel001.geometry} material={nodes.coll_glass_panel001.material} position={[-2.178, -1.315, 25.471]} scale={[13.446, 0.143, 5.159]} />
+        </RigidBody>
+        <RigidBody type="fixed" colliders="trimesh" name="coll_ramps" includeInvisible restitution={0} friction={0} frictionCombineRule={CoefficientCombineRule.Min}>
+          <mesh visible={false} geometry={nodes.coll_visual_habit_right_9_top.geometry} material={nodes.coll_visual_habit_right_9_top.material} position={[0.143, -4.465, -2.19]} />
+          <mesh visible={false} geometry={nodes.coll_visual_habit_right_left_9_top002.geometry} material={nodes.coll_visual_habit_right_left_9_top002.material} position={[0.143, -4.465, -2.19]} />
+          <mesh visible={false} geometry={nodes.coll_habit_vuk.geometry} material={nodes.coll_habit_vuk.material} position={[10.186, 5.001, -21.251]} />
         </RigidBody>
         <RigidBody type="fixed" colliders="trimesh" name="coll_faquir" includeInvisible>
           <mesh visible={false} geometry={nodes.coll_faquir.geometry} material={nodes.coll_faquir.material} position={[10.805, -2.882, -13.695]} />

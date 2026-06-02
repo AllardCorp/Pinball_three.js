@@ -10,6 +10,8 @@ type ObjectSoundProps = {
   volume?: number;
   distance?: number;
   playbackRate?: number;
+  pitchMin?: number;
+  pitchMax?: number;
 };
 
 export default function ObjectSound({
@@ -17,7 +19,9 @@ export default function ObjectSound({
   playTrigger,
   volume = 3,
   distance = 15,
-  playbackRate = 1
+  playbackRate = 1,
+  pitchMin,
+  pitchMax,
 }: ObjectSoundProps) {
   const urls = Array.isArray(url) ? url : [url];
   const soundRefs = useRef<(THREE.PositionalAudio | null)[]>([]);
@@ -59,14 +63,18 @@ export default function ObjectSound({
         });
 
         try {
-          chosenSound.setPlaybackRate(playbackRate);
+          let finalPlaybackRate = playbackRate;
+          if (pitchMin !== undefined && pitchMax !== undefined) {
+            finalPlaybackRate = Math.random() * (pitchMax - pitchMin) + pitchMin;
+          }
+          chosenSound.setPlaybackRate(finalPlaybackRate);
           chosenSound.play();
         } catch (err) {
           console.warn(`Impossible de jouer le son (${chosenSound.name || "inconnu"}) :`, err);
         }
       }
     }
-  }, [playTrigger, urls.length]); // 👈 Ne s'active que lors d'un vrai trigger !
+  }, [playTrigger, urls.length, pitchMin, pitchMax, playbackRate]); // 👈 Ne s'active que lors d'un vrai trigger !
 
   return (
     <>
