@@ -1,5 +1,5 @@
-import { useControls, button } from "leva";
-import { useGameStore } from "@/store/useGameStore"; // Adapte le chemin
+import { useControls } from "leva";
+// import { useGameStore } from "@/store/useGameStore"; // Adapte le chemin
 import * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
 import type { GLTF } from "three-stdlib";
@@ -155,7 +155,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
   ) as unknown as GLTFResult;
 
   // On récupère juste la fonction startGame (temporairement pour nos tests Leva)
-  const startGame = useGameStore((state) => state.startGame);
+  // const startGame = useGameStore((state) => state.startGame);
 
   // On garde Leva pour ajuster la position de départ
   const { startX, startY, startZ } = useControls("Ball Position", {
@@ -167,9 +167,9 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
     leftStrength: { value: 120, min: 0, max: 200, step: 1 },
     rightStrength: { value: 120, min: 0, max: 200, step: 1 },
   });
-  useControls("Game Controls", {
-    "Démarrer Partie": button(() => startGame()),
-  });
+  // useControls("Game Controls", {
+  //   "Démarrer Partie": button(() => startGame()),
+  // });
   return (
     <>
       <GoldMine nodes={nodes} materials={materials} />

@@ -11,7 +11,7 @@ export default function LauncherGate({ nodes, materials }: LuncherGateProps) {
   const { gateStartX, gateStartY, gateStartZ } = useControls(
     "Gate sensors Position",
     {
-      gateStartX: { value: 8.5, min: -20, max: 20, step: 0.1 },
+      gateStartX: { value: 8.4, min: -20, max: 20, step: 0.1 },
       gateStartY: { value: -1.6, min: -20, max: 20, step: 0.1 },
       gateStartZ: { value: 5.9, min: -20, max: 80, step: 0.1 },
     },
