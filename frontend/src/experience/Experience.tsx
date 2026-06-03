@@ -25,7 +25,7 @@ export default function Experience() {
     useLookAt: true,
 
     // Position de la caméra
-    camX: { value: 0, min: -50, max: 50, step: 0.1 },
+    camX: { value: 0.2, min: -50, max: 50, step: 0.1 },
     camY: { value: 56.7, min: -50, max: 100, step: 0.1 },
     camZ: { value: 29.5, min: -50, max: 100, step: 0.1 },
 
