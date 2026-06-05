@@ -152,13 +152,13 @@ export default function BallAudio({
       if (audio.isPlaying) {
         if (shouldPlay) {
           // Utilisation de la configuration pour le son actif
-          const conf = (isActiveSurface && isOnRockRamp) ? SOUNDS_CONFIG.ball.rollingRock : 
-                       (isActiveSurface && isOnRamps) ? SOUNDS_CONFIG.ball.rollingRamps :
-                       SOUNDS_CONFIG.ball.rollingPlayfield;
+          const conf = (isActiveSurface && isOnRockRamp) ? SOUNDS_CONFIG.ball.rollingRock :
+            (isActiveSurface && isOnRamps) ? SOUNDS_CONFIG.ball.rollingRamps :
+              SOUNDS_CONFIG.ball.rollingPlayfield;
           const div = conf.speedDivisor || 10;
-          
+
           const targetVol = Math.min(speed / div, 1) * conf.volume;
-          
+
           // Le pitch interpole entre pitchMin et pitchMax
           const pMin = conf.pitchMin || 0.5;
           const pMax = conf.pitchMax || 1;
@@ -207,7 +207,7 @@ export default function BallAudio({
       </AudioErrorBoundary>
 
       {/* Visualiseur de Raycast de Débug */}
-      <line ref={debugLineRef}>
+      <line ref={debugLineRef} visible={false}>
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
