@@ -17,6 +17,7 @@ type TestDatabaseContext = {
   databaseUrl: string;
   db: DatabaseClient;
   pool: DatabasePool;
+  reset: () => Promise<void>;
   teardown: () => Promise<void>;
 };
 
@@ -46,6 +47,41 @@ function getRequiredTestDatabaseUrl() {
   return databaseUrl;
 }
 
+function assertSafeTestDatabaseConfiguration() {
+  const testDatabaseUrl = getRequiredTestDatabaseUrl();
+  const fallbackDatabaseUrl = process.env.DATABASE_URL?.trim();
+  const testDatabaseName = new URL(testDatabaseUrl).pathname.replace(/^\//, "");
+
+  if (testDatabaseName === "pinball_db") {
+    throw new Error(
+      "DATABASE_URL_TEST ne doit jamais pointer vers `pinball_db`. Utilisez une base d'administration PostgreSQL dédiée aux tests, par exemple `postgres`.",
+    );
+  }
+
+  if (!fallbackDatabaseUrl) {
+    throw new Error(
+      "DATABASE_URL est requis dans `.env.test.local` et doit pointer vers une base sandbox inoffensive.",
+    );
+  }
+
+  const fallbackDatabaseName = new URL(fallbackDatabaseUrl).pathname.replace(/^\//, "");
+
+  if (fallbackDatabaseName === "pinball_db") {
+    throw new Error(
+      "DATABASE_URL dans `.env.test.local` ne doit jamais pointer vers `pinball_db`. Utilisez une base sandbox dédiée, par exemple `pinball_test_sandbox`.",
+    );
+  }
+
+  if (
+    !fallbackDatabaseName.toLowerCase().includes("test") &&
+    !fallbackDatabaseName.toLowerCase().includes("sandbox")
+  ) {
+    throw new Error(
+      "DATABASE_URL dans `.env.test.local` doit pointer vers une base explicitement dédiée aux tests, avec un nom contenant `test` ou `sandbox`.",
+    );
+  }
+}
+
 function getMigrationStatements() {
   const currentFilePath = fileURLToPath(import.meta.url);
   const backendRoot = path.resolve(path.dirname(currentFilePath), "..", "..");
@@ -73,6 +109,7 @@ export async function createPostgresTestDatabase(): Promise<TestDatabaseContext>
   // On crée une base dédiée par suite pour garantir l'isolation des tests.
   // C'est plus lent qu'un simple truncate, mais bien plus sûr pour éviter
   // qu'un test hérite silencieusement des données d'un autre.
+  assertSafeTestDatabaseConfiguration();
   const baseUrl = new URL(getRequiredTestDatabaseUrl());
   const databaseName = `pinball_test_${randomUUID().replace(/-/g, "")}`;
   const testDatabaseUrl = new URL(baseUrl.toString());
@@ -107,6 +144,31 @@ export async function createPostgresTestDatabase(): Promise<TestDatabaseContext>
     databaseUrl: testDatabaseUrl.toString(),
     db,
     pool,
+    reset: async () => {
+      const client = await pool.connect();
+
+      try {
+        const { rows } = await client.query<{ tablename: string }>(
+          `
+            SELECT tablename
+            FROM pg_tables
+            WHERE schemaname = 'public'
+          `,
+        );
+
+        if (rows.length === 0) {
+          return;
+        }
+
+        const quotedTables = rows
+          .map(({ tablename }) => `"${tablename.replace(/"/g, "\"\"")}"`)
+          .join(", ");
+
+        await client.query(`TRUNCATE TABLE ${quotedTables} RESTART IDENTITY CASCADE`);
+      } finally {
+        client.release();
+      }
+    },
     teardown: async () => {
       await pool.end();
 

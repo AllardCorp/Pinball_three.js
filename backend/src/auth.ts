@@ -2,7 +2,7 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
 import { username } from "better-auth/plugins";
 
-import { db, type DatabaseClient } from "./db/client.js";
+import { getDb, type DatabaseClient } from "./db/client.js";
 import * as schema from "./db/schema.js";
 import { env } from "./env.js";
 
@@ -108,6 +108,14 @@ export function createAuth({
   });
 }
 
-export const auth = createAuth({ db, env });
+let defaultAuth: ReturnType<typeof createAuth> | null = null;
 
-export type AuthInstance = typeof auth;
+export function getAuth() {
+  if (!defaultAuth) {
+    defaultAuth = createAuth({ db: getDb(), env });
+  }
+
+  return defaultAuth;
+}
+
+export type AuthInstance = ReturnType<typeof createAuth>;

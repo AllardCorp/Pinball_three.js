@@ -46,6 +46,22 @@ describe("score-claim-service", () => {
       });
     });
 
+    it("returns discard when the played duration stays below the significant threshold", () => {
+      expect(
+        evaluateScorePersistence({
+          finalScore: 2500,
+          isAuthenticated: false,
+          mode: "arcade",
+          playedDurationSeconds: GUEST_MIN_SIGNIFICANT_DURATION_SECONDS - 1,
+          requestClaim: false,
+          wouldEnterLeaderboard: true,
+        }),
+      ).toEqual({
+        decision: "discard",
+        reason: "score_not_significant",
+      });
+    });
+
     it("returns save for an authenticated player", () => {
       expect(
         evaluateScorePersistence({

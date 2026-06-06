@@ -2,6 +2,8 @@ import "dotenv/config";
 
 type TrustProxySetting = boolean | number;
 
+const integerPattern = /^\d+$/;
+
 function requireEnv(name: string): string {
   const value = process.env[name]?.trim();
 
@@ -23,7 +25,11 @@ function optionalEnv(name: string): string | undefined {
 }
 
 function parsePort(value: string): number {
-  const port = Number.parseInt(value, 10);
+  if (!integerPattern.test(value.trim())) {
+    throw new Error("PORT must be an integer between 1 and 65535.");
+  }
+
+  const port = Number(value);
 
   if (!Number.isInteger(port) || port < 1 || port > 65_535) {
     throw new Error("PORT must be an integer between 1 and 65535.");
@@ -47,7 +53,11 @@ function parseTrustProxy(value: string | undefined): TrustProxySetting {
     return false;
   }
 
-  const hopCount = Number.parseInt(normalizedValue, 10);
+  if (!integerPattern.test(normalizedValue)) {
+    throw new Error("TRUST_PROXY must be `true`, `false` or a non-negative integer.");
+  }
+
+  const hopCount = Number(normalizedValue);
 
   if (Number.isInteger(hopCount) && hopCount >= 0) {
     return hopCount;

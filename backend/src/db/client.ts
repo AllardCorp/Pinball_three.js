@@ -18,8 +18,24 @@ export function createDatabaseClient(pool: Pool) {
   return drizzle(pool, { schema });
 }
 
-export const pool = createPoolConnection(env.databaseUrl);
-export const db = createDatabaseClient(pool);
+let defaultPool: Pool | null = null;
+let defaultDb: ReturnType<typeof createDatabaseClient> | null = null;
 
-export type DatabasePool = typeof pool;
-export type DatabaseClient = typeof db;
+export function getPool() {
+  if (!defaultPool) {
+    defaultPool = createPoolConnection(env.databaseUrl);
+  }
+
+  return defaultPool;
+}
+
+export function getDb() {
+  if (!defaultDb) {
+    defaultDb = createDatabaseClient(getPool());
+  }
+
+  return defaultDb;
+}
+
+export type DatabasePool = ReturnType<typeof createPoolConnection>;
+export type DatabaseClient = ReturnType<typeof createDatabaseClient>;

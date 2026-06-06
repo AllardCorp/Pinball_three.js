@@ -1,4 +1,4 @@
-import { pool } from "./db/client.js";
+import { getPool } from "./db/client.js";
 import { env } from "./env.js";
 import { createApp, startServer } from "./app.js";
 
@@ -10,7 +10,7 @@ function shutdown(signal: NodeJS.Signals) {
   // On ferme d'abord l'entrée HTTP, puis le pool SQL.
   // Cela évite d'accepter de nouvelles requêtes pendant l'arrêt.
   server.close(async () => {
-    await pool.end();
+    await getPool().end();
     process.exit(0);
   });
 

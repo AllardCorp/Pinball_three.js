@@ -24,6 +24,7 @@ Le backend utilise deux niveaux de tests :
 
 - `pnpm test` : tests unitaires
 - `pnpm run test:integration` : tests d'intégration HTTP avec une vraie base PostgreSQL jetable
+- la stratégie globale du projet est décrite dans [docs/strategie-tests.md](/home/hristopherswl/dev1/Pinball_three.js/docs/strategie-tests.md)
 
 ### Configuration locale des tests d'intégration
 
@@ -42,6 +43,12 @@ Rôle de `DATABASE_URL_TEST` :
 - cette URL ne pointe pas vers la base de développement du projet
 - elle doit pointer vers une base d'administration PostgreSQL capable de créer des bases temporaires
 - les tests créent ensuite une base dédiée, appliquent les migrations, puis la suppriment à la fin
+
+Rôle de `DATABASE_URL` dans `.env.test.local` :
+
+- cette URL ne doit pas non plus pointer vers la base de développement ;
+- utilisez une base sandbox dédiée, par exemple `pinball_test_sandbox` ;
+- même si les tests d'intégration injectent ensuite leur propre base jetable, cette valeur doit rester inoffensive pour éviter toute écriture accidentelle si un import charge la DB par défaut.
 
 
 ## Commandes utiles pour la db : 

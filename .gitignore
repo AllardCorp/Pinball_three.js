@@ -31,3 +31,7 @@ mqtt/password_file.txt
 dist/
 build/
 .env
+
+# .MD files
+docs/strategie-tests.md
+docs/suivi-auth-develop-sync.md 

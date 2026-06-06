@@ -134,6 +134,17 @@ pnpm coverage
 
 Le rapport de couverture HTML est généré dans `frontend/coverage/` (ignoré par git).
 
+### Tests backend
+
+Les tests d'intégration backend utilisent une base PostgreSQL jetable créée puis supprimée à chaque suite.
+
+Points de sécurité importants :
+
+- `backend/.env.test.local` doit définir `DATABASE_URL_TEST` vers une base d'administration PostgreSQL capable de créer des bases temporaires, typiquement `postgres`.
+- `DATABASE_URL` dans ce même fichier doit pointer vers une base sandbox dédiée et sans données utiles, jamais vers `pinball_db`.
+- Les détails de configuration sont documentés dans `backend/README.md`.
+- La stratégie de tests du projet est documentée dans [docs/strategie-tests.md](/home/hristopherswl/dev1/Pinball_three.js/docs/strategie-tests.md).
+
 ---
 
 ## Collaborateurs :

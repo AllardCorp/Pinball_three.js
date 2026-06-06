@@ -11,8 +11,8 @@ import type { IncomingHttpHeaders } from "node:http";
 import { randomUUID } from "node:crypto";
 import { and, desc, eq, gt, isNull, sql } from "drizzle-orm";
 
-import { auth as defaultAuth, type AuthInstance } from "./auth.js";
-import { db as defaultDb, type DatabaseClient } from "./db/client.js";
+import { getAuth, type AuthInstance } from "./auth.js";
+import { getDb, type DatabaseClient } from "./db/client.js";
 import {
   games,
   scoreClaimRequests,
@@ -29,6 +29,8 @@ import {
 } from "./services/score-claim-service.js";
 
 const claimCodePattern = /^[A-Za-z0-9_-]{32}$/;
+const integerPattern = /^-?\d+$/;
+const postgresIntegerMax = 2_147_483_647;
 
 const scoreClaimStatus = {
   pending: "pending",
@@ -73,6 +75,10 @@ type BackendAppDependencies = {
 };
 
 const rateLimitStore = new Map<string, RateLimitBucket>();
+
+export function resetRateLimitStoreForTests() {
+  rateLimitStore.clear();
+}
 
 function createHttpError(
   status: number,
@@ -170,16 +176,25 @@ function isExpired(expiresAt: Date) {
 function parseRequiredInteger(
   fieldName: string,
   value: unknown,
-  options: { min?: number } = {},
+  options: { max?: number; min?: number } = {},
 ) {
-  const normalizedValue =
-    typeof value === "number"
-      ? value
-      : typeof value === "string" && value.trim()
-        ? Number.parseInt(value, 10)
-        : Number.NaN;
+  const normalizedValue = (() => {
+    if (typeof value === "number") {
+      return value;
+    }
 
-  if (!Number.isInteger(normalizedValue)) {
+    if (typeof value === "string") {
+      const trimmedValue = value.trim();
+
+      if (integerPattern.test(trimmedValue)) {
+        return Number(trimmedValue);
+      }
+    }
+
+    return Number.NaN;
+  })();
+
+  if (!Number.isSafeInteger(normalizedValue)) {
     throw createHttpError(400, `${fieldName}_invalid`, `${fieldName} must be an integer.`);
   }
 
@@ -188,6 +203,14 @@ function parseRequiredInteger(
       400,
       `${fieldName}_out_of_range`,
       `${fieldName} must be greater than or equal to ${options.min}.`,
+    );
+  }
+
+  if (typeof options.max === "number" && normalizedValue > options.max) {
+    throw createHttpError(
+      400,
+      `${fieldName}_out_of_range`,
+      `${fieldName} must be less than or equal to ${options.max}.`,
     );
   }
 
@@ -221,9 +244,9 @@ function parseAppMode(value: unknown): "web" | "arcade" {
 export function createApp(
   dependencies: Partial<BackendAppDependencies> = {},
 ): Express {
-  const auth = dependencies.auth ?? defaultAuth;
+  const auth = dependencies.auth ?? getAuth();
   const authRouteHandler = dependencies.authRouteHandler ?? toNodeHandler(auth);
-  const db = dependencies.db ?? defaultDb;
+  const db = dependencies.db ?? getDb();
   const env = dependencies.env ?? defaultEnv;
   const getSession =
     dependencies.getSession ??
@@ -405,12 +428,13 @@ export function createApp(
     limitScoreClaimStart,
     async (request, response) => {
       const finalScore = parseRequiredInteger("finalScore", request.body?.finalScore, {
+        max: postgresIntegerMax,
         min: 0,
       });
       const playedDurationSeconds = parseRequiredInteger(
         "playedDurationSeconds",
         request.body?.playedDurationSeconds,
-        { min: 0 },
+        { max: postgresIntegerMax, min: 0 },
       );
       const requestClaim = parseBooleanFlag(request.body?.requestClaim);
       const mode = parseAppMode(request.body?.mode);

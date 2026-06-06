@@ -1,7 +1,8 @@
 import request from "supertest";
 import { eq } from "drizzle-orm";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { resetRateLimitStoreForTests } from "../../src/app.js";
 import { games, scoreClaimRequests, users } from "../../src/db/schema.js";
 import { createTestApp } from "../helpers/create-test-app.js";
 import { createPostgresTestDatabase } from "../helpers/postgres-test-db.js";
@@ -9,6 +10,7 @@ import { createPostgresTestDatabase } from "../helpers/postgres-test-db.js";
 describe("score-claims integration - approve", () => {
   let app: ReturnType<typeof createTestApp>;
   let db: Awaited<ReturnType<typeof createPostgresTestDatabase>>["db"];
+  let reset: (() => Promise<void>) | null = null;
   let teardown: (() => Promise<void>) | null = null;
 
   beforeAll(async () => {
@@ -16,7 +18,13 @@ describe("score-claims integration - approve", () => {
 
     app = createTestApp(testDatabase.db);
     db = testDatabase.db;
+    reset = testDatabase.reset;
     teardown = testDatabase.teardown;
+  });
+
+  beforeEach(async () => {
+    resetRateLimitStoreForTests();
+    await reset?.();
   });
 
   afterAll(async () => {
@@ -60,6 +68,30 @@ describe("score-claims integration - approve", () => {
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
       error: "authentication_required",
+    });
+  });
+
+  it("returns 400 when the approval body has no claim code", async () => {
+    const response = await request(app)
+      .post("/api/score-claims/approve")
+      .send({});
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      error: "claim_code_required",
+    });
+  });
+
+  it("returns 400 for an invalid approval claim code", async () => {
+    const response = await request(app)
+      .post("/api/score-claims/approve")
+      .send({
+        claimCode: "not-a-valid-code",
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      error: "invalid_claim_code",
     });
   });
 
@@ -175,6 +207,16 @@ describe("score-claims integration - approve", () => {
     expect(response.body).toEqual({
       error: "score_claim_expired",
     });
+
+    const [persistedClaim] = await db
+      .select({
+        status: scoreClaimRequests.status,
+      })
+      .from(scoreClaimRequests)
+      .where(eq(scoreClaimRequests.claimCode, claimCode))
+      .limit(1);
+
+    expect(persistedClaim?.status).toBe("expired");
   });
 
   it("returns 409 when the claim game is already owned by another user", async () => {
