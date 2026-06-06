@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { Environment } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
-import { Leva, useControls } from "leva";
 import { Perf } from "r3f-perf";
+import { Environment } from "@react-three/drei";
+import { Leva, button, useControls } from "leva";
 
 import ScoreClaimControlPanel from "../components/score-claim/ScoreClaimControlPanel";
 import Experience from "../experience/Experience";
@@ -14,22 +14,6 @@ import { useGameStore } from "@/store/useGameStore";
 import { useInputStore } from "@/store/useInputStore";
 
 export default function Playfield() {
-  useKeyboardControls();
-
-  // Démarre la partie automatiquement si le bouton start est reçu via MQTT.
-  const startPressed = useInputStore((state) => state.buttons.start);
-  const isPlaying = useGameStore((state) => state.isPlaying);
-  const startGame = useGameStore((state) => state.startGame);
-  const updateInputs = useInputStore((state) => state.updateInputs);
-
-  useEffect(() => {
-    if (startPressed && !isPlaying) {
-      console.log("🎮 Démarrage de la partie depuis MQTT / Bouton Start !");
-      startGame();
-      updateInputs({ buttons: { start: false } });
-    }
-  }, [startPressed, isPlaying, startGame, updateInputs]);
-
   const { isArcadeMode, mode } = useAppMode();
   const {
     authenticatedUser,
@@ -39,10 +23,31 @@ export default function Playfield() {
     startScoreClaimSession,
   } = useScoreClaimSession({ enabled: isArcadeMode, mode });
 
+  useKeyboardControls();
+
+  const startPressed = useInputStore((state) => state.buttons.start);
+  const isPlaying = useGameStore((state) => state.isPlaying);
+  const startGame = useGameStore((state) => state.startGame);
+  const updateInputs = useInputStore((state) => state.updateInputs);
+
+  useEffect(() => {
+    if (startPressed && !isPlaying) {
+      console.log("🎮 Démarrage de la partie depuis MQTT / Bouton Start !");
+      startGame(1);
+      updateInputs({ buttons: { start: false } });
+    }
+  }, [startPressed, isPlaying, startGame, updateInputs]);
+
+  useControls("Game Lifecycle", {
+    "Start Solo (1P)": button(() => startGame(1)),
+    "Start Versus (2P)": button(() => startGame(2)),
+    "Start Match (3P)": button(() => startGame(3)),
+    "Start Arcade (4P)": button(() => startGame(4)),
+  });
+
   const { perfVisible } = useControls({
     perfVisible: true,
   });
-
   const { rapierDebug } = useControls("rapier", {
     rapierDebug: true,
   });
@@ -55,13 +60,15 @@ export default function Playfield() {
 
   return (
     <div className="relative h-screen w-screen">
-      <ScoreClaimControlPanel
-        authenticatedUser={authenticatedUser}
-        isSessionPending={isSessionPending}
-        onReset={resetScoreClaimSession}
-        onStart={startScoreClaimSession}
-        snapshot={snapshot}
-      />
+      {isArcadeMode && (
+        <ScoreClaimControlPanel
+          authenticatedUser={authenticatedUser}
+          isSessionPending={isSessionPending}
+          onReset={resetScoreClaimSession}
+          onStart={startScoreClaimSession}
+          snapshot={snapshot}
+        />
+      )}
 
       <Leva collapsed />
       <Canvas shadows camera={{ position: [0, 8, 15], fov: 50 }}>
