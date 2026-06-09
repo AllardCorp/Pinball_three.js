@@ -1,6 +1,6 @@
 services:
   frontend:
-    image: node:20-alpine
+    image: node:22-alpine
     working_dir: /app
     volumes:
       - ./frontend:/app
@@ -10,6 +10,8 @@ services:
     command: sh -c "corepack enable && pnpm install && pnpm dev"
     environment:
       - NODE_ENV=development
+      - VITE_MQTT_USERNAME=${MQTT_USERNAME}
+      - VITE_MQTT_PASSWORD=${MQTT_PASSWORD}
 
   mosquitto:
     image: eclipse-mosquitto:2.0.18

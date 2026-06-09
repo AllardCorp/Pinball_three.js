@@ -1,6 +1,6 @@
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import { useControls } from "leva";
-import * as THREE from "three";
+import type { BufferGeometry, Material } from "three";
 import { useGameStore } from "@/store/useGameStore";
 import { useState } from "react";
 import ObjectSound from "./ObjectSound";
@@ -8,10 +8,10 @@ import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
 type KickbackProps = {
   side: "left" | "right";
-  visualGeometry: THREE.BufferGeometry;
-  visualMaterial: THREE.Material;
+  visualGeometry: BufferGeometry;
+  visualMaterial: Material;
   visualPosition: [number, number, number];
-  colliderGeometry: THREE.BufferGeometry;
+  colliderGeometry: BufferGeometry;
   colliderPosition: [number, number, number];
   sensorPosition: [number, number, number];
   kickStrength?: number;

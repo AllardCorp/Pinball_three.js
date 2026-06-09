@@ -164,6 +164,7 @@ const DustEffect = forwardRef<DustEffectRef, { plankColor: string }>(
 // --- 2. COMPOSANT PRINCIPAL : GOLD MINE ---
 // ==============================================================================
 export default function GoldMine({ nodes, materials }: GoldMineProps) {
+  const displayMessage = useGameStore((state) => state.displayMessage);
   const mineHits = useGameStore((state) => state.mineHits);
   const incrementMine = useGameStore((state) => state.incrementMine);
   const addScore = useGameStore((state) => state.addScore);
@@ -191,6 +192,9 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
         incrementMine();
         addScore(500);
         console.log("Planche de la mine cassée ! Coups :", mineHits + 1);
+      }
+      if (mineHits + 1 === 3) {
+        displayMessage("Mine détruite ! Bonus de 500 points !", 3000);
       }
     }
   };

@@ -6,7 +6,7 @@
   "packageManager": "pnpm@9.15.4",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -p tsconfig.app.json --notEmit && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
@@ -49,3 +49,4 @@
     "vitest": "^4.1.4"
   }
 }
+

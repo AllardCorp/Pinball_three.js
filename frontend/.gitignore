@@ -28,7 +28,7 @@ dist-ssr
 coverage/
 
 # Models
-public/models/
+# public/models/
 
 # OS
 .DS_Store

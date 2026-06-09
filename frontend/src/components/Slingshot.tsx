@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RigidBody } from "@react-three/rapier";
+import { RigidBody, type CollisionEnterPayload } from "@react-three/rapier";
 import * as THREE from "three";
 import { useControls } from "leva";
 import { useGameStore } from "@/store/useGameStore";
@@ -24,7 +24,7 @@ export default function Slingshot({
     restitution: { value: 0.2, min: 0, max: 1, step: 0.1 },
     force: { value: 12, min: 0, max: 30, step: 0.1 },
   });
-  const handleCollision = (e: any) => {
+  const handleCollision = (e: CollisionEnterPayload) => {
     // e.other.rigidBody = la bille qui a touché le slingshot
     if (e.other.rigidBody) {
       // La puissance du coup

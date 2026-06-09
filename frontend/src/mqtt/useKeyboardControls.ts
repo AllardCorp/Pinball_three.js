@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useMqtt } from "./mqttContext";
+import { useInputStore } from "@/store/useInputStore";
 
 const TOPIC = "pinball/input/state";
 
@@ -39,7 +40,6 @@ export function useKeyboardControls() {
 
   // ── Helpers ──────────────────────────────────────
   function publish() {
-    if (!client) return;
     const payload = {
       timestamp: Date.now(),
       buttons: { ...state.current.buttons },
@@ -48,7 +48,15 @@ export function useKeyboardControls() {
         nudge: { ...state.current.analog.nudge },
       },
     };
-    client.publish(TOPIC, JSON.stringify(payload));
+    // Met à jour localement pour une réactivité instantanée à 0ms
+    useInputStore.getState().updateInputs({
+      buttons: payload.buttons,
+      analog: payload.analog,
+    });
+
+    if (client) {
+      client.publish(TOPIC, JSON.stringify(payload));
+    }
   }
 
   function releasePlunger() {
