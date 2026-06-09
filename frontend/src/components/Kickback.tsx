@@ -2,6 +2,10 @@ import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import { useControls } from "leva";
 import type { BufferGeometry, Material } from "three";
 import { useGameStore } from "@/store/useGameStore";
+import { useState } from "react";
+import ObjectSound from "./ObjectSound";
+import { SOUNDS_CONFIG } from "@/config/soundsConfig";
+
 type KickbackProps = {
   side: "left" | "right";
   visualGeometry: BufferGeometry;
@@ -27,6 +31,7 @@ export default function Kickback({
     side === "left" ? state.leftKickbackActive : state.rightKickbackActive,
   );
   const useKickback = useGameStore((state) => state.useKickback);
+  const [kickCount, setKickCount] = useState(0);
   const addScore = useGameStore((state) => state.addScore);
   const { leftOrientation, rightOrientation } = useControls("Kickbacks", {
     leftOrientation: { value: 6, min: -100, max: 100, step: 1 },
@@ -58,10 +63,10 @@ export default function Kickback({
                 { x: xDirection, y: 0, z: -kickStrength },
                 true,
               );
+              setKickCount((prev) => prev + 1);
             }, 1000);
 
             addScore(2500);
-
             // Fermeture de la porte après 300ms
             setTimeout(() => {
               useKickback(side);
@@ -71,6 +76,11 @@ export default function Kickback({
       >
         {/* Dimensions du capteur */}
         <CuboidCollider args={[1, 0.5, 0.5]} />
+
+        <ObjectSound
+          {...SOUNDS_CONFIG.kickback.trigger}
+          playTrigger={kickCount}
+        />
       </RigidBody>
 
       {/* PORTE DE CONDAMNATION */}
