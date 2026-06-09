@@ -3,10 +3,13 @@ import {
   type RapierRigidBody,
   type CollisionEnterPayload,
 } from "@react-three/rapier";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useGameStore } from "@/store/useGameStore";
+import ObjectSound from "./ObjectSound";
+import { SOUNDS_CONFIG } from "@/config/soundsConfig";
+
 
 type BumperProps = {
   id: 0 | 1 | 2;
@@ -34,6 +37,8 @@ export default function Bumper({
   position,
   strength = 15,
 }: BumperProps) {
+  const [hitCount, setHitCount] = useState(0);
+
   const rigidBodyRef = useRef<RapierRigidBody>(null);
   const visualMeshRef = useRef<THREE.Mesh>(null);
 
@@ -82,6 +87,7 @@ export default function Bumper({
       // LOGIQUE DU JEU
       addScore(500);
       toggleRuby(id);
+      setHitCount((prev) => prev + 1);
     }
   };
 
@@ -113,6 +119,11 @@ export default function Bumper({
         geometry={rubyGeometry}
         material={rubyMaterial}
         position={[0, 2.012, 0]}
+      />
+
+      <ObjectSound
+        {...SOUNDS_CONFIG.bumper.hit}
+        playTrigger={hitCount}
       />
     </RigidBody>
   );

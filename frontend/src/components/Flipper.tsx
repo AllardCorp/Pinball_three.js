@@ -3,6 +3,8 @@ import { useFrame } from "@react-three/fiber";
 import { useControls } from "leva";
 import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import * as THREE from "three";
+import ObjectSound from "./ObjectSound";
+import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 import { useInputStore } from "@/store/useInputStore";
 
 type FlipperProps = {
@@ -26,6 +28,7 @@ export default function Flipper({
     upForce: { value: 55, min: 10, max: 80, step: 0.1 },
     downForce: { value: 35, min: 10, max: 60, step: 0.1 },
   });
+  const isMounted = useRef(false);
   // 👈 2. On indique à TypeScript le type exact de la référence
   const flipperRef = useRef<RapierRigidBody>(null);
 
@@ -89,6 +92,16 @@ export default function Flipper({
 
       {/* 2. Le mesh visuel ! (Remarque : pas de position ni de rotation ici !) */}
       <mesh geometry={visualGeometry} material={visualMaterial} />
+      {/* Le son s'active quand isActive devient 'true' (flipper monte) */}
+      <ObjectSound
+        {...SOUNDS_CONFIG.flipper.up}
+        playTrigger={isActive}
+      />
+      {/* Le son s'active quand isActive devient 'false' (flipper descend) */}
+      <ObjectSound
+        {...SOUNDS_CONFIG.flipper.down}
+        playTrigger={!isActive}
+      />
     </RigidBody>
   );
 }

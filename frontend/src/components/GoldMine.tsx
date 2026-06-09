@@ -8,6 +8,8 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useGameStore } from "@/store/useGameStore";
 import { useControls } from "leva";
+import ObjectSound from "./ObjectSound";
+import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
 // --- TYPES POUR LE SYSTÈME DE POUSSIÈRE ---
 export interface DustEffectRef {
@@ -280,6 +282,10 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
         }}
       >
         <CuboidCollider args={[0.9, 0.9, 0.9]} />
+        <ObjectSound
+          {...SOUNDS_CONFIG.goldmine.enter}
+          playTrigger={mineHits}
+        />
       </RigidBody>
     </group>
   );

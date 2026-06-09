@@ -1,6 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import { useControls } from "leva";
+import { useGameStore } from "@/store/useGameStore";
+import ObjectSound from "./ObjectSound";
+import BallAudio from "./BallAudio";
+import { SOUNDS_CONFIG } from "@/config/soundsConfig";
+
 import { useGameStore } from "@/store/useGameStore"; // Adapte le chemin vers ton store
 import { useInputStore } from "@/store/useInputStore";
 type BallProps = {
@@ -9,6 +14,11 @@ type BallProps = {
 
 export default function Ball({ position }: BallProps) {
   const ballRef = useRef<RapierRigidBody>(null);
+  const chargeStartTime = useRef<number>(0);
+
+  const [launchCount, setLaunchCount] = useState(0);
+  const [launchVolume, setLaunchVolume] = useState(1);
+  const { isPlaying, ballInLauncher } = useGameStore();
 
   const isPlaying = useGameStore((state) => state.isPlaying);
   const ballInLauncher = useGameStore((state) => state.ballInLauncher);
@@ -25,12 +35,22 @@ export default function Ball({ position }: BallProps) {
       // Calcul de la force en fonction de la jauge MQTT plungerForce (0.0 à 1.0)
       const forceMagnitude = plungerForce > 0 ? plungerForce * maxForce : 30; // Force par défaut si lancement immédiat
 
-      if (ballRef.current) {
-        console.log(
-          `🚀 Bille lancée via MQTT ! Force appliquée: ${forceMagnitude.toFixed(2)}`,
-        );
-        ballRef.current.applyImpulse({ x: 0, y: 0, z: -forceMagnitude }, true);
-        ballRef.current.wakeUp();
+        if (ballRef.current) {
+          console.log(
+            `Tir lancé avec une force de ${forceMagnitude.toFixed(2)} !`,
+          );
+          ballRef.current.applyImpulse(
+            { x: 0, y: 0, z: -forceMagnitude },
+            true,
+          );
+          ballRef.current.wakeUp();
+
+          const forceRatio = forceMagnitude / maxForce;
+
+          const calculatedVolume = 0.2 + (forceRatio * 0.8);
+          setLaunchVolume(calculatedVolume);
+          setLaunchCount((prev) => prev + 1);
+        }
       }
     }
     prevLaunchBall.current = launchBall;
@@ -61,25 +81,51 @@ export default function Ball({ position }: BallProps) {
     angularDamping: { value: 0.1, min: 0, max: 1, step: 0.01 },
   });
 
+
+
   // SÉCURITÉ : Si la partie n'est pas lancée, la bille n'existe pas dans le monde 3D
-  if (!isPlaying) return null;
+  // On render tout de même le son pour qu'il soit préchargé au démarrage de l'app,
+  // évitant ainsi un retour du loading screen au clic sur "Démarrer".
+  if (!isPlaying) {
+    return (
+      <group position={position}>
+        <ObjectSound
+          {...SOUNDS_CONFIG.ball.launch}
+          playTrigger={launchCount}
+          volume={0}
+        />
+        <BallAudio ballRef={ballRef} size={size} isPlaying={isPlaying} ballInLauncher={ballInLauncher} />
+      </group>
+    );
+  }
 
   return (
-    <RigidBody
-      name="ball"
-      ref={ballRef}
-      ccd={true}
-      position={position}
-      colliders="ball"
-      restitution={restitution}
-      mass={mass}
+    <>
+      <RigidBody
+        name="ball"
+        ref={ballRef}
+        ccd={true}
+        position={position}
+        colliders="ball"
+        restitution={restitution}
+        mass={mass}
       //      linearDamping={linearDamping}
       //     angularDamping={angularDamping}
-    >
-      <mesh>
-        <sphereGeometry args={[size, 32, 32]} />
-        <meshStandardMaterial color="silver" metalness={1} roughness={0.1} />
-      </mesh>
-    </RigidBody>
+      >
+        <mesh>
+          <sphereGeometry args={[size, 32, 32]} />
+          <meshStandardMaterial color="silver" metalness={1} roughness={0.1} />
+        </mesh>
+
+        <ObjectSound
+          {...SOUNDS_CONFIG.ball.launch}
+          playTrigger={launchCount}
+          volume={launchVolume}
+        />
+
+      </RigidBody>
+
+      <BallAudio ballRef={ballRef} size={size} isPlaying={isPlaying} ballInLauncher={ballInLauncher} />
+    </>
   );
 }
