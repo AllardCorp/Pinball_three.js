@@ -8,6 +8,7 @@ export function connectMqtt(): MqttClient {
   // Lecture des identifiants injectés par Vite
   const username = import.meta.env.VITE_MQTT_USERNAME;
   const password = import.meta.env.VITE_MQTT_PASSWORD;
+  const mqttUrl = import.meta.env.VITE_MQTT_URL || "ws://localhost:9001";
 
   const options: IClientOptions = {};
   if (username && password) {
@@ -15,7 +16,7 @@ export function connectMqtt(): MqttClient {
     options.password = password;
   }
 
-  client = mqtt.connect("ws://localhost:9001", options);
+  client = mqtt.connect(mqttUrl, options);
 
   client.on("connect", () => {
     console.log("✅ MQTT connected via WebSocket");
