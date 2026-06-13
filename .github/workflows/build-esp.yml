@@ -39,7 +39,7 @@ jobs:
         run: |
           git config user.name  "firmware-ci"
           git config user.email "firmware-ci@users.noreply.github.com"
-          git add firmware/build/firmware.bin
+          git add -f firmware/build/firmware.bin
           git diff --staged --quiet && echo "no change" && exit 0
           git commit -m "ci: rebuild ESP32 firmware [skip ci]"
           git push
