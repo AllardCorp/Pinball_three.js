@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'firmware/**'
+      - '.github/workflows/build-esp.yml'
 
 permissions:
   contents: write
@@ -27,9 +28,9 @@ jobs:
 
       - name: Merge into a single image
         run: |
-          BUILD=firmware/.pio/build/esp32dev   # the env name from platformio.ini
+          BUILD=firmware/.pio/build/denky32
           mkdir -p firmware/build
-          esptool --chip esp32 merge_bin -o firmware/build/firmware.bin \
+          esptool --chip esp32 merge-bin -o firmware/build/firmware.bin \
             0x1000  "$BUILD/bootloader.bin" \
             0x8000  "$BUILD/partitions.bin" \
             0x10000 "$BUILD/firmware.bin"
