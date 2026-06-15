@@ -5,6 +5,7 @@ on:
     paths:
       - 'firmware/**'
       - '.github/workflows/build-esp.yml'
+  workflow_dispatch:
 
 permissions:
   contents: write
