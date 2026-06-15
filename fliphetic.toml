@@ -18,5 +18,5 @@ file          = "deploy/docker-compose.yml"
 ready_timeout = 30
 
 [esp32.buttons]
-firmware = "firmware/build/buttons.bin"
+firmware = "firmware/build/firmware.bin"
 chip     = "esp32"
