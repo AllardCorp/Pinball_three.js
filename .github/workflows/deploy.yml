@@ -45,7 +45,7 @@ jobs:
             echo "MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }}" >> .env
             
             # Déploiement
-            sudo docker compose -f compose.prod.yml up -d --build
+            sudo docker compose -f deploy/docker-compose.yml up -d --build
             
             # Nettoyage des anciennes images inutilisées (libère de la place)
             sudo docker image prune -f
@@ -53,4 +53,4 @@ jobs:
             # Vérification de santé
             echo "Vérification du statut..."
             sleep 10
-            sudo docker compose -f compose.prod.yml ps
+            sudo docker compose -f deploy/docker-compose.yml ps

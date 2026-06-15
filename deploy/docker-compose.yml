@@ -7,6 +7,7 @@ services:
         # On crée une variable VITE_ alimentée par ton .env local
         - VITE_MQTT_USERNAME=${MQTT_USERNAME}
         - VITE_MQTT_PASSWORD=${MQTT_PASSWORD}
+        - VITE_MQTT_URL=${MQTT_URL}
     ports:
       - "80:80"
     restart: always
