@@ -1,15 +1,74 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pinball-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  backend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    command: sh -c "apk add --no-cache python3 make g++ && corepack enable && corepack prepare pnpm@10.33.0 --activate && pnpm install && pnpm dev"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-change_me_with_a_long_random_secret}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+      - FRONTEND_ORIGINS=${FRONTEND_ORIGINS:-http://localhost:5173}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  drizzle-studio:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "4983:4983"
+    command: sh -c "apk add --no-cache python3 make g++ && corepack enable && corepack prepare pnpm@10.33.0 --activate && pnpm install && pnpm db:studio"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   frontend:
-    image: node:22-alpine
+    image: node:20-alpine
     working_dir: /app
     volumes:
       - ./frontend:/app
       - /app/node_modules
     ports:
       - "5173:5173"
-    command: sh -c "corepack enable && pnpm install && pnpm dev"
+    command: sh -c "corepack enable && corepack prepare pnpm@10.33.0 --activate && pnpm install && pnpm dev -- --host 0.0.0.0"
     environment:
       - NODE_ENV=development
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:3000}
       - VITE_MQTT_USERNAME=${MQTT_USERNAME}
       - VITE_MQTT_PASSWORD=${MQTT_PASSWORD}
 
@@ -19,13 +78,12 @@ services:
     environment:
       - MQTT_USERNAME=${MQTT_USERNAME}
       - MQTT_PASSWORD=${MQTT_PASSWORD}
-    # On génère le fichier dans /config/ et on donne les droits à l'utilisateur mosquitto
     entrypoint: >
-      sh -c "touch /mosquitto/config/password_file.txt && 
-             mosquitto_passwd -b /mosquitto/config/password_file.txt $$MQTT_USERNAME $$MQTT_PASSWORD && 
+      sh -c "touch /mosquitto/config/password_file.txt &&
+             mosquitto_passwd -b /mosquitto/config/password_file.txt $$MQTT_USERNAME $$MQTT_PASSWORD &&
              chown 1883:1883 /mosquitto/config/password_file.txt &&
              chmod 600 /mosquitto/config/password_file.txt &&
-             echo 'MQTT user created' && 
+             echo 'MQTT user created' &&
              exec mosquitto -c /mosquitto/config/mosquitto.conf"
     ports:
       - "1883:1883"
@@ -37,5 +95,6 @@ services:
     restart: always
 
 volumes:
+  postgres_data:
   mosquitto_data:
   mosquitto_log:
