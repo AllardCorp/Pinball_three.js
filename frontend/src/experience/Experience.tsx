@@ -1,4 +1,9 @@
-import { OrbitControls, Html, PerspectiveCamera } from "@react-three/drei";
+import {
+  OrbitControls,
+  Html,
+  PerspectiveCamera,
+  OrthographicCamera,
+} from "@react-three/drei";
 import { Suspense, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useControls } from "leva";
@@ -8,6 +13,7 @@ import PinballMVPBase from "@/components/models/PinballMVP_Base";
 export default function Experience() {
   // LEVA
   const {
+    isOrthographic, // <-- Nouveau : Toggle entre les deux caméras
     orbitControls,
     useLookAt,
     camX,
@@ -20,7 +26,14 @@ export default function Experience() {
     rotY,
     rotZ,
     fov,
+    orthoZoom, // <-- Nouveau : Zoom spécifique à la caméra orthographique
+    near,
+    far,
+    filmGauge,
+    filmOffset,
+    aspectRatio,
   } = useControls("Camera & Controls", {
+    isOrthographic: false,
     orbitControls: false,
     useLookAt: true,
 
@@ -39,7 +52,18 @@ export default function Experience() {
     rotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
     rotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
 
+    // Paramètres spécifiques Perspective
     fov: { value: 45, min: 10, max: 120, step: 1 },
+    filmGauge: { value: 35, min: 1, max: 100, step: 1 },
+    filmOffset: { value: 0, min: -50, max: 50, step: 0.1 },
+    aspectRatio: { value: 1.5, min: 0.1, max: 5, step: 0.01 },
+
+    // Paramètres spécifiques Orthographique
+    orthoZoom: { value: 50, min: 1, max: 300, step: 1 },
+
+    // Paramètres partagés
+    near: { value: 0.1, min: 0.01, max: 10, step: 0.01 },
+    far: { value: 1000, min: 10, max: 5000, step: 1 },
   });
 
   const cameraRef = useRef<THREE.PerspectiveCamera>(null);
@@ -59,12 +83,28 @@ export default function Experience() {
 
   return (
     <>
-      <PerspectiveCamera
-        makeDefault
-        ref={cameraRef}
-        position={[camX, camY, camZ]}
-        fov={fov}
-      />
+      {/* Rendu conditionnel des caméras */}
+      {isOrthographic ? (
+        <OrthographicCamera
+          makeDefault
+          position={[camX, camY, camZ]}
+          zoom={orthoZoom}
+          near={near}
+          far={far}
+        />
+      ) : (
+        <PerspectiveCamera
+          makeDefault
+          ref={cameraRef}
+          position={[camX, camY, camZ]}
+          fov={fov}
+          near={near}
+          far={far}
+          filmGauge={filmGauge}
+          filmOffset={filmOffset}
+          aspect={aspectRatio}
+        />
+      )}
 
       {orbitControls && (
         <OrbitControls makeDefault target={[targetX, targetY, targetZ]} />
