@@ -6,7 +6,6 @@ import ObjectSound from "./ObjectSound";
 import BallAudio from "./BallAudio";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
-import { useGameStore } from "@/store/useGameStore"; // Adapte le chemin vers ton store
 import { useInputStore } from "@/store/useInputStore";
 type BallProps = {
   position: [number, number, number];
@@ -14,11 +13,9 @@ type BallProps = {
 
 export default function Ball({ position }: BallProps) {
   const ballRef = useRef<RapierRigidBody>(null);
-  const chargeStartTime = useRef<number>(0);
 
   const [launchCount, setLaunchCount] = useState(0);
   const [launchVolume, setLaunchVolume] = useState(1);
-  const { isPlaying, ballInLauncher } = useGameStore();
 
   const isPlaying = useGameStore((state) => state.isPlaying);
   const ballInLauncher = useGameStore((state) => state.ballInLauncher);
@@ -35,22 +32,18 @@ export default function Ball({ position }: BallProps) {
       // Calcul de la force en fonction de la jauge MQTT plungerForce (0.0 à 1.0)
       const forceMagnitude = plungerForce > 0 ? plungerForce * maxForce : 30; // Force par défaut si lancement immédiat
 
-        if (ballRef.current) {
-          console.log(
-            `Tir lancé avec une force de ${forceMagnitude.toFixed(2)} !`,
-          );
-          ballRef.current.applyImpulse(
-            { x: 0, y: 0, z: -forceMagnitude },
-            true,
-          );
-          ballRef.current.wakeUp();
+      if (ballRef.current) {
+        console.log(
+          `Tir lancé avec une force de ${forceMagnitude.toFixed(2)} !`,
+        );
+        ballRef.current.applyImpulse({ x: 0, y: 0, z: -forceMagnitude }, true);
+        ballRef.current.wakeUp();
 
-          const forceRatio = forceMagnitude / maxForce;
+        const forceRatio = forceMagnitude / maxForce;
 
-          const calculatedVolume = 0.2 + (forceRatio * 0.8);
-          setLaunchVolume(calculatedVolume);
-          setLaunchCount((prev) => prev + 1);
-        }
+        const calculatedVolume = 0.2 + forceRatio * 0.8;
+        setLaunchVolume(calculatedVolume);
+        setLaunchCount((prev) => prev + 1);
       }
     }
     prevLaunchBall.current = launchBall;
@@ -81,8 +74,6 @@ export default function Ball({ position }: BallProps) {
     angularDamping: { value: 0.1, min: 0, max: 1, step: 0.01 },
   });
 
-
-
   // SÉCURITÉ : Si la partie n'est pas lancée, la bille n'existe pas dans le monde 3D
   // On render tout de même le son pour qu'il soit préchargé au démarrage de l'app,
   // évitant ainsi un retour du loading screen au clic sur "Démarrer".
@@ -94,7 +85,12 @@ export default function Ball({ position }: BallProps) {
           playTrigger={launchCount}
           volume={0}
         />
-        <BallAudio ballRef={ballRef} size={size} isPlaying={isPlaying} ballInLauncher={ballInLauncher} />
+        <BallAudio
+          ballRef={ballRef}
+          size={size}
+          isPlaying={isPlaying}
+          ballInLauncher={ballInLauncher}
+        />
       </group>
     );
   }
@@ -109,8 +105,8 @@ export default function Ball({ position }: BallProps) {
         colliders="ball"
         restitution={restitution}
         mass={mass}
-      //      linearDamping={linearDamping}
-      //     angularDamping={angularDamping}
+        //      linearDamping={linearDamping}
+        //     angularDamping={angularDamping}
       >
         <mesh>
           <sphereGeometry args={[size, 32, 32]} />
@@ -122,10 +118,14 @@ export default function Ball({ position }: BallProps) {
           playTrigger={launchCount}
           volume={launchVolume}
         />
-
       </RigidBody>
 
-      <BallAudio ballRef={ballRef} size={size} isPlaying={isPlaying} ballInLauncher={ballInLauncher} />
+      <BallAudio
+        ballRef={ballRef}
+        size={size}
+        isPlaying={isPlaying}
+        ballInLauncher={ballInLauncher}
+      />
     </>
   );
 }

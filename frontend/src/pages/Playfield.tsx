@@ -50,7 +50,7 @@ export default function Playfield() {
   return (
     <div className="w-screen h-screen">
       <Leva collapsed />
-      <Canvas dpr={1} shadows camera={{ position: [0, 8, 15], fov: 50 }}>
+      <Canvas shadows camera={{ position: [0, 8, 15], fov: 50 }}>
         <color attach="background" args={["skyblue"]} />
         {perfVisible && <Perf position="top-left" showGraph />}
         <Environment preset="forest" />

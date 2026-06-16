@@ -17,6 +17,6 @@ dmd       = { service = "frontend", port = 80, path = "/dmd" }
 file          = "deploy/docker-compose.yml"
 ready_timeout = 30
 
-[esp32.buttons]
+[esp32.esp32]
 firmware = "firmware/build/firmware.bin"
 chip     = "esp32"
