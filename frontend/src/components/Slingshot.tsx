@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { RigidBody, type CollisionEnterPayload } from "@react-three/rapier";
 import * as THREE from "three";
 import { useControls } from "leva";
 import { useGameStore } from "@/store/useGameStore";
+import ObjectSound from "./ObjectSound";
+import { SOUNDS_CONFIG } from "@/config/soundsConfig";
+
 type SlingshotProps = {
   geometry: THREE.BufferGeometry;
   position: [number, number, number];
@@ -14,6 +18,7 @@ export default function Slingshot({
   rotation,
   pushDirection,
 }: SlingshotProps) {
+  const [hitCount, setHitCount] = useState(0);
   const addScore = useGameStore((state) => state.addScore);
   const { restitution, force } = useControls("Slingshot Controls", {
     restitution: { value: 0.2, min: 0, max: 1, step: 0.1 },
@@ -33,6 +38,7 @@ export default function Slingshot({
       addScore(100);
       // Frappe la bille ! ("true" sert à réveiller la bille si elle dormait)
       e.other.rigidBody.applyImpulse(impulse, true);
+      setHitCount((prev) => prev + 1);
     }
   };
 
@@ -48,6 +54,11 @@ export default function Slingshot({
       <mesh geometry={geometry}>
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
+
+      <ObjectSound
+        {...SOUNDS_CONFIG.slingshot.hit}
+        playTrigger={hitCount}
+      />
     </RigidBody>
   );
 }
