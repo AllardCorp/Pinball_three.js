@@ -65,12 +65,16 @@ export default function ObjectSound({
         try {
           let finalPlaybackRate = playbackRate;
           if (pitchMin !== undefined && pitchMax !== undefined) {
-            finalPlaybackRate = Math.random() * (pitchMax - pitchMin) + pitchMin;
+            finalPlaybackRate =
+              Math.random() * (pitchMax - pitchMin) + pitchMin;
           }
           chosenSound.setPlaybackRate(finalPlaybackRate);
           chosenSound.play();
         } catch (err) {
-          console.warn(`Impossible de jouer le son (${chosenSound.name || "inconnu"}) :`, err);
+          console.warn(
+            `Impossible de jouer le son (${chosenSound.name || "inconnu"}) :`,
+            err,
+          );
         }
       }
     }
@@ -86,7 +90,7 @@ export default function ObjectSound({
             }}
             url={singleUrl}
             loop={false}
-            volume={finalVolume}
+            // volume={finalVolume}
             distance={distance}
           />
         </AudioErrorBoundary>
