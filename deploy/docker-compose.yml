@@ -3,9 +3,9 @@ services:
     image: postgres:16-alpine
     container_name: pinball-postgres
     environment:
-      - POSTGRES_DB
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -21,23 +21,17 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
-    command:
-      - sh
-      - -c
-      - DATABASE_URL="postgresql://$$POSTGRES_USER:$$POSTGRES_PASSWORD@postgres:5432/$$POSTGRES_DB" pnpm run db:migrate
+    command: ["pnpm", "run", "db:migrate"]
     environment:
       - NODE_ENV=production
-      - POSTGRES_DB
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - BETTER_AUTH_SECRET
-      - BETTER_AUTH_URL
-      - FRONTEND_URL
-      - FRONTEND_ORIGINS
-      - GITHUB_CLIENT_ID
-      - GITHUB_CLIENT_SECRET
-      - GOOGLE_CLIENT_ID
-      - GOOGLE_CLIENT_SECRET
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-change_me_with_a_long_random_secret}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -48,24 +42,17 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    command:
-      - sh
-      - -c
-      - DATABASE_URL="postgresql://$$POSTGRES_USER:$$POSTGRES_PASSWORD@postgres:5432/$$POSTGRES_DB" pnpm run start
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - POSTGRES_DB
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - BETTER_AUTH_SECRET
-      - BETTER_AUTH_URL
-      - FRONTEND_URL
-      - FRONTEND_ORIGINS
-      - GITHUB_CLIENT_ID
-      - GITHUB_CLIENT_SECRET
-      - GOOGLE_CLIENT_ID
-      - GOOGLE_CLIENT_SECRET
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-change_me_with_a_long_random_secret}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -76,8 +63,9 @@ services:
       context: ../frontend
       dockerfile: Dockerfile
       args:
-        - VITE_MQTT_USERNAME
-        - VITE_MQTT_PASSWORD
+        - VITE_MQTT_USERNAME=${MQTT_USERNAME}
+        - VITE_MQTT_PASSWORD=${MQTT_PASSWORD}
+        - VITE_MQTT_URL=${MQTT_URL}
     ports:
       - "80:80"
     restart: always
@@ -86,8 +74,8 @@ services:
     image: eclipse-mosquitto:2.0.18
     container_name: mosquitto
     environment:
-      - MQTT_USERNAME
-      - MQTT_PASSWORD
+      - MQTT_USERNAME=${MQTT_USERNAME}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
     # On génère le fichier dans /config/ et on donne les droits à l'utilisateur mosquitto
     entrypoint: >
       sh -c "touch /mosquitto/config/password_file.txt && 
