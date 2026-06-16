@@ -1,6 +1,13 @@
 import { useGameStore } from "@/store/useGameStore";
+import ScoreClaimQrCode from "../components/score-claim/ScoreClaimQrCode";
+import { useAppMode } from "../hooks/useAppMode";
+import { useScoreClaimSession } from "../hooks/useScoreClaimSession";
+import { getScoreClaimPhaseLabel } from "../lib/score-claim-copy";
 
 export default function Backglass() {
+  const { mode } = useAppMode();
+  const { snapshot } = useScoreClaimSession({ enabled: false, mode });
+
   // 1. Données globales de la partie
   const isPlaying = useGameStore((state) => state.isPlaying);
   const playerCount = useGameStore((state) => state.playerCount);
@@ -22,25 +29,22 @@ export default function Backglass() {
   const currentScore = scores[currentPlayerIndex] || 0;
   const currentBalls = ballsRemaining[currentPlayerIndex] || 0;
 
-  // On vérifie si une partie a déjà été jouée (si au moins un joueur a fait plus de 0)
   const hasPlayed = scores.some((s) => s > 0);
-  // Récupération du message d'écran
   const screenMessage = useGameStore((state) => state.screenMessage);
+
   return (
-    <div className="p-6 text-xl text-white">
+    <div className="relative p-6 text-xl text-white">
       <h1>Page BackGlass</h1>
 
       {!isPlaying ? (
-        // --- ÉCRAN D'ATTENTE / GAME OVER ---
         <div className="mt-10 text-center">
-          <h2 className="text-5xl font-bold text-orange-600 mb-6">
+          <h2 className="mb-6 text-5xl font-bold text-orange-600">
             {hasPlayed ? "GAME OVER" : "INSERT COIN"}
           </h2>
 
-          {/* Affichage des scores finaux uniquement si une partie a été jouée */}
           {hasPlayed && (
-            <div className="bg-gray-800 p-6 rounded-lg border border-gray-600 inline-block mb-8 min-w-75">
-              <h3 className="text-2xl text-gray-400 mb-4 border-b border-gray-600 pb-2">
+            <div className="mb-8 inline-block min-w-75 rounded-lg border border-gray-600 bg-gray-800 p-6">
+              <h3 className="mb-4 border-b border-gray-600 pb-2 text-2xl text-gray-400">
                 Scores Finaux
               </h3>
               <div className="flex flex-col gap-2">
@@ -56,11 +60,10 @@ export default function Backglass() {
             </div>
           )}
 
-          {/* Bouton pour relancer (Garde le même nombre de joueurs que la partie précédente) */}
           <div>
             <button
               onClick={() => startGame(playerCount)}
-              className=" cursor-pointer px-8 py-4 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-2xl font-bold transition-colors shadow-lg"
+              className="cursor-pointer rounded-lg bg-emerald-600 px-8 py-4 text-2xl font-bold shadow-lg transition-colors hover:bg-emerald-500"
             >
               {hasPlayed ? "Rejouer" : "Démarrer"} ({playerCount} Joueur
               {playerCount > 1 ? "s" : ""})
@@ -68,14 +71,11 @@ export default function Backglass() {
           </div>
         </div>
       ) : (
-        // --- ÉCRAN EN JEU ---
         <div className="mt-6">
-          {/* INDICATEUR DU JOUEUR EN COURS */}
           <h2 className="text-3xl font-bold text-yellow-400 mb-4">
             Joueur {currentPlayerIndex + 1}
           </h2>
 
-          {/* STATS DU JOUEUR EN COURS */}
           <div className="bg-gray-800 p-4 rounded-lg mb-8 border border-gray-600">
             <p className="text-4xl font-black mb-4">Score: {currentScore}</p>
             <p>Billes restantes: {currentBalls}</p>
@@ -100,7 +100,6 @@ export default function Backglass() {
             <p className="mt-2">Message : {screenMessage}</p>
           </div>
 
-          {/* AFFICHAGE DES SCORES GLOBAUX (Uniquement en Multijoueur) */}
           {playerCount > 1 && (
             <div>
               <h3 className="text-lg text-gray-400 mb-2">
@@ -124,6 +123,38 @@ export default function Backglass() {
             </div>
           )}
         </div>
+      )}
+
+      {(snapshot.claim?.verificationUrl || snapshot.user?.username || snapshot.game) && (
+        <aside className="absolute right-6 top-6 w-80 rounded-2xl border border-white/10 bg-black/70 p-4 text-sm shadow-lg backdrop-blur">
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+            Score Claim
+          </p>
+          <h2 className="mt-2 text-lg font-semibold">
+            {getScoreClaimPhaseLabel(snapshot.phase)}
+          </h2>
+
+          {snapshot.game && (
+            <p className="mt-3 text-slate-300">
+              Score sauvegardé : {snapshot.game.finalScore}
+            </p>
+          )}
+
+          {snapshot.claim?.verificationUrl && (
+            <div className="mt-4 flex flex-col items-center">
+              <ScoreClaimQrCode verificationUrl={snapshot.claim.verificationUrl} />
+              <p className="mt-3 text-center text-xs text-slate-300">
+                Scannez pour rattacher le score à votre compte.
+              </p>
+            </div>
+          )}
+
+          {snapshot.user?.username && (
+            <p className="mt-4 text-slate-300">
+              Score rattaché à {snapshot.user.username}
+            </p>
+          )}
+        </aside>
       )}
     </div>
   );
