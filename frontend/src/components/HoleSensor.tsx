@@ -1,9 +1,13 @@
 import { useState } from "react";
-import { RigidBody, CuboidCollider, IntersectionEnterPayload } from "@react-three/rapier";
+import {
+  RigidBody,
+  CuboidCollider,
+  type IntersectionEnterPayload,
+} from "@react-three/rapier";
 import { useControls, folder } from "leva";
 import ObjectSound from "./ObjectSound";
 
-import { SoundConfig } from "@/config/soundsConfig";
+import type { SoundConfig } from "@/config/soundsConfig";
 
 type HoleSensorProps = {
   id: string;
@@ -46,25 +50,32 @@ export default function HoleSensor({
   };
 
   return (
-    <group position={controls.pos as [number, number, number]} rotation={controls.rot as [number, number, number]}>
+    <group
+      position={controls.pos as [number, number, number]}
+      rotation={controls.rot as [number, number, number]}
+    >
       {/* Sensor physique invisible */}
       <RigidBody type="fixed" sensor onIntersectionEnter={handleEnter}>
-        <CuboidCollider args={[controls.size[0] / 2, 0.05, controls.size[1] / 2]} />
+        <CuboidCollider
+          args={[controls.size[0] / 2, 0.05, controls.size[1] / 2]}
+        />
       </RigidBody>
-      
+
       {/* Affichage optionnel pour le debug Leva */}
       {rapierDebug && (
         <mesh>
           <boxGeometry args={[controls.size[0], 0.1, controls.size[1]]} />
-          <meshBasicMaterial color="purple" wireframe transparent opacity={0.5} />
+          <meshBasicMaterial
+            color="purple"
+            wireframe
+            transparent
+            opacity={0.5}
+          />
         </mesh>
       )}
 
       {/* Le son "one-shot" avec le pitch géré par ObjectSound */}
-      <ObjectSound
-        {...config}
-        playTrigger={playCount}
-      />
+      <ObjectSound {...config} playTrigger={playCount} />
     </group>
   );
 }
