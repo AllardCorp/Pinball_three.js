@@ -38,14 +38,14 @@ export default function Experience() {
     useLookAt: true,
 
     // Position de la caméra
-    camX: { value: 0.2, min: -50, max: 50, step: 0.1 },
-    camY: { value: 56.7, min: -50, max: 100, step: 0.1 },
-    camZ: { value: 29.5, min: -50, max: 100, step: 0.1 },
+    camX: { value: 0.2, min: -400, max: 400, step: 0.1 },
+    camY: { value: 56.7, min: -400, max: 400, step: 0.1 },
+    camZ: { value: 29.5, min: -400, max: 400, step: 0.1 },
 
     // Cible
-    targetX: { value: 0.5, min: -50, max: 50, step: 0.1 },
-    targetY: { value: -5.0, min: -50, max: 50, step: 0.1 },
-    targetZ: { value: 4.7, min: -50, max: 50, step: 0.1 },
+    targetX: { value: 0.5, min: -400, max: 400, step: 0.1 },
+    targetY: { value: -5.0, min: -400, max: 400, step: 0.1 },
+    targetZ: { value: 4.7, min: -400, max: 400, step: 0.1 },
 
     // Rotation
     rotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
@@ -55,7 +55,7 @@ export default function Experience() {
     // Paramètres spécifiques Perspective
     fov: { value: 45, min: 10, max: 120, step: 1 },
     filmGauge: { value: 35, min: 1, max: 100, step: 1 },
-    filmOffset: { value: 0, min: -50, max: 50, step: 0.1 },
+    filmOffset: { value: 0, min: -400, max: 400, step: 0.1 },
     aspectRatio: { value: 1.5, min: 0.1, max: 5, step: 0.01 },
 
     // Paramètres spécifiques Orthographique
