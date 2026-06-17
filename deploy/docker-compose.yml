@@ -11,7 +11,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -21,7 +21,7 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
-    command: ["pnpm", "run", "db:migrate"]
+    command: [ "pnpm", "run", "db:migrate" ]
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${POSTGRES_USER:-pinball_user}:${POSTGRES_PASSWORD:-change_me}@postgres:5432/${POSTGRES_DB:-pinball_db}
@@ -32,6 +32,8 @@ services:
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GLOBAL_API_URL=${GLOBAL_API_URL:-}
+      - BORNE_TOKEN=${BORNE_TOKEN:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,6 +55,8 @@ services:
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GLOBAL_API_URL=${GLOBAL_API_URL:-}
+      - BORNE_TOKEN=${BORNE_TOKEN:-}
     depends_on:
       migrate:
         condition: service_completed_successfully
