@@ -3,9 +3,9 @@ services:
     image: postgres:16-alpine
     container_name: pinball-postgres
     environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-pinball_db}
+      - POSTGRES_USER=${POSTGRES_USER:-pinball_user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change_me}
     ports:
       - "5432:5432"
     volumes:
@@ -24,7 +24,7 @@ services:
     command: ["pnpm", "run", "db:migrate"]
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-pinball_user}:${POSTGRES_PASSWORD:-change_me}@postgres:5432/${POSTGRES_DB:-pinball_db}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-change_me_with_a_long_random_secret}
       - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
@@ -45,7 +45,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-pinball_user}:${POSTGRES_PASSWORD:-change_me}@postgres:5432/${POSTGRES_DB:-pinball_db}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-change_me_with_a_long_random_secret}
       - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
@@ -63,9 +63,9 @@ services:
       context: ../frontend
       dockerfile: Dockerfile
       args:
-        - VITE_MQTT_USERNAME=${MQTT_USERNAME}
-        - VITE_MQTT_PASSWORD=${MQTT_PASSWORD}
-        - VITE_MQTT_URL=${MQTT_URL}
+        - VITE_MQTT_USERNAME=${MQTT_USERNAME:-pinball_user}
+        - VITE_MQTT_PASSWORD=${MQTT_PASSWORD:-change_me}
+        - VITE_MQTT_URL=${MQTT_URL:-}
     ports:
       - "80:80"
     restart: always
@@ -74,8 +74,8 @@ services:
     image: eclipse-mosquitto:2.0.18
     container_name: mosquitto
     environment:
-      - MQTT_USERNAME=${MQTT_USERNAME}
-      - MQTT_PASSWORD=${MQTT_PASSWORD}
+      - MQTT_USERNAME=${MQTT_USERNAME:-pinball_user}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:-change_me}
     # On génère le fichier dans /config/ et on donne les droits à l'utilisateur mosquitto
     entrypoint: >
       sh -c "touch /mosquitto/config/password_file.txt && 
