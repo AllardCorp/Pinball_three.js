@@ -4,6 +4,7 @@ import AuthGuard from "./components/auth/AuthGuard";
 import Backglass from "./pages/Backglass";
 import Dashboard from "./pages/Dashboard";
 import DMD from "./pages/DMD";
+import FlipperMaker from "./pages/FlipperMaker";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Playfield from "./pages/Playfield";
@@ -23,6 +24,10 @@ function App() {
             <Dashboard />
           </AuthGuard>
         }
+      />
+      <Route
+        path="/maker"
+        element={<FlipperMaker />}
       />
       <Route path="/backglass" element={<Backglass />} />
       <Route path="/dmd" element={<DMD />} />

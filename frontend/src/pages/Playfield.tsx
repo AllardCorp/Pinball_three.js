@@ -71,7 +71,7 @@ export default function Playfield() {
       )}
 
       <Leva collapsed />
-      <Canvas shadows camera={{ position: [0, 8, 15], fov: 50 }}>
+      <Canvas dpr={1} shadows camera={{ position: [0, 8, 15], fov: 50 }}>
         <color attach="background" args={["skyblue"]} />
         {perfVisible && <Perf position="top-left" showGraph />}
         <Environment preset="forest" />
