@@ -189,7 +189,7 @@ function Editor({ onBack }: { onBack: () => void }) {
           <Environment preset="city" />
 
           <Suspense fallback={null}>
-            <PinballMVPMaker />
+            <PinballMVPMaker position={[0, 2.903, 0]} />
           </Suspense>
 
           {/* Éléments créés */}

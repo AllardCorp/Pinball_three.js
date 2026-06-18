@@ -32,6 +32,9 @@ export function PlayfieldElement({ element }: PlayfieldElementProps) {
     localMatrix.decompose(pos, quat, sc);
     const rot = new THREE.Euler().setFromQuaternion(quat);
 
+    // Bloquer la hauteur (axe Y) pour qu'elle ne bouge pas à la souris
+    pos.y = element.position[1];
+
     updateElementTransform(
       element.id,
       [pos.x, pos.y, pos.z],
@@ -83,16 +86,7 @@ export function PlayfieldElement({ element }: PlayfieldElementProps) {
     }
   };
 
-  const meshContent = (
-    <group
-      position={element.position}
-      rotation={element.rotation}
-      scale={element.scale}
-      onPointerDown={handlePointerDown}
-    >
-      {renderGeometry()}
-    </group>
-  );
+  const meshContent = renderGeometry();
 
   if (isSelected) {
     return (
@@ -104,13 +98,25 @@ export function PlayfieldElement({ element }: PlayfieldElementProps) {
         depthTest={false}
         fixed
         scale={75}
-        disableRotations={false}
-        disableScales={false}
+        disableSliders={true} // Masque les carrés (déplacement diagonal)
+        activeAxes={[true, false, true]} // Masque la flèche verte (Axe Y)
       >
-        {meshContent}
+        {/* On ne remet pas position/rotation/scale ici car PivotControls s'en charge via la prop 'matrix' */}
+        <group onPointerDown={handlePointerDown}>
+          {meshContent}
+        </group>
       </PivotControls>
     );
   }
 
-  return meshContent;
+  return (
+    <group
+      position={element.position}
+      rotation={element.rotation}
+      scale={element.scale}
+      onPointerDown={handlePointerDown}
+    >
+      {meshContent}
+    </group>
+  );
 }
