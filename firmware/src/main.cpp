@@ -12,8 +12,9 @@
 #define WIFI_SSID "FLIPHETIC_CAB0"       // Mets le SSID configuré sur la borne
 #endif
 #ifndef WIFI_PASS
-#define WIFI_PASS "Dauphin67" // Mets le mot de passe configuré sur la borne
+#define WIFI_PASS "dauphin67" // Mets le mot de passe configuré sur la borne
 #endif
+
 
 // --- CONFIGURATION MQTT (CIBLE LA BORNE LOCALEMENT) ---
 // D'après la doc Fliphetic, la borne est TOUJOURS joignable à cette IP fixe :
