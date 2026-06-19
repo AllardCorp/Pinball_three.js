@@ -19,4 +19,5 @@ ready_timeout = 30
 
 [esp32.esp32]
 firmware = "firmware/build/firmware.bin"
+flash_addr = "0x0"
 chip     = "esp32"
