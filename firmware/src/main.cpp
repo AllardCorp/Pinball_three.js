@@ -9,10 +9,10 @@
 // --- CONFIGURATION SECURISÉE DU WIFI ---
 // Si les identifiants ne sont pas définis dans platformio.ini, on utilise ces valeurs par défaut :
 #ifndef WIFI_SSID
-#define WIFI_SSID "FLIPHETIC_CAB0"       // Mets le SSID configuré sur la borne
+#define WIFI_SSID       // Mets le SSID configuré sur la borne
 #endif
 #ifndef WIFI_PASS
-#define WIFI_PASS "Dauphin67" // Mets le mot de passe configuré sur la borne
+#define WIFI_PASS // Mets le mot de passe configuré sur la borne
 #endif
 
 // --- CONFIGURATION MQTT (CIBLE LA BORNE LOCALEMENT) ---
