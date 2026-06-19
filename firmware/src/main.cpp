@@ -15,6 +15,7 @@
 #define WIFI_PASS "dauphin67" // Mets le mot de passe configuré sur la borne
 #endif
 
+
 // --- CONFIGURATION MQTT (CIBLE LA BORNE LOCALEMENT) ---
 // D'après la doc Fliphetic, la borne est TOUJOURS joignable à cette IP fixe :
 const char* mqtt_server = "10.42.0.1"; 
