@@ -138,6 +138,7 @@ void publishCurrentState() {
 
 void setup() {
   Serial.begin(115200);
+  client.setBufferSize(512);
   
   // Configuration des boutons
   for (int i = 0; i < NUM_BUTTONS; i++) {
