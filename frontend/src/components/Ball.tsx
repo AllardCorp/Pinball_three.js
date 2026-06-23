@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import { useControls } from "leva";
-import { useGameStore } from "@/store/useGameStore";
+import { useGameStore } from "@/store/gameStore/useGameStore";
 import ObjectSound from "./ObjectSound";
 import BallAudio from "./BallAudio";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
-import { useInputStore } from "@/store/useInputStore";
+import { useInputStore } from "@/store/inputStore/useInputStore";
 type BallProps = {
   position: [number, number, number];
 };

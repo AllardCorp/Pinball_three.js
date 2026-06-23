@@ -1,7 +1,7 @@
 import { RigidBody, type CollisionEnterPayload } from "@react-three/rapier";
 import { useRef } from "react";
 import * as THREE from "three";
-import { useGameStore } from "@/store/useGameStore";
+import { useGameStore } from "@/store/gameStore/useGameStore";
 
 type ScoreTargetProps = {
   geometry: THREE.BufferGeometry;

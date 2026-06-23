@@ -1,6 +1,6 @@
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import { useControls } from "leva";
-import { useGameStore } from "@/store/useGameStore";
+import { useGameStore } from "@/store/gameStore/useGameStore";
 
 export default function DeathZone() {
   const loseBall = useGameStore((state) => state.loseBall);

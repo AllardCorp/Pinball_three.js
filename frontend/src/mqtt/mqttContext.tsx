@@ -1,7 +1,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { MqttClient } from "mqtt";
 import { connectMqtt } from "./mqttClient";
-import { useInputStore, type InputState } from "@/store/useInputStore";
+import {
+  useInputStore,
+  type InputState,
+} from "@/store/inputStore/useInputStore";
 
 const MqttContext = createContext<MqttClient | null>(null);
 const TOPIC = "pinball/input/state";

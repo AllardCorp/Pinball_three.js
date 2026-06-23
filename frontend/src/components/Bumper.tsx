@@ -6,7 +6,7 @@ import {
 import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { useGameStore } from "@/store/useGameStore";
+import { useGameStore } from "@/store/gameStore/useGameStore";
 import ObjectSound from "./ObjectSound";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
