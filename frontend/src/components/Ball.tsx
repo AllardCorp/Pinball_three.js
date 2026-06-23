@@ -65,7 +65,6 @@ export default function Ball({ position }: BallProps) {
     }
   }, [ballInLauncher, isPlaying, position]);
 
-  // const { mass, restitution, size, linearDamping, angularDamping } = ❓
   const { mass, restitution, size } = useControls("Ball Controls", {
     mass: { value: 3.5, min: 0.1, max: 20, step: 0.1 },
     restitution: { value: 0.2, min: 0, max: 1, step: 0.1 },
@@ -105,8 +104,6 @@ export default function Ball({ position }: BallProps) {
         colliders="ball"
         restitution={restitution}
         mass={mass}
-        //      linearDamping={linearDamping}
-        //     angularDamping={angularDamping}
       >
         <mesh>
           <sphereGeometry args={[size, 32, 32]} />

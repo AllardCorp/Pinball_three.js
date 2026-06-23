@@ -28,7 +28,7 @@ export default function Flipper({
     upForce: { value: 55, min: 10, max: 80, step: 0.1 },
     downForce: { value: 35, min: 10, max: 60, step: 0.1 },
   });
-  // 👈 2. On indique à TypeScript le type exact de la référence
+  // 2. On indique à TypeScript le type exact de la référence
   const flipperRef = useRef<RapierRigidBody>(null);
 
   const isActive = useInputStore((state) =>
@@ -42,7 +42,7 @@ export default function Flipper({
     [position],
   );
 
-  // 👈 3. On remplace "state" par "_" pour indiquer qu'on ignore le premier paramètre
+  // 3. On remplace "state" par "_" pour indiquer qu'on ignore le premier paramètre
   useFrame((_, delta) => {
     if (!flipperRef.current) return;
     const speed = isActive ? upForce : downForce; // Vitesse de levée | Vitesse de descente du flipper
