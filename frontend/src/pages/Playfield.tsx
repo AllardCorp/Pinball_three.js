@@ -11,8 +11,8 @@ import Loader from "../components/Loader";
 import { useAppMode } from "../hooks/useAppMode";
 import { useScoreClaimSession } from "../hooks/useScoreClaimSession";
 import { useKeyboardControls } from "../mqtt/useKeyboardControls";
-import { useGameStore } from "@/store/useGameStore";
-import { useInputStore } from "@/store/useInputStore";
+import { useGameStore } from "@/store/gameStore/useGameStore";
+import { useInputStore } from "@/store/inputStore/useInputStore";
 
 export default function Playfield() {
   const { isArcadeMode, mode } = useAppMode();

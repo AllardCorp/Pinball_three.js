@@ -1,7 +1,7 @@
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import { useControls } from "leva";
 import type { BufferGeometry, Material } from "three";
-import { useGameStore } from "@/store/useGameStore";
+import { useGameStore } from "@/store/gameStore/useGameStore";
 import { useState } from "react";
 import ObjectSound from "./ObjectSound";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";

@@ -5,7 +5,7 @@ import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import * as THREE from "three";
 import ObjectSound from "./ObjectSound";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
-import { useInputStore } from "@/store/useInputStore";
+import { useInputStore } from "@/store/inputStore/useInputStore";
 
 type FlipperProps = {
   colliderGeometry: THREE.BufferGeometry;
