@@ -85,7 +85,7 @@ export const useGameStore = create<GameState>()((set, get) => {
         isPlaying: true,
         ballInLauncher: true,
         scoreMultiplier: 1,
-        mineHits: 3,
+        mineHits: 0,
         rubiesActive: [false, false, false],
         leftKickbackActive: true,
         rightKickbackActive: true,

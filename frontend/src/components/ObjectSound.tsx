@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { PositionalAudio } from "@react-three/drei";
 import * as THREE from "three";
-import { useControls } from "leva"; // 👈 1. Ajoute cet import
+import { useControls } from "leva";
 import { AudioErrorBoundary } from "@/components/AudioErrorBoundary";
 
 type ObjectSoundProps = {
@@ -27,22 +27,21 @@ export default function ObjectSound({
   const soundRefs = useRef<(THREE.PositionalAudio | null)[]>([]);
   const isMounted = useRef(false);
 
-  // 👇 2. Ajout du contrôle global Leva dans un dossier "Audio"
+  // Leva
   const { masterVolume } = useControls("Audio", {
     masterVolume: { value: 1, min: 0, max: 5, step: 0.1 },
   });
-
-  // 👇 3. On multiplie le volume spécifique de l'objet par le masterVolume global
+  // Gestion du volume final
   const finalVolume = volume * masterVolume;
 
-  // 👇 1er useEffect : Gère UNIQUEMENT le volume en direct (silencieux)
+  // 1er useEffect : Gère UNIQUEMENT le volume en direct (silencieux)
   useEffect(() => {
     soundRefs.current.forEach((sound) => {
       if (sound) sound.setVolume(finalVolume);
     });
-  }, [finalVolume]); // 👈 Ne s'active que si le volume change
+  }, [finalVolume]); // Ne s'active que si le volume change
 
-  // 👇 2ème useEffect : Gère UNIQUEMENT le fait de jouer le son
+  // 2ème useEffect : Gère UNIQUEMENT le fait de jouer le son
   useEffect(() => {
     if (!isMounted.current) {
       isMounted.current = true;
@@ -78,7 +77,7 @@ export default function ObjectSound({
         }
       }
     }
-  }, [playTrigger, urls.length, pitchMin, pitchMax, playbackRate]); // 👈 Ne s'active que lors d'un vrai trigger !
+  }, [playTrigger, urls.length, pitchMin, pitchMax, playbackRate]); // Ne s'active que lors d'un vrai trigger !
 
   return (
     <>
