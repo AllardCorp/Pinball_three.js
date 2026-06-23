@@ -1,6 +1,7 @@
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import { useControls } from "leva";
-import { useGameStore } from "@/store/useGameStore";
+import { useGameStore } from "@/store/gameStore/useGameStore";
+
 type LuncherGateProps = {
   nodes: any;
   materials: any;

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { RigidBody, type CollisionEnterPayload } from "@react-three/rapier";
 import * as THREE from "three";
 import { useControls } from "leva";
-import { useGameStore } from "@/store/useGameStore";
+import { useGameStore } from "@/store/gameStore/useGameStore";
 import ObjectSound from "./ObjectSound";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
@@ -55,10 +55,7 @@ export default function Slingshot({
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      <ObjectSound
-        {...SOUNDS_CONFIG.slingshot.hit}
-        playTrigger={hitCount}
-      />
+      <ObjectSound {...SOUNDS_CONFIG.slingshot.hit} playTrigger={hitCount} />
     </RigidBody>
   );
 }

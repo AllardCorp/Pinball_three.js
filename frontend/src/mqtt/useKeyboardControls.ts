@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useMqtt } from "./mqttContext";
-import { useInputStore } from "@/store/useInputStore";
+import { useInputStore } from "@/store/inputStore/useInputStore";
 
 const TOPIC = "pinball/input/state";
 
