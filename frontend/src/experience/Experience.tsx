@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useControls } from "leva";
 import * as THREE from "three";
-import PinballMVPBase from "@/components/models/PinballMVP_Base";
+import PinballBase from "@/components/models/PinballFinal";
 
 export default function Experience() {
   // LEVA
@@ -95,21 +95,7 @@ export default function Experience() {
         />
       )}
 
-      {/* Le Fallback HTML unique et en mode fullscreen */}
-      {/* <Suspense */}
-      {/*   fallback={ */}
-      {/*     <Html fullscreen> */}
-      {/*       <main className="bg-indigo-950 w-screen h-screen flex items-center justify-center"> */}
-      {/*         <span className="text-orange-300 font-semibold text-4xl"> */}
-      {/*           Loading... */}
-      {/*         </span> */}
-      {/*       </main> */}
-      {/*     </Html> */}
-      {/*   } */}
-      {/* > */}
-      {/*   <PinballMVPBase /> */}
-      {/* </Suspense> */}
-      <PinballMVPBase />
+      <PinballBase />
     </>
   );
 }

@@ -110,7 +110,7 @@ export default function BallAudio({
       console.log(
         `%c[Raycast Ball Hit] ${hitName}`,
         logColor,
-        // 👇 Ajout de (hit as any) pour forcer la lecture de "toi"
+        // Ajout de (hit as any) pour forcer la lecture de "toi"
         hit
           ? { distance: (hit as any).toi, collider: hit.collider }
           : "Air/Vide",
