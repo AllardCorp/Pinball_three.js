@@ -14,6 +14,7 @@ import { useGameStore } from "@/store/useGameStore";
 import { useInputStore } from "@/store/useInputStore";
 
 export default function Playfield() {
+
   const { isArcadeMode, mode } = useAppMode();
   const {
     authenticatedUser,

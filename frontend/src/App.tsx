@@ -8,6 +8,7 @@ import FlipperMaker from "./pages/FlipperMaker";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Playfield from "./pages/Playfield";
+import PlayfieldMaker from "./pages/PlayfieldMaker";
 import ScoreClaim from "./pages/ScoreClaim";
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/score-claim" element={<ScoreClaim />} />
       <Route path="/playfield" element={<Playfield />} />
+      <Route path="/playfield/:levelId" element={<PlayfieldMaker />} />
       <Route
         path="/dashboard"
         element={
