@@ -43,6 +43,12 @@ export const ELF_POWER_CONFIG = {
   ] as const,
 };
 
+// Réglages spécifiques au pouvoir du guerrier
+export const WARRIOR_POWER_CONFIG = {
+  // Ajuste ces valeurs selon tes tests. y donne un petit saut, -z propulse vers le haut du plateau
+  impulseForce: { x: 0, y: 0, z: -60 },
+};
+
 // Les synergies entre classes et zones
 export const CLASS_ZONE_SYNERGIES: Record<
   string,
@@ -97,7 +103,7 @@ export const SWORD_SPAWN_TIMERS = {
 // SCORE DES ÉLÉMENTS DU PLATEAU
 export const SCORE_VALUES: Record<string, number> = {
   bumper: 1000,
-  slingShot: 250,
+  slingshot: 250,
   kickback: 5000,
   minePlank: 2500,
   fakirTarget: 500,

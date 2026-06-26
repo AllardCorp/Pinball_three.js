@@ -22,6 +22,7 @@ export interface ClassSlice {
   swordActive: boolean;
   swordPositionIndex: number; // Index de la position actuelle de l'épée dans SWORD_POSITIONS
   swordSpawnTimeoutId: NodeJS.Timeout | null;
+  warriorImpulseTrigger: number;
 
   // Actions
   spawnSword: () => void;
@@ -50,6 +51,7 @@ export const createClassSlice: StateCreator<GameState, [], [], ClassSlice> = (
     swordActive: false,
     swordPositionIndex: 0,
     swordSpawnTimeoutId: null,
+    warriorImpulseTrigger: 0,
 
     spawnSword: () => {
       if (!get().isPlaying) return;
@@ -104,6 +106,8 @@ export const createClassSlice: StateCreator<GameState, [], [], ClassSlice> = (
         activeClass: randomClass,
         swordActive: false,
         isPowerOnCooldown: false,
+        powerCooldownExpiresAt: 0,
+        powerCooldownTotalDuration: 0,
       });
 
       get().displayMessage(
@@ -161,6 +165,10 @@ export const createClassSlice: StateCreator<GameState, [], [], ClassSlice> = (
           break;
 
         case "Warrior":
+          // Incrémentation du trigger pour avertir le composant Ball
+          setAndSync({
+            warriorImpulseTrigger: state.warriorImpulseTrigger + 1,
+          });
           break;
 
         case "Dwarf":
@@ -197,6 +205,7 @@ export const createClassSlice: StateCreator<GameState, [], [], ClassSlice> = (
         powerCooldownExpiresAt: 0,
         powerCooldownTotalDuration: 0,
         swordActive: false,
+        warriorImpulseTrigger: 0,
       });
     },
 
@@ -204,6 +213,8 @@ export const createClassSlice: StateCreator<GameState, [], [], ClassSlice> = (
       setAndSync({
         activeClass: className,
         isPowerOnCooldown: false,
+        powerCooldownExpiresAt: 0,
+        powerCooldownTotalDuration: 0,
         swordActive: false,
       });
       get().displayMessage(`[DEBUG] Classe forcée : ${className}`, 2000);

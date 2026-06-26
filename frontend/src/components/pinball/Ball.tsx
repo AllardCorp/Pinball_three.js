@@ -4,9 +4,11 @@ import { useGameStore } from "@/store/gameStore/useGameStore";
 import ObjectSound from "@/components/sounds/ObjectSound";
 import BallAudio from "@/components/sounds/BallAudio";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
-
+import { WARRIOR_POWER_CONFIG } from "@/config/gameBalancingConfig";
+import ParticleExplosion from "@/components/pinball/ParticleExplosion";
 import { useInputStore } from "@/store/inputStore/useInputStore";
 import { useGameDebug } from "@/config/useGameDebug";
+
 type BallProps = {
   position: [number, number, number];
 };
@@ -17,8 +19,18 @@ export default function Ball({ position }: BallProps) {
   const [launchCount, setLaunchCount] = useState(0);
   const [launchVolume, setLaunchVolume] = useState(1);
 
+  const [isWarriorExploding, setIsWarriorExploding] = useState(false);
+  const [explosionPos, setExplosionPos] = useState<[number, number, number]>([
+    0, 0, 0,
+  ]);
+
   const isPlaying = useGameStore((state) => state.isPlaying);
   const ballInLauncher = useGameStore((state) => state.ballInLauncher);
+
+  const warriorImpulseTrigger = useGameStore(
+    (state) => state.warriorImpulseTrigger,
+  );
+
   // Écoute des contrôles de lancement provenant de MQTT ou du clavier
   const launchBall = useInputStore((state) => state.buttons.launch_ball);
   const plungerForce = useInputStore((state) => state.analog.plunger);
@@ -65,6 +77,34 @@ export default function Ball({ position }: BallProps) {
     }
   }, [ballInLauncher, isPlaying, position]);
 
+  // Compétence du guerrier
+  useEffect(() => {
+    // On s'assure qu'on est en jeu, que la bille n'est pas dans le lanceur et que le pouvoir a été déclenché
+    if (
+      warriorImpulseTrigger > 0 &&
+      ballRef.current &&
+      isPlaying &&
+      !ballInLauncher
+    ) {
+      ballRef.current.wakeUp(); // Réveille la bille pour la physique
+
+      // Sauvegarde de la position actuelle de la bille pour l'effet visuel
+      const currentPos = ballRef.current.translation();
+      setExplosionPos([currentPos.x, currentPos.y, currentPos.z]);
+
+      // On applique instantanément la force fixe définie dans la config
+      ballRef.current.applyImpulse(WARRIOR_POWER_CONFIG.impulseForce, true);
+
+      console.log("Impulsion du Guerrier appliquée !");
+
+      // Effet visuel
+      setIsWarriorExploding(true);
+      setTimeout(() => {
+        setIsWarriorExploding(false);
+      }, 500);
+    }
+  }, [warriorImpulseTrigger, isPlaying, ballInLauncher]);
+
   const { mass, restitution, size } = useGameDebug();
 
   // SÉCURITÉ : Si la partie n'est pas lancée, la bille n'existe pas dans le monde 3D
@@ -110,6 +150,14 @@ export default function Ball({ position }: BallProps) {
           volume={launchVolume}
         />
       </RigidBody>
+
+      <group position={explosionPos}>
+        <ParticleExplosion
+          count={80}
+          color="#fffa00"
+          isExploding={isWarriorExploding}
+        />
+      </group>
 
       <BallAudio
         ballRef={ballRef}
