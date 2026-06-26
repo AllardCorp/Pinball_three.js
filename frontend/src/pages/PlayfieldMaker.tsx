@@ -10,6 +10,7 @@ import Ball from "@/components/Ball";
 import { apiEndpoint } from "@/lib/api";
 import type { MakerElement } from "@/store/useMakerStore";
 import { useGameStore } from "@/store/useGameStore";
+import { useInputStore } from "@/store/useInputStore";
 import { useKeyboardControls } from "@/mqtt/useKeyboardControls";
 
 function FixedCamera() {
@@ -21,16 +22,9 @@ function FixedCamera() {
 }
 
 function Scene({ elements }: { elements: MakerElement[] }) {
-  const startGame = useGameStore((state) => state.startGame);
-  const isPlaying = useGameStore((state) => state.isPlaying);
-
-  useEffect(() => {
-    if (!isPlaying) startGame(1);
-  }, [isPlaying, startGame]);
-
   return (
     <Suspense fallback={null}>
-      <PinballMVPMaker />
+      <PinballMVPMaker withPhysics />
       {elements.map((el) => (
         <PhysicsPlayfieldElement key={el.id} element={el} />
       ))}
@@ -44,7 +38,18 @@ export default function PlayfieldMaker() {
   const navigate = useNavigate();
   const [elements, setElements] = useState<MakerElement[]>([]);
 
+  const startPressed = useInputStore((state) => state.buttons.start);
+  const startGame = useGameStore((state) => state.startGame);
+  const updateInputs = useInputStore((state) => state.updateInputs);
+
   useKeyboardControls();
+
+  useEffect(() => {
+    if (startPressed) {
+      startGame(1);
+      updateInputs({ buttons: { start: false } });
+    }
+  }, [startPressed, startGame, updateInputs]);
 
   useEffect(() => {
     if (!levelId) { navigate("/maker"); return; }
