@@ -44,14 +44,25 @@ function sanitizePayload(payload: any): {
     const b = payload.buttons;
 
     // On ne garde et ne transtype que ce que l'on connaît
-    if ("left_flipper" in b)
-      sanitized.buttons.left_flipper = Boolean(b.left_flipper);
-    if ("right_flipper" in b)
-      sanitized.buttons.right_flipper = Boolean(b.right_flipper);
-    if ("start" in b) sanitized.buttons.start = Boolean(b.start);
-    if ("coin_slot" in b) sanitized.buttons.coin_slot = Boolean(b.coin_slot);
-    if ("launch_ball" in b)
-      sanitized.buttons.launch_ball = Boolean(b.launch_ball);
+    const current = useInputStore.getState().buttons;
+    
+    if ("black_left" in b) sanitized.buttons.black_left = Boolean(b.black_left);
+    if ("white_left" in b) sanitized.buttons.white_left = Boolean(b.white_left);
+    if ("front_left_green" in b) {
+      sanitized.buttons.front_left_green = Boolean(b.front_left_green);
+      if (b.front_left_green && !current.front_left_green) console.log("🟢 front left green pressed");
+    }
+    if ("front_left_yellow" in b) sanitized.buttons.front_left_yellow = Boolean(b.front_left_yellow);
+    if ("front_left_red" in b) {
+      sanitized.buttons.front_left_red = Boolean(b.front_left_red);
+      if (b.front_left_red && !current.front_left_red) console.log("🔴 front left red pressed");
+    }
+    if ("black_right" in b) {
+      sanitized.buttons.black_right = Boolean(b.black_right);
+      if (b.black_right && !current.black_right) console.log("⚫ black right pressed");
+    }
+    if ("white_right" in b) sanitized.buttons.white_right = Boolean(b.white_right);
+    if ("front_white" in b) sanitized.buttons.front_white = Boolean(b.front_white);
   }
 
   // 2. Validation des données analogiques
