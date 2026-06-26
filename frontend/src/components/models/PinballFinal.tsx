@@ -1,20 +1,22 @@
-import { useControls } from "leva";
+import { useGameDebug } from "@/config/useGameDebug";
 import * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
 import type { GLTF } from "three-stdlib";
 import type { JSX } from "react";
 import { RigidBody, CoefficientCombineRule } from "@react-three/rapier";
-import Flipper from "@/components/Flipper";
-import Kickback from "@/components/Kickback";
-import Slingshot from "@/components/Slingshot";
-import Bumper from "@/components/Bumper";
-import Ball from "@/components/Ball";
-import LauncherGate from "@/components/LauncherGate";
-import DeathZone from "@/components/DeathZone";
-import GoldMine from "@/components/GoldMine";
-import ScoreTarget from "@/components/ScoreTarget";
-import HoleSensor from "@/components/HoleSensor";
+import Flipper from "@/components/pinball/Flipper";
+import Kickback from "@/components/pinball/Kickback";
+import Slingshot from "@/components/pinball/Slingshot";
+import Bumper from "@/components/pinball/Bumper";
+import Ball from "@/components/pinball/Ball";
+import LauncherGate from "@/components/pinball/LauncherGate";
+import DeathZone from "@/components/pinball/DeathZone";
+import GoldMine from "@/components/pinball/GoldMine";
+import ScoreTarget from "@/components/pinball/ScoreTarget";
+import HoleSensor from "@/components/pinball/HoleSensor";
+import ClassTriggerSword from "@/components/pinball/ClassTriggerSword";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
+import { SCORE_VALUES } from "@/config/gameBalancingConfig";
 
 type GLTFResult = GLTF & {
   nodes: {
@@ -260,23 +262,17 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
     "/models/Pinball_BaseFinal.glb",
   ) as unknown as GLTFResult;
 
-  // Debug Leva
-  const { startX, startY, startZ } = useControls("Ball Position", {
-    startX: { value: 12.75, min: -20, max: 20, step: 0.1 },
-    startY: { value: -2.3, min: -20, max: 20, step: 0.1 },
-    startZ: { value: 30.46, min: -40, max: 80, step: 0.1 },
-  });
-  const { leftStrength, rightStrength } = useControls("Kickbacks", {
-    leftStrength: { value: 120, min: 0, max: 200, step: 1 },
-    rightStrength: { value: 120, min: 0, max: 200, step: 1 },
-  });
+  const { startingPosition } = useGameDebug();
+  const { leftStrength, rightStrength } = useGameDebug();
+
   return (
     <>
       <GoldMine nodes={nodes} materials={materials} />
       <LauncherGate nodes={nodes} materials={materials} />
-      <Ball position={[startX, startY, startZ]} />
+      <Ball
+        position={[startingPosition.x, startingPosition.y, startingPosition.z]}
+      />
       <DeathZone />
-
       {/* Sensor pour le trou */}
       <HoleSensor
         id="MainHole"
@@ -285,7 +281,6 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         defaultRot={[1.5, 0, 0]}
         defaultSize={[2.5, 1.3]}
       />
-      {/* A refaire */}
       {/* <Bumper */}
       {/*   id={0} */}
       {/*   colliderGeometry={nodes.coll_bumpers001.geometry} */}
@@ -341,7 +336,6 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           </>
         }
       />
-
       {/* Bumper 1 */}
       <Bumper
         id={1}
@@ -367,7 +361,6 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           </>
         }
       />
-
       {/* Bumper 2 */}
       <Bumper
         id={2}
@@ -393,13 +386,13 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           </>
         }
       />
+      {/* Left Slingshot */}
       <Slingshot
         geometry={nodes.coll_left_sling_collision.geometry}
         position={[-7.708, -2.233, 16.596]}
         rotation={[0, 0, 0]}
         pushDirection={[1, 0, -1]}
       />
-      {/* Le droit renvoie la bille vers la gauche (-X) et vers le haut (-Z) */}
       {/* Right Slingshot */}
       <Slingshot
         geometry={nodes.coll_right_sling_collision.geometry}
@@ -447,12 +440,12 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         sensorPosition={[9.4, -2.3, 26.5]}
         kickStrength={rightStrength}
       />
-
       {/* --- CIBLES FAKIR (Donnent des points) --- */}
       <ScoreTarget
         geometry={nodes.coll_faquir_plank001.geometry}
         position={[9.866, -2.882, -14.48]}
-        points={150}
+        points={SCORE_VALUES.fakirTarget}
+        zone={"Fakir"}
       />
       {/* <ScoreTarget */}
       {/*   geometry={nodes.coll_faquir_plank002.geometry} */}
@@ -462,29 +455,37 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
       <ScoreTarget
         geometry={nodes.coll_faquir_plank003.geometry}
         position={[9.134, -0.452, -12.781]}
-        points={150}
+        points={SCORE_VALUES.fakirTarget}
+        zone={"Fakir"}
       />
       <ScoreTarget
         geometry={nodes.coll_faquir_plank004.geometry}
         position={[7.995, -0.452, -10.223]}
-        points={150}
+        points={SCORE_VALUES.fakirTarget}
+        zone={"Fakir"}
       />
+
       <ScoreTarget
         geometry={nodes.coll_faquir_plank005.geometry}
         position={[7.527, -0.452, -6]}
-        points={150}
+        points={SCORE_VALUES.fakirTarget}
+        zone={"Fakir"}
       />
 
       <ScoreTarget
         geometry={nodes.coll_faquir_plank006.geometry}
         position={[8.799, -0.452, -8.033]}
-        points={150}
+        points={SCORE_VALUES.fakirTarget}
+        zone={"Fakir"}
       />
       <ScoreTarget
         geometry={nodes.coll_faquir_plank007.geometry}
         position={[7.12, -0.452, -3.509]}
-        points={150}
+        points={SCORE_VALUES.fakirTarget}
+        zone={"Fakir"}
       />
+      {/* Épée de sélection de classes */}
+      <ClassTriggerSword />
       <group {...props} dispose={null}>
         <group name="Scene">
           <group name="visual_TowerModel" position={[-13.618, -1.583, 2.318]}>
@@ -1230,18 +1231,18 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             }
             position={[5.517, -1.362, 19.445]}
           />
-          <group name="visual_sword" position={[0, -0.762, 0]}>
-            <mesh
-              name="defaultMaterial"
-              geometry={nodes.defaultMaterial.geometry}
-              material={materials.Blade}
-            />
-            <mesh
-              name="defaultMaterial_1"
-              geometry={nodes.defaultMaterial_1.geometry}
-              material={materials.Hilt}
-            />
-          </group>
+          {/* <group name="visual_sword" position={[0, -0.762, 0]}> */}
+          {/*   <mesh */}
+          {/*     name="defaultMaterial" */}
+          {/*     geometry={nodes.defaultMaterial.geometry} */}
+          {/*     material={materials.Blade} */}
+          {/*   /> */}
+          {/*   <mesh */}
+          {/*     name="defaultMaterial_1" */}
+          {/*     geometry={nodes.defaultMaterial_1.geometry} */}
+          {/*     material={materials.Hilt} */}
+          {/*   /> */}
+          {/* </group> */}
           {/* <mesh */}
           {/*   name="coll_flipper_left_bottom" */}
           {/*   geometry={nodes.coll_flipper_left_bottom.geometry} */}

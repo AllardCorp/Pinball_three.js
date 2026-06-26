@@ -1,11 +1,11 @@
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useControls } from "leva";
 import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import * as THREE from "three";
-import ObjectSound from "./ObjectSound";
+import ObjectSound from "@/components/sounds/ObjectSound";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 import { useInputStore } from "@/store/inputStore/useInputStore";
+import { useGameDebug } from "@/config/useGameDebug";
 
 type FlipperProps = {
   colliderGeometry: THREE.BufferGeometry;
@@ -24,10 +24,7 @@ export default function Flipper({
   rotation,
   side,
 }: FlipperProps) {
-  const { upForce, downForce } = useControls("Vitesse des flippers", {
-    upForce: { value: 55, min: 10, max: 80, step: 0.1 },
-    downForce: { value: 35, min: 10, max: 60, step: 0.1 },
-  });
+  const { upForce, downForce } = useGameDebug();
   // 2. On indique à TypeScript le type exact de la référence
   const flipperRef = useRef<RapierRigidBody>(null);
 

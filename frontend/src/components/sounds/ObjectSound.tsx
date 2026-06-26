@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { PositionalAudio } from "@react-three/drei";
 import * as THREE from "three";
-import { useControls } from "leva";
-import { AudioErrorBoundary } from "@/components/AudioErrorBoundary";
+import { AudioErrorBoundary } from "@/components/sounds/AudioErrorBoundary";
+import { useGameDebug } from "@/config/useGameDebug";
 
 type ObjectSoundProps = {
   url: string | string[];
@@ -28,9 +28,7 @@ export default function ObjectSound({
   const isMounted = useRef(false);
 
   // Leva
-  const { masterVolume } = useControls("Audio", {
-    masterVolume: { value: 1, min: 0, max: 5, step: 0.1 },
-  });
+  const { masterVolume } = useGameDebug();
   // Gestion du volume final
   const finalVolume = volume * masterVolume;
 

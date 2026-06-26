@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
-import { useControls } from "leva";
 import { useGameStore } from "@/store/gameStore/useGameStore";
-import ObjectSound from "./ObjectSound";
-import BallAudio from "./BallAudio";
+import ObjectSound from "@/components/sounds/ObjectSound";
+import BallAudio from "@/components/sounds/BallAudio";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
 import { useInputStore } from "@/store/inputStore/useInputStore";
+import { useGameDebug } from "@/config/useGameDebug";
 type BallProps = {
   position: [number, number, number];
 };
@@ -65,13 +65,7 @@ export default function Ball({ position }: BallProps) {
     }
   }, [ballInLauncher, isPlaying, position]);
 
-  const { mass, restitution, size } = useControls("Ball Controls", {
-    mass: { value: 3.5, min: 0.1, max: 20, step: 0.1 },
-    restitution: { value: 0.2, min: 0, max: 1, step: 0.1 },
-    size: { value: 0.6, min: 0.1, max: 5, step: 0.05 },
-    linearDamping: { value: 0.1, min: 0, max: 1, step: 0.01 },
-    angularDamping: { value: 0.1, min: 0, max: 1, step: 0.01 },
-  });
+  const { mass, restitution, size } = useGameDebug();
 
   // SÉCURITÉ : Si la partie n'est pas lancée, la bille n'existe pas dans le monde 3D
   // On render tout de même le son pour qu'il soit préchargé au démarrage de l'app,

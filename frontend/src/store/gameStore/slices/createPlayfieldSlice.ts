@@ -1,5 +1,6 @@
 import { type StateCreator } from "zustand";
 import { type GameState, syncState } from "../gameStore.types";
+import { SCORE_VALUES } from "@/config/gameBalancingConfig";
 
 export interface PlayfieldSlice {
   scoreMultiplier: number;
@@ -69,9 +70,10 @@ export const createPlayfieldSlice: StateCreator<
       setAndSync({ rubiesActive: currentRubies });
 
       if (currentRubies.every((ruby) => ruby === true)) {
-        get().addScore(5000); // 👈 Slices can call actions from other slices via get() !
+        get().addScore(SCORE_VALUES.gemsToggle);
+        get().activateMultiplier("gems");
         setAndSync({ rubiesActive: [false, false, false] });
-        console.log("Tous les rubis activés + 5000");
+        console.log("Tous les rubis activés");
       }
     },
 

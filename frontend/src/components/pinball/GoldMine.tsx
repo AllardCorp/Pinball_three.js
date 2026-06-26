@@ -7,9 +7,9 @@ import { useRef, forwardRef, useImperativeHandle, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useGameStore } from "@/store/gameStore/useGameStore";
-import { useControls } from "leva";
-import ObjectSound from "./ObjectSound";
+import ObjectSound from "@/components/sounds/ObjectSound";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
+import { SCORE_VALUES } from "@/config/gameBalancingConfig";
 
 // --- TYPES POUR LE SYSTÈME DE POUSSIÈRE ---
 export interface DustEffectRef {
@@ -166,6 +166,7 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
   const mineHits = useGameStore((state) => state.mineHits);
   const incrementMine = useGameStore((state) => state.incrementMine);
   const addScore = useGameStore((state) => state.addScore);
+  const activateMultiplier = useGameStore((state) => state.activateMultiplier);
   const dustRef = useRef<DustEffectRef>(null!);
 
   const lastHitTime = useRef<number>(0);
@@ -188,7 +189,7 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
         }
 
         incrementMine();
-        addScore(500);
+        addScore(SCORE_VALUES.minePlank);
         console.log("Planche de la mine cassée ! Coups :", mineHits + 1);
       }
       if (mineHits + 1 === 3) {
@@ -196,21 +197,6 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
       }
     }
   };
-
-  // --- LEVA CONTROLS ---
-  const { startX, startY, startZ } = useControls("Mine teleporter Position", {
-    startX: { value: -12.8, min: -20, max: 20, step: 0.01 },
-    startY: { value: -8.8, min: -20, max: 20, step: 0.01 },
-    startZ: { value: 5.4, min: -40, max: 80, step: 0.01 },
-  });
-  const { rotationX, rotationY, rotationZ } = useControls(
-    "Mine teleporter rotation",
-    {
-      rotationX: { value: 0, min: -100, max: 100, step: 0.01 },
-      rotationY: { value: 3.7, min: -10, max: 10, step: 0.01 },
-      rotationZ: { value: 0, min: -10040, max: 100, step: 0.01 },
-    },
-  );
 
   return (
     <group>
@@ -282,12 +268,13 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
       <RigidBody
         type="fixed"
         sensor
-        position={[startX, startY, startZ]}
-        rotation={[rotationX, rotationY, rotationZ]}
+        position={[-12.8, -8.8, 5.4]}
+        rotation={[0, 3.7, 0]}
         onIntersectionEnter={(e) => {
           if (e.other.rigidBodyObject?.name === "ball" && e.other.rigidBody) {
             console.log("Jackpot ! La bille est dans la mine !");
 
+            activateMultiplier("mine");
             e.other.rigidBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
             e.other.rigidBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
 

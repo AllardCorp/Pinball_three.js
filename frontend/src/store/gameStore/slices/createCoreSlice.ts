@@ -45,7 +45,8 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
         leftKickbackActive: true,
         rightKickbackActive: true,
       });
-
+      get().resetMultipliers();
+      get().resetClassSystem();
       console.log(`Début de la partie à ${players} joueur(s) !`);
     },
 
@@ -81,7 +82,8 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
         leftKickbackActive: true,
         rightKickbackActive: true,
       });
-
+      get().resetMultipliers();
+      get().resetClassSystem();
       console.log(`Bille perdue. Au tour du Joueur ${nextPlayer + 1} !`);
     },
 

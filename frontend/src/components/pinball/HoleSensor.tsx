@@ -4,9 +4,9 @@ import {
   CuboidCollider,
   type IntersectionEnterPayload,
 } from "@react-three/rapier";
-import { useControls, folder } from "leva";
-import ObjectSound from "./ObjectSound";
-
+import { useControls } from "leva";
+import ObjectSound from "@/components/sounds/ObjectSound";
+import { useGameDebug } from "@/config/useGameDebug";
 import type { SoundConfig } from "@/config/soundsConfig";
 
 type HoleSensorProps = {
@@ -26,16 +26,17 @@ export default function HoleSensor({
 }: HoleSensorProps) {
   const [playCount, setPlayCount] = useState(0);
 
-  // Pour afficher la zone d'intersection si on veut voir où elle est
-  const { rapierDebug } = useControls("rapier", { rapierDebug: true });
+  const { rapierDebug } = useGameDebug();
 
-  const controls = useControls(`HoleSensor ${id}`, {
-    Transform: folder({
+  const controls = useControls(
+    `HoleSensor ${id}`,
+    {
       pos: { value: defaultPos, step: 0.1 },
       rot: { value: defaultRot, step: 0.05 },
       size: { value: defaultSize, step: 0.1 },
-    }),
-  });
+    },
+    { collapsed: true },
+  );
 
   const handleEnter = (e: IntersectionEnterPayload) => {
     // Si c'est la bille qui entre en collision
