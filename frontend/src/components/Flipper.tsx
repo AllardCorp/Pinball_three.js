@@ -32,7 +32,7 @@ export default function Flipper({
   const flipperRef = useRef<RapierRigidBody>(null);
 
   const isActive = useInputStore((state) =>
-    side === "left" ? state.buttons.left_flipper : state.buttons.right_flipper,
+    side === "left" ? state.buttons.white_left : state.buttons.white_right,
   );
 
   const animProgress = useRef(0);

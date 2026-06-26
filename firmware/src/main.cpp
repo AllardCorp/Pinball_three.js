@@ -25,21 +25,24 @@ const char* mqtt_pass = "hfucshgnu578qkhfnusghsufhqnecujsgbrguj57485";
 
 const char* mqtt_pub_topic = "pinball/input/state";
 
-// --- CONFIGURATION BOUTONS (PINS CORRIGÉS SANS DOUBLONS) ---
-const int NUM_BUTTONS = 6;
-const int buttonPins[NUM_BUTTONS] = {4, 25, 16, 18, 33, 32}; 
+// --- CONFIGURATION BOUTONS ---
+const int NUM_BUTTONS = 9;
+const int buttonPins[NUM_BUTTONS] = {16, 4, 17, 18, 19, 13, 25, 33, 32}; 
 const char* buttonNames[NUM_BUTTONS] = {
-  "Flipper Left",
-  "Flipper Right",
-  "Focus Switch",
-  "Valide",
-  "Bouton 5",
-  "Bouton 6"
+  "black left",
+  "white left",
+  "front left green",
+  "front left yellow",
+  "front left red",
+  "black right",
+  "white right",
+  "front white",
+  "plunger"
 };
 
 // Suivi de l'état réel actuel des boutons (false = relâché, true = appuyé)
-bool currentButtonStates[NUM_BUTTONS] = {false, false, false, false, false, false};
-unsigned long lastDebounceTime[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0};
+bool currentButtonStates[NUM_BUTTONS] = {false, false, false, false, false, false, false, false, false};
+unsigned long lastDebounceTime[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 const unsigned long debounceDelay = 50; 
 
 // --- INSTANCES ---
@@ -113,14 +116,18 @@ void publishCurrentState() {
   doc["timestamp"] = getEpochMilli();
 
   JsonObject buttons = doc.createNestedObject("buttons");
-  buttons["left_flipper"] = currentButtonStates[0];  
-  buttons["right_flipper"] = currentButtonStates[1]; 
-  buttons["start"] = currentButtonStates[2];         
-  buttons["coin_slot"] = currentButtonStates[3];     
-  buttons["launch_ball"] = currentButtonStates[4];   
+  buttons["black_left"] = currentButtonStates[0];
+  buttons["white_left"] = currentButtonStates[1];
+  buttons["front_left_green"] = currentButtonStates[2];
+  buttons["front_left_yellow"] = currentButtonStates[3];
+  buttons["front_left_red"] = currentButtonStates[4];
+  buttons["black_right"] = currentButtonStates[5];
+  buttons["white_right"] = currentButtonStates[6];
+  buttons["front_white"] = currentButtonStates[7];
+  buttons["plunger"] = currentButtonStates[8];
 
   JsonObject analog = doc.createNestedObject("analog");
-  analog["plunger"] = currentButtonStates[4] ? 1.0 : 0.0;
+  analog["plunger"] = currentButtonStates[8] ? 1.0 : 0.0;
 
   JsonObject analog_nudge = analog.createNestedObject("nudge");
   analog_nudge["x"] = 0.0;
