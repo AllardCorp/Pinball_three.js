@@ -179,8 +179,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
       <Bumper
         id={0}
         colliderGeometry={nodes.coll_bumpers001.geometry}
-        visualGeometry={nodes.visual_barrel_bumpers001.geometry}
-        visualMaterial={materials["barrel.001"]}
+        visualNode={<mesh geometry={nodes.visual_barrel_bumpers001.geometry} material={materials["barrel.001"]} />}
         rubyGeometry={nodes.visual_ruby001.geometry} // Rubis correspondant
         rubyMaterial={materials.PaletteMaterial003}
         position={[1.112, -1.6, -11.134]}
@@ -189,8 +188,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
       <Bumper
         id={1}
         colliderGeometry={nodes.coll_bumpers002.geometry}
-        visualGeometry={nodes.visual_barrel_bumpers002.geometry}
-        visualMaterial={materials["barrel.001"]}
+        visualNode={<mesh geometry={nodes.visual_barrel_bumpers002.geometry} material={materials["barrel.001"]} />}
         rubyGeometry={nodes.visual_ruby002.geometry} // Rubis correspondant
         rubyMaterial={materials.PaletteMaterial003}
         position={[-4.744, -1.6, -6.463]}
@@ -199,8 +197,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
       <Bumper
         id={2}
         colliderGeometry={nodes.coll_bumpers003.geometry}
-        visualGeometry={nodes.visual_barrel_bumpers003.geometry}
-        visualMaterial={materials["barrel.001"]}
+        visualNode={<mesh geometry={nodes.visual_barrel_bumpers003.geometry} material={materials["barrel.001"]} />}
         rubyGeometry={nodes.visual_ruby003.geometry} // Rubis correspondant
         rubyMaterial={materials.PaletteMaterial003}
         position={[-6.635, -1.6, -12.845]}

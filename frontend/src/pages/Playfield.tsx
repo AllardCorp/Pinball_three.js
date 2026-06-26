@@ -26,7 +26,7 @@ export default function Playfield() {
 
   useKeyboardControls();
 
-  const startPressed = useInputStore((state) => state.buttons.start);
+  const startPressed = useInputStore((state) => state.buttons.black_left);
   const isPlaying = useGameStore((state) => state.isPlaying);
   const startGame = useGameStore((state) => state.startGame);
   const updateInputs = useInputStore((state) => state.updateInputs);
@@ -35,7 +35,7 @@ export default function Playfield() {
     if (startPressed && !isPlaying) {
       console.log("🎮 Démarrage de la partie depuis MQTT / Bouton Start !");
       startGame(1);
-      updateInputs({ buttons: { start: false } });
+      updateInputs({ buttons: { black_left: false } });
     }
   }, [startPressed, isPlaying, startGame, updateInputs]);
 
