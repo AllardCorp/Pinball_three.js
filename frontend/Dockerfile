@@ -11,12 +11,16 @@ COPY . .
 
 # --- AJOUT CRUCIAL ICI ---
 # On déclare que le Dockerfile va recevoir ces arguments depuis le docker-compose
+ARG VITE_API_URL
 ARG VITE_MQTT_USERNAME
 ARG VITE_MQTT_PASSWORD
+ARG VITE_MQTT_URL
 
 # On les transforme en variables d'environnement pour que Vite puisse les lire
+ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_MQTT_USERNAME=$VITE_MQTT_USERNAME
 ENV VITE_MQTT_PASSWORD=$VITE_MQTT_PASSWORD
+ENV VITE_MQTT_URL=$VITE_MQTT_URL
 # -------------------------
 
 RUN pnpm build

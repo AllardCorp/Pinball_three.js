@@ -38,7 +38,7 @@ export function getScoreClaimDmdMessage(snapshot: ScoreClaimSessionSnapshot) {
     case "claim_expired":
       return "CLAIM EXPIRED";
     case "error":
-      return "CLAIM ERROR";
+      return "";
   }
 }
 

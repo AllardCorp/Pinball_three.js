@@ -2,6 +2,9 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_URL?: string;
+  readonly VITE_MQTT_PASSWORD?: string;
+  readonly VITE_MQTT_URL?: string;
+  readonly VITE_MQTT_USERNAME?: string;
 }
 
 interface ImportMeta {

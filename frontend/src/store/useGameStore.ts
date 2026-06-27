@@ -37,7 +37,40 @@ interface GameState {
   displayMessage: (message: string, durationInMs?: number) => void;
 }
 
-const syncState = (state: Partial<GameState>) => {
+type SyncedGameState = Pick<
+  GameState,
+  | "ballInLauncher"
+  | "ballsRemaining"
+  | "currentPlayerIndex"
+  | "isPlaying"
+  | "leftKickbackActive"
+  | "mineHits"
+  | "playerCount"
+  | "rightKickbackActive"
+  | "rubiesActive"
+  | "scoreMultiplier"
+  | "scores"
+  | "screenMessage"
+>;
+
+function getSyncedGameState(state: GameState): SyncedGameState {
+  return {
+    ballInLauncher: state.ballInLauncher,
+    ballsRemaining: state.ballsRemaining,
+    currentPlayerIndex: state.currentPlayerIndex,
+    isPlaying: state.isPlaying,
+    leftKickbackActive: state.leftKickbackActive,
+    mineHits: state.mineHits,
+    playerCount: state.playerCount,
+    rightKickbackActive: state.rightKickbackActive,
+    rubiesActive: state.rubiesActive,
+    scoreMultiplier: state.scoreMultiplier,
+    scores: state.scores,
+    screenMessage: state.screenMessage,
+  };
+}
+
+const syncState = (state: SyncedGameState) => {
   if (channel) {
     channel.postMessage(state);
   }
@@ -54,7 +87,10 @@ export const useGameStore = create<GameState>()((set, get) => {
 
   const setAndSync = (newState: Partial<GameState>) => {
     set(newState);
-    syncState(newState);
+    // Les écrans cabinet peuvent être ouverts dans des fenêtres séparées.
+    // On diffuse donc un snapshot complet pour éviter qu'un DMD ouvert tard
+    // reste avec `isPlaying` ou `ballInLauncher` désynchronisé du score.
+    syncState(getSyncedGameState(get()));
   };
 
   return {

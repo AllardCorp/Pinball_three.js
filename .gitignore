@@ -2,43 +2,6 @@
 .DS_Store
 Thumbs.db
 *.local
-
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# pnpm
-pnpm-lock.yaml
-
-# Docker
-.docker/
-
-# IDE / Editors
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# MQTT
-mqtt/password_file.txt
-# Vite
-.vite/
-
-# Project specific
-dist/
-build/
-.env
-
-# .MD files
-docs/strategie-tests.md
-docs/suivi-auth-develop-sync.md 
-# OS
-.DS_Store
-Thumbs.db
-*.local
 *Zone.Identifier
 
 # Node.js
@@ -48,9 +11,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# pnpm
-pnpm-lock.yaml
-
 # Docker
 .docker/
 
@@ -62,6 +22,7 @@ pnpm-lock.yaml
 
 # MQTT
 mqtt/password_file.txt
+
 # Vite
 .vite/
 
@@ -69,3 +30,8 @@ mqtt/password_file.txt
 dist/
 build/
 .env
+.env.deploy
+
+# Local project notes
+docs/strategie-tests.md
+docs/suivi-auth-develop-sync.md

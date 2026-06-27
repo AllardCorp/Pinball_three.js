@@ -1,4 +1,9 @@
-import { Component, ReactNode } from "react";
+import { Component, type ReactNode } from "react";
+
+// Correction apportée :
+// ReactNode devait être importé avec type ReactNode.
+// errorInfo était déclaré mais jamais utilisé.
+// error dans getDerivedStateFromError était déclaré mais jamais utilisé.
 
 interface Props {
   children: ReactNode;
@@ -16,12 +21,12 @@ export class AudioErrorBoundary extends Component<Props, State> {
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(): State {
     // Met à jour l'état pour que le prochain rendu affiche l'interface de secours.
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, errorInfo: any) {
+  componentDidCatch(error: Error) {
     // Tu peux aussi enregistrer l'erreur dans un service de rapport d'erreurs
     console.warn(`[AudioErrorBoundary] Impossible de charger le son "${this.props.url}" :`, error);
   }

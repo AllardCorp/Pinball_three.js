@@ -12,6 +12,8 @@ export type ScorePersistenceReason =
 
 export type AppMode = "web" | "arcade";
 
+export type ScoreClaimRequestStatus = "pending";
+
 export type ScorePersistenceEvaluationInput = {
   finalScore: number;
   isAuthenticated: boolean;
@@ -19,6 +21,34 @@ export type ScorePersistenceEvaluationInput = {
   playedDurationSeconds: number;
   requestClaim: boolean;
   wouldEnterLeaderboard: boolean;
+};
+
+export type ScoreClaimStartPayload = {
+  finalScore: number;
+  mode: AppMode;
+  playedDurationSeconds: number;
+  requestClaim: boolean;
+};
+
+export type ScoreClaimStartGame = {
+  finalScore: number;
+  id: number;
+  playedAt: string;
+  playedDurationSeconds: number;
+};
+
+export type ScoreClaimStartClaim = {
+  claimCode: string;
+  expiresAt: string;
+  status: ScoreClaimRequestStatus;
+  verificationUrl: string;
+};
+
+export type ScoreClaimStartResponse = {
+  claim: ScoreClaimStartClaim | null;
+  decision: ScorePersistenceDecision;
+  game: ScoreClaimStartGame | null;
+  reason: ScorePersistenceReason;
 };
 
 export const SCORE_CLAIM_TTL_MS = 120 * 1000;

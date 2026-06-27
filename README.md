@@ -96,10 +96,16 @@ Variables à renseigner dans `.env` :
 - `BETTER_AUTH_SECRET`
 - `BETTER_AUTH_URL`
 - `FRONTEND_URL`
+- `FRONTEND_ORIGINS`
 - `GITHUB_CLIENT_ID`
 - `GITHUB_CLIENT_SECRET`
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
+- `SCORE_CLAIM_MODE`
+- `GLOBAL_API_URL`
+- `BORNE_TOKEN`
+
+Le flux QR code avec VPS est détaillé dans [docs/score-claim-vps.md](docs/score-claim-vps.md).
 
 ### Production
 
@@ -109,7 +115,7 @@ Il n'y a pas d'interface d'administration de la base exposée.
 Commande de déploiement :
 
 ```bash
-docker compose -f compose.prod.yml up -d --build
+docker compose -p flipper-project -f deploy/docker-compose.yml up -d --build
 ```
 
 ---
