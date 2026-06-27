@@ -1,4 +1,4 @@
-import { useGameStore } from "@/store/useGameStore";
+import { useGameStore } from "@/store/gameStore/useGameStore";
 import ScoreClaimQrCode from "../components/score-claim/ScoreClaimQrCode";
 import { useAppMode } from "../hooks/useAppMode";
 import { useScoreClaimSession } from "../hooks/useScoreClaimSession";
@@ -125,7 +125,9 @@ export default function Backglass() {
         </div>
       )}
 
-      {(snapshot.claim?.verificationUrl || snapshot.user?.username || snapshot.game) && (
+      {(snapshot.claim?.verificationUrl ||
+        snapshot.user?.username ||
+        snapshot.game) && (
         <aside className="absolute right-6 top-6 w-80 rounded-2xl border border-white/10 bg-black/70 p-4 text-sm shadow-lg backdrop-blur">
           <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
             Score Claim
@@ -142,7 +144,9 @@ export default function Backglass() {
 
           {snapshot.claim?.verificationUrl && (
             <div className="mt-4 flex flex-col items-center">
-              <ScoreClaimQrCode verificationUrl={snapshot.claim.verificationUrl} />
+              <ScoreClaimQrCode
+                verificationUrl={snapshot.claim.verificationUrl}
+              />
               <p className="mt-3 text-center text-xs text-slate-300">
                 Scannez pour rattacher le score à votre compte.
               </p>

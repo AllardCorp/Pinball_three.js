@@ -6,7 +6,7 @@ import {
 import { useRef, forwardRef, useImperativeHandle, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { useGameStore } from "@/store/useGameStore";
+import { useGameStore } from "@/store/gameStore/useGameStore";
 import { useControls } from "leva";
 import ObjectSound from "./ObjectSound";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
@@ -29,14 +29,14 @@ type GoldMineProps = {
   materials: any;
 };
 
-const PARTICLE_COUNT_PER_PUFF = 24; // Un peu moins, mais plus gros
-const MAX_PARTICLES_TOTAL = 48; // Pool réduit pour la perf
-const PARTICLE_LIFE_TIME = 1.0; // Durée de vie légèrement réduite
+const PARTICLE_COUNT_PER_PUFF = 24; // Nombre de particules émises par "puff"
+const MAX_PARTICLES_TOTAL = 48; // Nombre maximum de particules dans le système
+const PARTICLE_LIFE_TIME = 1.0; // Durée de vie
 
 // Réglage de la taille
-const BASE_GEOMETRY_SIZE = 0.3; // 💥 Était 0.1. C'est la taille du cube de base.
-const START_SCALE_MIN = 0.5; // 💥 Échelle de départ minimale (multiplicateur)
-const START_SCALE_MAX = 1.5; // 💥 Échelle de départ maximale (multiplicateur)
+const BASE_GEOMETRY_SIZE = 0.3; // Taille du cube de base.
+const START_SCALE_MIN = 0.5; // Échelle de départ minimale (multiplicateur)
+const START_SCALE_MAX = 1.5; // Échelle de départ maximale (multiplicateur)
 
 const DustEffect = forwardRef<DustEffectRef, { plankColor: string }>(
   (props, ref) => {
@@ -56,7 +56,6 @@ const DustEffect = forwardRef<DustEffectRef, { plankColor: string }>(
 
     useImperativeHandle(ref, () => ({
       emit(origin: THREE.Vector3) {
-        // console.log("💥 Émission de GROSSE poussière à :", origin);
         let countEmitted = 0;
         for (let p of particles) {
           if (!p.active && countEmitted < PARTICLE_COUNT_PER_PUFF) {
@@ -70,7 +69,7 @@ const DustEffect = forwardRef<DustEffectRef, { plankColor: string }>(
               z: 0,
             });
 
-            // 💥 TAILLE DE DÉPART BEAUCOUP PLUS GRANDE
+            // Taille de départ aléatoire pour chaque particule
             p.scale =
               Math.random() * (START_SCALE_MAX - START_SCALE_MIN) +
               START_SCALE_MIN;
@@ -104,7 +103,6 @@ const DustEffect = forwardRef<DustEffectRef, { plankColor: string }>(
         p.life -= delta;
         const lifePercent = p.life / PARTICLE_LIFE_TIME;
 
-        // 💥 NOUVEAU COMPORTEMENT D'ÉCHELLE 💥
         // Au lieu de rétrécir de 1 à 0, la particule commence à 0.5,
         // gonfle rapidement à sa taille max (1.0), puis rétrécit.
         let currentScale = p.scale;
@@ -218,25 +216,46 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
     <group>
       {/* --- PLANCHES VISUELLES --- */}
       {mineHits < 1 && (
-        <mesh
-          geometry={nodes.visual_mine_plank001.geometry}
-          material={materials.plywood}
-          position={[-9.978, -1.495, 5.084]}
-        />
+        <group name="visual_mine_plank001" position={[-9.978, -1.495, 5.084]}>
+          <mesh
+            name="light1_Lamp_0002"
+            geometry={nodes.light1_Lamp_0002.geometry}
+            material={materials.M_wood_medium}
+          />
+          <mesh
+            name="light1_Lamp_0002_1"
+            geometry={nodes.light1_Lamp_0002_1.geometry}
+            material={materials.M_stone_medium}
+          />
+        </group>
       )}
       {mineHits < 2 && (
-        <mesh
-          geometry={nodes.visual_mine_plank002.geometry}
-          material={materials.plywood}
-          position={[-9.978, -1.495, 5.084]}
-        />
+        <group name="visual_mine_plank002" position={[-9.978, -1.495, 5.084]}>
+          <mesh
+            name="light1_Lamp_0003"
+            geometry={nodes.light1_Lamp_0003.geometry}
+            material={materials.M_wood_medium}
+          />
+          <mesh
+            name="light1_Lamp_0003_1"
+            geometry={nodes.light1_Lamp_0003_1.geometry}
+            material={materials.M_stone_medium}
+          />
+        </group>
       )}
       {mineHits < 3 && (
-        <mesh
-          geometry={nodes.visual_mine_plank003.geometry}
-          material={materials.plywood}
-          position={[-9.978, -1.495, 5.084]}
-        />
+        <group name="visual_mine_plank003" position={[-9.978, -1.495, 5.084]}>
+          <mesh
+            name="light1_Lamp_0004"
+            geometry={nodes.light1_Lamp_0004.geometry}
+            material={materials.M_wood_medium}
+          />
+          <mesh
+            name="light1_Lamp_0004_1"
+            geometry={nodes.light1_Lamp_0004_1.geometry}
+            material={materials.M_stone_medium}
+          />
+        </group>
       )}
 
       {/* --- MUR PHYSIQUE --- */}
@@ -282,10 +301,7 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
         }}
       >
         <CuboidCollider args={[0.9, 0.9, 0.9]} />
-        <ObjectSound
-          {...SOUNDS_CONFIG.goldmine.enter}
-          playTrigger={mineHits}
-        />
+        <ObjectSound {...SOUNDS_CONFIG.goldmine.enter} playTrigger={mineHits} />
       </RigidBody>
     </group>
   );

@@ -1,19 +1,13 @@
-import {
-  OrbitControls,
-  Html,
-  PerspectiveCamera,
-  OrthographicCamera,
-} from "@react-three/drei";
-import { Suspense, useRef } from "react";
+import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useControls } from "leva";
 import * as THREE from "three";
-import PinballMVPBase from "@/components/models/PinballMVP_Base";
+import PinballBase from "@/components/models/PinballFinal";
 
 export default function Experience() {
   // LEVA
   const {
-    isOrthographic, // <-- Nouveau : Toggle entre les deux caméras
     orbitControls,
     useLookAt,
     camX,
@@ -26,26 +20,24 @@ export default function Experience() {
     rotY,
     rotZ,
     fov,
-    orthoZoom, // <-- Nouveau : Zoom spécifique à la caméra orthographique
     near,
     far,
     filmGauge,
     filmOffset,
-    aspectRatio,
   } = useControls("Camera & Controls", {
     isOrthographic: false,
     orbitControls: false,
     useLookAt: true,
 
     // Position de la caméra
-    camX: { value: 0.2, min: -50, max: 50, step: 0.1 },
-    camY: { value: 56.7, min: -50, max: 100, step: 0.1 },
-    camZ: { value: 29.5, min: -50, max: 100, step: 0.1 },
+    camX: { value: -0.62, min: -400, max: 400, step: 0.1 },
+    camY: { value: 62.6, min: -400, max: 400, step: 0.1 },
+    camZ: { value: 30.93, min: -400, max: 400, step: 0.1 },
 
-    // Cible
-    targetX: { value: 0.5, min: -50, max: 50, step: 0.1 },
-    targetY: { value: -5.0, min: -50, max: 50, step: 0.1 },
-    targetZ: { value: 4.7, min: -50, max: 50, step: 0.1 },
+    // Cible (Mets targetX à 0 pour centrer parfaitement si le flipper est au centre)
+    targetX: { value: 0, min: -400, max: 400, step: 0.1 },
+    targetY: { value: -3.76, min: -400, max: 400, step: 0.1 },
+    targetZ: { value: 2.55, min: -400, max: 400, step: 0.1 },
 
     // Rotation
     rotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
@@ -53,13 +45,9 @@ export default function Experience() {
     rotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
 
     // Paramètres spécifiques Perspective
-    fov: { value: 45, min: 10, max: 120, step: 1 },
+    fov: { value: 47.5, min: 10, max: 120, step: 1 },
     filmGauge: { value: 35, min: 1, max: 100, step: 1 },
-    filmOffset: { value: 0, min: -50, max: 50, step: 0.1 },
-    aspectRatio: { value: 1.5, min: 0.1, max: 5, step: 0.01 },
-
-    // Paramètres spécifiques Orthographique
-    orthoZoom: { value: 50, min: 1, max: 300, step: 1 },
+    filmOffset: { value: 0, min: -400, max: 400, step: 0.1 },
 
     // Paramètres partagés
     near: { value: 0.1, min: 0.01, max: 10, step: 0.01 },
@@ -67,6 +55,7 @@ export default function Experience() {
   });
 
   const cameraRef = useRef<THREE.PerspectiveCamera>(null);
+  const controlsRef = useRef<any>(null);
 
   // GESTION DE LA CAMÉRA
   useFrame((state) => {
@@ -83,46 +72,30 @@ export default function Experience() {
 
   return (
     <>
-      {/* Rendu conditionnel des caméras */}
-      {isOrthographic ? (
-        <OrthographicCamera
-          makeDefault
-          position={[camX, camY, camZ]}
-          zoom={orthoZoom}
-          near={near}
-          far={far}
-        />
-      ) : (
-        <PerspectiveCamera
-          makeDefault
-          ref={cameraRef}
-          position={[camX, camY, camZ]}
-          fov={fov}
-          near={near}
-          far={far}
-          filmGauge={filmGauge}
-          filmOffset={filmOffset}
-          aspect={aspectRatio}
-        />
-      )}
+      <PerspectiveCamera
+        makeDefault
+        ref={cameraRef}
+        position={[camX, camY, camZ]}
+        fov={fov}
+        near={near}
+        far={far}
+        filmGauge={filmGauge}
+        filmOffset={filmOffset}
+      />
 
       {orbitControls && (
-        <OrbitControls makeDefault target={[targetX, targetY, targetZ]} />
+        <OrbitControls
+          ref={controlsRef}
+          makeDefault
+          target={[targetX, targetY, targetZ]}
+          onEnd={() => {
+            console.log("Position :", cameraRef.current?.position);
+            console.log("Target :", controlsRef.current?.target);
+          }}
+        />
       )}
 
-      <Suspense
-        fallback={
-          <Html center>
-            <main className="bg-indigo-950 min-w-screen min-h-screen flex items-center justify-center">
-              <span className="text-orange-300 font-semibold text-4xl">
-                Loading...
-              </span>
-            </main>
-          </Html>
-        }
-      >
-        <PinballMVPBase />
-      </Suspense>
+      <PinballBase />
     </>
   );
 }

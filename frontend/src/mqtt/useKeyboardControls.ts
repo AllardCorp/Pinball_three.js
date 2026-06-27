@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useMqtt } from "./mqttContext";
-import { useInputStore } from "@/store/useInputStore";
+import { useInputStore } from "@/store/inputStore/useInputStore";
 
 const TOPIC = "pinball/input/state";
 
@@ -20,11 +20,14 @@ export function useKeyboardControls() {
   // Mutable state kept in refs so event listeners always see the latest values
   const state = useRef({
     buttons: {
-      left_flipper: false,
-      right_flipper: false,
-      start: false,
-      coin_slot: false,
-      launch_ball: false,
+      black_left: false,
+      white_left: false,
+      front_left_green: false,
+      front_left_yellow: false,
+      front_left_red: false,
+      black_right: false,
+      white_right: false,
+      front_white: false,
     },
     analog: {
       plunger: 0.0,
@@ -68,11 +71,11 @@ export function useKeyboardControls() {
     const force = state.current.analog.plunger;
     console.log(`🚀 Plunger released with force: ${force.toFixed(2)}`);
 
-    state.current.buttons.launch_ball = true;
+    state.current.buttons.front_white = true;
     publish();
 
     setTimeout(() => {
-      state.current.buttons.launch_ball = false;
+      state.current.buttons.front_white = false;
       state.current.analog.plunger = 0.0;
       publish();
     }, 50);
@@ -92,13 +95,13 @@ export function useKeyboardControls() {
 
       switch (key) {
         case "q":
-          state.current.buttons.left_flipper = true;
+          state.current.buttons.white_left = true;
           console.log("🏓 Left flipper ON");
           publish();
           break;
 
         case "d":
-          state.current.buttons.right_flipper = true;
+          state.current.buttons.white_right = true;
           console.log("🏓 Right flipper ON");
           publish();
           break;
@@ -122,13 +125,13 @@ export function useKeyboardControls() {
           break;
 
         case "s":
-          state.current.buttons.start = true;
+          state.current.buttons.black_left = true;
           console.log("▶️  Start pressed");
           publish();
           break;
 
         case "c":
-          state.current.buttons.coin_slot = true;
+          state.current.buttons.front_left_yellow = true;
           console.log("🪙 Coin inserted");
           publish();
           break;
@@ -141,13 +144,13 @@ export function useKeyboardControls() {
 
       switch (key) {
         case "q":
-          state.current.buttons.left_flipper = false;
+          state.current.buttons.white_left = false;
           console.log("🏓 Left flipper OFF");
           publish();
           break;
 
         case "d":
-          state.current.buttons.right_flipper = false;
+          state.current.buttons.white_right = false;
           console.log("🏓 Right flipper OFF");
           publish();
           break;
@@ -159,12 +162,12 @@ export function useKeyboardControls() {
           break;
 
         case "s":
-          state.current.buttons.start = false;
+          state.current.buttons.black_left = false;
           publish();
           break;
 
         case "c":
-          state.current.buttons.coin_slot = false;
+          state.current.buttons.front_left_yellow = false;
           publish();
           break;
       }

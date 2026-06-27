@@ -5,7 +5,7 @@ import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import * as THREE from "three";
 import ObjectSound from "./ObjectSound";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
-import { useInputStore } from "@/store/useInputStore";
+import { useInputStore } from "@/store/inputStore/useInputStore";
 
 type FlipperProps = {
   colliderGeometry: THREE.BufferGeometry;
@@ -28,11 +28,11 @@ export default function Flipper({
     upForce: { value: 55, min: 10, max: 80, step: 0.1 },
     downForce: { value: 35, min: 10, max: 60, step: 0.1 },
   });
-  // 👈 2. On indique à TypeScript le type exact de la référence
+  // 2. On indique à TypeScript le type exact de la référence
   const flipperRef = useRef<RapierRigidBody>(null);
 
   const isActive = useInputStore((state) =>
-    side === "left" ? state.buttons.left_flipper : state.buttons.right_flipper,
+    side === "left" ? state.buttons.white_left : state.buttons.white_right,
   );
 
   const animProgress = useRef(0);
@@ -42,7 +42,7 @@ export default function Flipper({
     [position],
   );
 
-  // 👈 3. On remplace "state" par "_" pour indiquer qu'on ignore le premier paramètre
+  // 3. On remplace "state" par "_" pour indiquer qu'on ignore le premier paramètre
   useFrame((_, delta) => {
     if (!flipperRef.current) return;
     const speed = isActive ? upForce : downForce; // Vitesse de levée | Vitesse de descente du flipper

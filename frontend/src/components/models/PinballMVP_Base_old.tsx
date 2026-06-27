@@ -1,5 +1,5 @@
 import { useControls, button } from "leva";
-import { useGameStore } from "@/store/useGameStore"; // Adapte le chemin
+import { useGameStore } from "@/store/gameStore/useGameStore";
 import * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
 import type { GLTF } from "three-stdlib";

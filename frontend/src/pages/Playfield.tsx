@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import { Perf } from "r3f-perf";
@@ -7,11 +7,12 @@ import { Leva, button, useControls } from "leva";
 
 import ScoreClaimControlPanel from "../components/score-claim/ScoreClaimControlPanel";
 import Experience from "../experience/Experience";
+import Loader from "../components/Loader";
 import { useAppMode } from "../hooks/useAppMode";
 import { useScoreClaimSession } from "../hooks/useScoreClaimSession";
 import { useKeyboardControls } from "../mqtt/useKeyboardControls";
-import { useGameStore } from "@/store/useGameStore";
-import { useInputStore } from "@/store/useInputStore";
+import { useGameStore } from "@/store/gameStore/useGameStore";
+import { useInputStore } from "@/store/inputStore/useInputStore";
 
 export default function Playfield() {
   const { isArcadeMode, mode } = useAppMode();
@@ -71,14 +72,16 @@ export default function Playfield() {
       )}
 
       <Leva collapsed />
-      <Canvas shadows camera={{ position: [0, 8, 15], fov: 50 }}>
-        <color attach="background" args={["skyblue"]} />
-        {perfVisible && <Perf position="top-left" showGraph />}
-        <Environment preset="forest" />
-        <Physics debug={rapierDebug} gravity={[gravityX, gravityY, gravityZ]}>
-          <Experience />
-        </Physics>
-      </Canvas>
+      <Suspense fallback={<Loader />}>
+        <Canvas shadows camera={{ position: [0, 8, 15], fov: 50 }}>
+          <color attach="background" args={["skyblue"]} />
+          {perfVisible && <Perf position="top-left" showGraph />}
+          <Environment preset="forest" />
+          <Physics debug={rapierDebug} gravity={[gravityX, gravityY, gravityZ]}>
+            <Experience />
+          </Physics>
+        </Canvas>
+      </Suspense>
     </div>
   );
 }

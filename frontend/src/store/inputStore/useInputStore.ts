@@ -3,11 +3,14 @@ import { create } from "zustand";
 // Interface représentant la structure du JSON du topic MQTT "pinball/input/state"
 export interface InputState {
   buttons: {
-    left_flipper: boolean;
-    right_flipper: boolean;
-    start: boolean;
-    coin_slot: boolean;
-    launch_ball: boolean;
+    black_left: boolean;
+    white_left: boolean;
+    front_left_green: boolean;
+    front_left_yellow: boolean;
+    front_left_red: boolean;
+    black_right: boolean;
+    white_right: boolean;
+    front_white: boolean;
   };
   analog: {
     plunger: number; // Force de lancement de la bille (0.0 à 1.0)
@@ -30,11 +33,14 @@ interface InputStore extends InputState {
 export const useInputStore = create<InputStore>((set) => ({
   // Valeurs initiales par défaut conformes au JSON MQTT
   buttons: {
-    left_flipper: false,
-    right_flipper: false,
-    start: false,
-    coin_slot: false,
-    launch_ball: false,
+    black_left: false,
+    white_left: false,
+    front_left_green: false,
+    front_left_yellow: false,
+    front_left_red: false,
+    black_right: false,
+    white_right: false,
+    front_white: false,
   },
   analog: {
     plunger: 0,
