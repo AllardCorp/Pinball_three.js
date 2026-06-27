@@ -276,7 +276,7 @@ describe("dmd-messages", () => {
     ensureBroadcastChannel();
     TestBroadcastChannel.messages = [];
 
-    const { useGameStore } = await import("../store/useGameStore");
+    const { useGameStore } = await import("../store/gameStore/useGameStore");
 
     useGameStore.setState({
       ballInLauncher: true,
@@ -314,7 +314,7 @@ describe("dmd-messages", () => {
   it("affiche un score produit par useGameStore.addScore", async () => {
     ensureBroadcastChannel();
 
-    const { useGameStore } = await import("../store/useGameStore");
+    const { useGameStore } = await import("../store/gameStore/useGameStore");
 
     useGameStore.setState({
       ballInLauncher: true,
@@ -363,7 +363,7 @@ describe("dmd-messages", () => {
   it("affiche les points cumules par les elements de scoring actuels du plateau", async () => {
     ensureBroadcastChannel();
 
-    const { useGameStore } = await import("../store/useGameStore");
+    const { useGameStore } = await import("../store/gameStore/useGameStore");
 
     useGameStore.setState({
       ballInLauncher: true,

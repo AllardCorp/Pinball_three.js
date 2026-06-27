@@ -1,5 +1,9 @@
 import { type StateCreator } from "zustand";
-import { type GameState, syncState } from "../gameStore.types";
+import {
+  getSyncedGameState,
+  type GameState,
+  syncState,
+} from "../gameStore.types";
 
 export interface PlayerSlice {
   playerCount: number;
@@ -19,7 +23,9 @@ export const createPlayerSlice: StateCreator<GameState, [], [], PlayerSlice> = (
 ) => {
   const setAndSync = (newState: Partial<GameState>) => {
     set(newState);
-    syncState(newState);
+    // Chaque écran reçoit le même snapshot sérialisable après un changement de
+    // score, ce qui garde le playfield, le backglass et le DMD alignés.
+    syncState(getSyncedGameState(get()));
   };
 
   return {

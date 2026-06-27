@@ -1,5 +1,9 @@
 import { type StateCreator } from "zustand";
-import { type GameState, syncState } from "../gameStore.types";
+import {
+  getSyncedGameState,
+  type GameState,
+  syncState,
+} from "../gameStore.types";
 
 export interface PlayfieldSlice {
   scoreMultiplier: number;
@@ -23,7 +27,9 @@ export const createPlayfieldSlice: StateCreator<
 > = (set, get) => {
   const setAndSync = (newState: Partial<GameState>) => {
     set(newState);
-    syncState(newState);
+    // Les objectifs du plateau ont un impact direct sur les écrans cabinet :
+    // on propage donc l'état complet plutôt qu'un fragment isolé.
+    syncState(getSyncedGameState(get()));
   };
 
   return {

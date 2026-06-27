@@ -13,8 +13,13 @@ import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 type BumperProps = {
   id: 0 | 1 | 2;
   colliderGeometry: THREE.BufferGeometry;
-  // On récupère le node react des bumpers
-  visualNode: React.ReactNode;
+  // Nouveau modèle : le parent peut fournir directement un node prêt à rendre.
+  visualNode?: React.ReactNode;
+  // Ancien modèle : certains fichiers MVP passent encore une géométrie et un
+  // matériau séparés. Cette compatibilité permet de garder le build stable le
+  // temps que les modèles soient harmonisés.
+  visualGeometry?: THREE.BufferGeometry;
+  visualMaterial?: THREE.Material;
   rubyGeometry: THREE.BufferGeometry;
   rubyMaterial: THREE.Material;
   position: [number, number, number];
@@ -28,6 +33,8 @@ export default function Bumper({
   id,
   colliderGeometry,
   visualNode,
+  visualGeometry,
+  visualMaterial,
   rubyGeometry,
   rubyMaterial,
   position,
@@ -96,8 +103,13 @@ export default function Bumper({
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Enveloppe le visuel fourni dans un groupe pour l'animer */}
-      <group ref={visualGroupRef}>{visualNode}</group>
+      {/* Enveloppe le visuel fourni dans un groupe pour l'animer. */}
+      <group ref={visualGroupRef}>
+        {visualNode ??
+          (visualGeometry && visualMaterial ? (
+            <mesh geometry={visualGeometry} material={visualMaterial} />
+          ) : null)}
+      </group>
 
       <mesh
         scale={isRubyActive ? 1 : 0}

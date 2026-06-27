@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import DungeonDragonDmdDisplay from "@/components/dmd/DungeonDragonDmdDisplay";
 import { useAppMode } from "@/hooks/useAppMode";
 import { buildDmdViewModel } from "@/lib/dmd-messages";
-import { useGameStore } from "@/store/useGameStore";
+import { useGameStore } from "@/store/gameStore/useGameStore";
 
 const GAME_OVER_DISPLAY_MS = 10000;
 

@@ -1,5 +1,9 @@
 import { type StateCreator } from "zustand";
-import { type GameState, syncState } from "../gameStore.types";
+import {
+  getSyncedGameState,
+  type GameState,
+  syncState,
+} from "../gameStore.types";
 export interface CoreSlice {
   isPlaying: boolean;
   ballInLauncher: boolean;
@@ -20,7 +24,9 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
 ) => {
   const setAndSync = (newState: Partial<GameState>) => {
     set(newState);
-    syncState(newState);
+    // Les fenêtres secondaires reçoivent un état complet pour éviter les
+    // désynchronisations entre score, joueur actif, billes et messages DMD.
+    syncState(getSyncedGameState(get()));
   };
 
   return {
