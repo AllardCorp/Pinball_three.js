@@ -20,7 +20,7 @@ export default function Ball({ position }: BallProps) {
   const isPlaying = useGameStore((state) => state.isPlaying);
   const ballInLauncher = useGameStore((state) => state.ballInLauncher);
   // Écoute des contrôles de lancement provenant de MQTT ou du clavier
-  const launchBall = useInputStore((state) => state.buttons.launch_ball);
+  const launchBall = useInputStore((state) => state.buttons.front_white);
   const plungerForce = useInputStore((state) => state.analog.plunger);
 
   // Référence pour détecter la transition de launch_ball (front montant: false -> true)

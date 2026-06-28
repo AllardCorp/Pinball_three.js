@@ -33,7 +33,17 @@ export default function Backglass() {
   const screenMessage = useGameStore((state) => state.screenMessage);
 
   return (
-    <div className="relative p-6 text-xl text-white">
+    <div className="relative min-h-screen overflow-hidden text-xl text-white">
+      <video
+        className="absolute inset-0 h-full w-full object-cover"
+        src="/videos/fontBackglass.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+      />
+
+      <div className="relative z-10 p-6">
       <h1>Page BackGlass</h1>
 
       {!isPlaying ? (
@@ -160,6 +170,7 @@ export default function Backglass() {
           )}
         </aside>
       )}
+      </div>
     </div>
   );
 }
