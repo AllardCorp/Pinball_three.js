@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { PositionalAudio } from "@react-three/drei";
 import { useRapier } from "@react-three/rapier";
 import type { RapierRigidBody } from "@react-three/rapier";
-import { AudioErrorBoundary } from "@/components/AudioErrorBoundary";
+import { AudioErrorBoundary } from "@/components/sounds/AudioErrorBoundary";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 
 type BallAudioProps = {
