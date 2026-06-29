@@ -23,7 +23,10 @@ import {
   postgresIntegerMax,
   readSingleRouteParam,
 } from "../http/request-parsing.js";
-import type { RemoteScoreClaimStarter } from "../services/remote-score-claim-client.js";
+import type {
+  RemoteScoreClaimStatusChecker,
+  RemoteScoreClaimStarter,
+} from "../services/remote-score-claim-client.js";
 import {
   LEADERBOARD_LIMIT,
   SCORE_CLAIM_TTL_MS,
@@ -43,6 +46,7 @@ type RegisterScoreClaimRoutesDependencies = {
   db: DatabaseClient;
   env: typeof defaultEnv;
   getSession: GetSession;
+  remoteScoreClaimStatusChecker: RemoteScoreClaimStatusChecker;
   remoteScoreClaimStarter: RemoteScoreClaimStarter;
 };
 
@@ -142,6 +146,7 @@ export function registerScoreClaimRoutes({
   db,
   env,
   getSession,
+  remoteScoreClaimStatusChecker,
   remoteScoreClaimStarter,
 }: RegisterScoreClaimRoutesDependencies) {
   async function wouldScoreEnterLeaderboard(finalScore: number) {
@@ -443,6 +448,27 @@ export function registerScoreClaimRoutes({
       const claimCode = readSingleRouteParam(request.params.claimCode);
 
       assertValidClaimCode(claimCode);
+
+      if (env.scoreClaimMode === "remote") {
+        // En mode borne, le score a été créé sur le VPS. Le backend local sert
+        // uniquement de relais pour que le Playfield/Backglass ne dépendent pas
+        // directement d'une URL publique différente.
+        if (!env.globalApiUrl) {
+          throw createHttpError(
+            503,
+            "remote_score_claim_not_configured",
+            "Remote score claim mode requires GLOBAL_API_URL.",
+          );
+        }
+
+        const remoteResult = await remoteScoreClaimStatusChecker({
+          claimCode,
+          globalApiUrl: env.globalApiUrl,
+        });
+
+        response.status(remoteResult.statusCode).json(remoteResult.body);
+        return;
+      }
 
       const [scoreClaim] = await db
         // On joint `games` pour renvoyer au mobile le score exact à afficher

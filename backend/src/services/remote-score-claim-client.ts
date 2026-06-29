@@ -16,9 +16,43 @@ type RemoteScoreClaimStartInput = {
   payload: ScoreClaimStartPayload;
 };
 
+type RemoteScoreClaimStatusInput = {
+  claimCode: string;
+  fetchImpl?: typeof fetch;
+  globalApiUrl: string;
+};
+
+export type RemoteScoreClaimStatusResponse = {
+  approvedAt: string | null;
+  expiresAt: string;
+  game: ScoreClaimStartGame;
+  status: "pending" | "approved";
+  user: {
+    username: string | null;
+  } | null;
+};
+
+export type RemoteScoreClaimStatusResult =
+  | {
+      body: RemoteScoreClaimStatusResponse;
+      statusCode: 200;
+    }
+  | {
+      body: { status: "expired" };
+      statusCode: 410;
+    }
+  | {
+      body: { status: "not_found" };
+      statusCode: 404;
+    };
+
 export type RemoteScoreClaimStarter = (
   input: RemoteScoreClaimStartInput,
 ) => Promise<ScoreClaimStartResponse>;
+
+export type RemoteScoreClaimStatusChecker = (
+  input: RemoteScoreClaimStatusInput,
+) => Promise<RemoteScoreClaimStatusResult>;
 
 export class RemoteScoreClaimError extends Error {
   code: string;
@@ -119,6 +153,31 @@ function isScoreClaimStartClaim(value: unknown): value is ScoreClaimStartClaim {
   );
 }
 
+function isScoreClaimStatusUser(
+  value: unknown,
+): value is RemoteScoreClaimStatusResponse["user"] {
+  return (
+    value === null ||
+    (isRecord(value) &&
+      (typeof value.username === "string" || value.username === null))
+  );
+}
+
+function isScoreClaimStatusResponse(
+  value: unknown,
+): value is RemoteScoreClaimStatusResponse {
+  return (
+    isRecord(value) &&
+    (value.status === "pending" || value.status === "approved") &&
+    isIsoDateString(value.expiresAt) &&
+    (typeof value.approvedAt === "string"
+      ? isIsoDateString(value.approvedAt)
+      : value.approvedAt === null) &&
+    isScoreClaimStartGame(value.game) &&
+    isScoreClaimStatusUser(value.user)
+  );
+}
+
 function isScoreClaimStartResponse(value: unknown): value is ScoreClaimStartResponse {
   if (!isRecord(value)) {
     return false;
@@ -189,4 +248,67 @@ export async function startRemoteScoreClaim({
   }
 
   return responseBody;
+}
+
+export async function getRemoteScoreClaimStatus({
+  claimCode,
+  fetchImpl = fetch,
+  globalApiUrl,
+}: RemoteScoreClaimStatusInput): Promise<RemoteScoreClaimStatusResult> {
+  const endpoint = new URL(
+    `/api/score-claims/status/${encodeURIComponent(claimCode)}`,
+    globalApiUrl,
+  );
+  let response: Response;
+
+  try {
+    response = await fetchImpl(endpoint, {
+      method: "GET",
+    });
+  } catch {
+    throw new RemoteScoreClaimError(
+      502,
+      "remote_score_claim_status_unreachable",
+      "The remote score claim status API could not be reached.",
+    );
+  }
+
+  const responseBody = await readJsonResponse(response);
+
+  // Ces deux statuts sont volontairement relayés tels quels : ils décrivent un
+  // état métier attendu et permettent au front local d'arrêter son polling.
+  if (response.status === 404) {
+    return {
+      body: { status: "not_found" },
+      statusCode: 404,
+    };
+  }
+
+  if (response.status === 410) {
+    return {
+      body: { status: "expired" },
+      statusCode: 410,
+    };
+  }
+
+  if (!response.ok) {
+    throw new RemoteScoreClaimError(
+      502,
+      "remote_score_claim_status_failed",
+      "The remote score claim status API rejected the status lookup.",
+    );
+  }
+
+  if (!isScoreClaimStatusResponse(responseBody)) {
+    throw new RemoteScoreClaimError(
+      502,
+      "remote_score_claim_status_invalid_response",
+      "The remote score claim status API returned an invalid payload.",
+    );
+  }
+
+  return {
+    body: responseBody,
+    statusCode: 200,
+  };
 }

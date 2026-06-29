@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import { useAppMode } from "../hooks/useAppMode";
+import { isPublicAppTarget } from "../lib/app-target";
 import { signOut, useSession } from "../lib/auth-client";
 
 export default function Home() {
@@ -18,15 +19,21 @@ export default function Home() {
         <Link className="hover:text-blue-600" to={withMode("/dashboard")}>
           Dashboard
         </Link>
-        <Link className="hover:text-blue-600" to={withMode("/playfield")}>
-          Playfield
-        </Link>
-        <Link className="hover:text-blue-600" to={withMode("/backglass")}>
-          Backglass
-        </Link>
-        <Link className="hover:text-blue-600" to={withMode("/dmd")}>
-          DMD
-        </Link>
+        {!isPublicAppTarget && (
+          <>
+            {/* Ces routes existent uniquement sur le flipper local. Le VPS
+                public ne doit pas exposer les écrans physiques de la borne. */}
+            <Link className="hover:text-blue-600" to={withMode("/playfield")}>
+              Playfield
+            </Link>
+            <Link className="hover:text-blue-600" to={withMode("/backglass")}>
+              Backglass
+            </Link>
+            <Link className="hover:text-blue-600" to={withMode("/dmd")}>
+              DMD
+            </Link>
+          </>
+        )}
       </div>
       <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
         {isPending && <p>Chargement de la session...</p>}

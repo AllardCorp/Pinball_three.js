@@ -38,6 +38,9 @@ services:
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - SCORE_CLAIM_MODE=${SCORE_CLAIM_MODE:-local}
+      - GLOBAL_API_URL=${GLOBAL_API_URL:-}
+      - BORNE_TOKEN=${BORNE_TOKEN:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -68,9 +71,11 @@ services:
     command: sh -c "corepack enable && corepack prepare pnpm@10.33.0 --activate && pnpm install && pnpm dev -- --host 0.0.0.0"
     environment:
       - NODE_ENV=development
+      - VITE_APP_TARGET=${VITE_APP_TARGET:-flipper}
       - VITE_API_URL=${VITE_API_URL:-http://localhost:3000}
       - VITE_MQTT_USERNAME=${MQTT_USERNAME}
       - VITE_MQTT_PASSWORD=${MQTT_PASSWORD}
+      - VITE_MQTT_URL=${MQTT_URL:-ws://localhost:9001}
 
   mosquitto:
     image: eclipse-mosquitto:2.0.18

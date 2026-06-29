@@ -29,9 +29,10 @@ export default function ScoreClaim() {
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center px-6">
         <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h1 className="text-2xl font-semibold">Code QR invalide</h1>
+          <h1 className="text-2xl font-semibold">Aucun score à rattacher</h1>
           <p className="mt-3 text-sm text-slate-500">
-            La demande de rattachement ne contient pas de code de claim.
+            Cette page fonctionne uniquement après le scan d'un QR code généré
+            par le flipper en fin de partie.
           </p>
           <Link className="mt-6 inline-block text-blue-600" to={withMode("/")}>
             Retour à l'accueil

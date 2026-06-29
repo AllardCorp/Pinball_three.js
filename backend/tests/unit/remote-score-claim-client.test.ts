@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   RemoteScoreClaimError,
+  getRemoteScoreClaimStatus,
   startRemoteScoreClaim,
 } from "../../src/services/remote-score-claim-client.js";
 
@@ -51,6 +52,19 @@ const validResponse = {
     playedDurationSeconds: 95,
   },
   reason: "guest_claim_requested",
+} as const;
+
+const validStatusResponse = {
+  approvedAt: null,
+  expiresAt: new Date(Date.now() + 60_000).toISOString(),
+  game: {
+    finalScore: 123456,
+    id: 42,
+    playedAt: new Date().toISOString(),
+    playedDurationSeconds: 95,
+  },
+  status: "pending",
+  user: null,
 } as const;
 
 describe("remote-score-claim-client", () => {
@@ -164,5 +178,81 @@ describe("remote-score-claim-client", () => {
     );
 
     await expectInvalidRemotePayload(fetchImpl);
+  });
+
+  it("gets score claim status from the VPS public status endpoint", async () => {
+    const fetchImpl = vi.fn(async () => createJsonResponse(validStatusResponse));
+
+    const result = await getRemoteScoreClaimStatus({
+      claimCode: "ABCDEFGHIJKLMNOPQRSTUVWX12345678",
+      fetchImpl,
+      globalApiUrl: "https://scores.example.test",
+    });
+
+    expect(result).toEqual({
+      body: validStatusResponse,
+      statusCode: 200,
+    });
+    expect(fetchImpl).toHaveBeenCalledWith(
+      new URL(
+        "https://scores.example.test/api/score-claims/status/ABCDEFGHIJKLMNOPQRSTUVWX12345678",
+      ),
+      {
+        method: "GET",
+      },
+    );
+  });
+
+  it("relays expected remote status terminal responses", async () => {
+    const notFoundFetch = vi.fn(async () =>
+      createJsonResponse({ status: "not_found" }, { status: 404 }),
+    );
+    const expiredFetch = vi.fn(async () =>
+      createJsonResponse({ status: "expired" }, { status: 410 }),
+    );
+
+    await expect(
+      getRemoteScoreClaimStatus({
+        claimCode: "ABCDEFGHIJKLMNOPQRSTUVWX12345678",
+        fetchImpl: notFoundFetch,
+        globalApiUrl: "https://scores.example.test",
+      }),
+    ).resolves.toEqual({
+      body: { status: "not_found" },
+      statusCode: 404,
+    });
+
+    await expect(
+      getRemoteScoreClaimStatus({
+        claimCode: "ABCDEFGHIJKLMNOPQRSTUVWX12345678",
+        fetchImpl: expiredFetch,
+        globalApiUrl: "https://scores.example.test",
+      }),
+    ).resolves.toEqual({
+      body: { status: "expired" },
+      statusCode: 410,
+    });
+  });
+
+  it("rejects malformed remote status responses", async () => {
+    const fetchImpl = vi.fn(async () =>
+      createJsonResponse({
+        ...validStatusResponse,
+        game: {
+          id: "invalid",
+        },
+      }),
+    );
+
+    await expect(
+      getRemoteScoreClaimStatus({
+        claimCode: "ABCDEFGHIJKLMNOPQRSTUVWX12345678",
+        fetchImpl,
+        globalApiUrl: "https://scores.example.test",
+      }),
+    ).rejects.toMatchObject({
+      code: "remote_score_claim_status_invalid_response",
+      status: 502,
+    } satisfies Partial<RemoteScoreClaimError>);
   });
 });

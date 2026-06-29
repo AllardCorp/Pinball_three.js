@@ -5,7 +5,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import Home from "../pages/Home";
 
-const { signOutMock, useSessionMock, withModeMock } = vi.hoisted(() => ({
+const { appTargetState, signOutMock, useSessionMock, withModeMock } = vi.hoisted(() => ({
+  appTargetState: {
+    isPublic: false,
+  },
   signOutMock: vi.fn(),
   useSessionMock: vi.fn(),
   withModeMock: vi.fn((path: string) => path),
@@ -25,6 +28,12 @@ vi.mock("../hooks/useAppMode", () => ({
   }),
 }));
 
+vi.mock("../lib/app-target", () => ({
+  get isPublicAppTarget() {
+    return appTargetState.isPublic;
+  },
+}));
+
 describe("Page Home", () => {
   // Petit utilitaire pour entourer le composant du Router nécessaire.
   const renderWithRouter = (component: ReactNode) => {
@@ -32,6 +41,7 @@ describe("Page Home", () => {
   };
 
   afterEach(() => {
+    appTargetState.isPublic = false;
     vi.clearAllMocks();
   });
 
@@ -51,6 +61,19 @@ describe("Page Home", () => {
     renderWithRouter(<Home />);
 
     expect(screen.getByText("Pinball Three.js")).toBeInTheDocument();
+  });
+
+  it("masque les routes physiques de la borne sur le frontend public", () => {
+    appTargetState.isPublic = true;
+    mockSessionState(null);
+
+    renderWithRouter(<Home />);
+
+    expect(screen.getByRole("link", { name: "Login" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Playfield" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Backglass" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "DMD" })).not.toBeInTheDocument();
   });
 
   it("affiche l'etat de chargement de session", () => {

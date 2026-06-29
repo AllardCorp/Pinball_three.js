@@ -18,9 +18,28 @@ Le flipper peut rester en local pour les écrans (`playfield`, `backglass`, `dmd
 
 En mode remote, la base de données source de vérité pour `games`, `users` et `score_claim_requests` est celle du VPS. La base locale du flipper ne doit pas servir à valider un QR code public.
 
+## Frontend public VPS
+
+Le VPS ne doit pas charger le jeu complet. Son build frontend est ciblé avec
+`VITE_APP_TARGET=public` et expose uniquement les pages utiles au téléphone :
+
+- `/` : accueil public minimal.
+- `/login` : connexion ou création de compte.
+- `/score-claim?code=...` : rattachement du score après scan QR.
+- `/dashboard` : espace utilisateur authentifié.
+
+Les pages `/playfield`, `/backglass` et `/dmd` restent réservées au flipper
+local. Le build public ne monte pas `MqttProvider`, ce qui évite les erreurs
+`Mixed Content` provoquées par un WebSocket MQTT `ws://` depuis une page HTTPS.
+
+La route `/score-claim` n'est pas mise en avant dans la navigation. Sans
+paramètre `code`, elle ne permet aucune action de sauvegarde : le score doit
+toujours venir d'un claim créé par le backend VPS.
+
 ## Variables côté flipper
 
 ```env
+VITE_APP_TARGET=flipper
 SCORE_CLAIM_MODE=remote
 GLOBAL_API_URL=https://votre-vps.example
 BORNE_TOKEN=secret_long_et_aleatoire
@@ -32,6 +51,7 @@ VITE_API_URL=http://localhost:3000
 ## Variables côté VPS
 
 ```env
+VITE_APP_TARGET=public
 SCORE_CLAIM_MODE=local
 FRONTEND_URL=https://votre-vps.example
 BETTER_AUTH_URL=https://votre-vps.example
@@ -41,6 +61,29 @@ DATABASE_URL=postgresql://...
 ```
 
 Le VPS utilise `SCORE_CLAIM_MODE=local` car il écrit dans sa propre base. Il expose en plus la route sécurisée `/api/borne/score-claims/start` pour recevoir les scores des bornes autorisées.
+
+Le workflow de déploiement doit générer le `.env` du VPS depuis les secrets
+GitHub Actions. Les secrets réels ne doivent pas être versionnés dans le dépôt.
+
+## Réseau Docker côté VPS
+
+Le reverse proxy Nginx du VPS est le seul point d'entrée public HTTP/HTTPS :
+
+- Nginx sert `https://votre-vps.example`.
+- Le VPS doit être lancé avec `deploy/docker-compose.vps.yml`.
+- Le frontend Docker écoute seulement sur `127.0.0.1:8080`.
+- Le backend Docker écoute seulement sur `127.0.0.1:3000`.
+- PostgreSQL n'est pas publié sur le host : seul le réseau Docker interne y accède.
+
+`deploy/docker-compose.yml` reste dédié au flipper physique via `fliphetic.toml`.
+Ce fichier build le jeu complet avec `VITE_APP_TARGET=flipper`, expose les écrans
+attendus par la borne et garde Mosquitto actif.
+
+Mosquitto n'est pas démarré par défaut dans `deploy/docker-compose.vps.yml`. Il est
+placé sous le profil Docker `mqtt`, car le VPS public n'a pas besoin de piloter
+la borne physique. Si un jour ce service redevient nécessaire côté serveur, il
+faudra l'activer explicitement avec `--profile mqtt` et sécuriser l'exposition
+des ports.
 
 ## Sécurité
 

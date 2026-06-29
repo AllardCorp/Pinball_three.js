@@ -6,8 +6,6 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-pinball_db}
       - POSTGRES_USER=${POSTGRES_USER:-pinball_user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change_me}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -44,8 +42,9 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
+    # Le backend n'est pas exposé publiquement : Nginx le contacte en local.
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -71,24 +70,26 @@ services:
       context: ../frontend
       dockerfile: Dockerfile
       args:
-        # Le fichier Compose principal est celui utilisé par Fliphetic pour la borne.
-        # Il doit donc builder le jeu complet par défaut.
-        - VITE_APP_TARGET=${VITE_APP_TARGET:-flipper}
+        # Le VPS sert uniquement l'interface publique : pas de jeu 3D ni MQTT.
+        - VITE_APP_TARGET=${VITE_APP_TARGET:-public}
         - VITE_API_URL=${VITE_API_URL:-http://localhost:3000}
         - VITE_MQTT_USERNAME=${MQTT_USERNAME:-pinball_user}
         - VITE_MQTT_PASSWORD=${MQTT_PASSWORD:-change_me}
         - VITE_MQTT_URL=${MQTT_URL:-}
+    # Nginx expose HTTPS publiquement et proxy vers ce port local.
     ports:
-      - "80:80"
+      - "127.0.0.1:8080:80"
     restart: always
 
   mosquitto:
+    profiles:
+      - mqtt
     image: eclipse-mosquitto:2.0.18
     container_name: mosquitto
     environment:
       - MQTT_USERNAME=${MQTT_USERNAME:-pinball_user}
       - MQTT_PASSWORD=${MQTT_PASSWORD:-change_me}
-    # On génère le fichier dans /config/ et on donne les droits à l'utilisateur mosquitto
+    # Service optionnel côté VPS : le flipper physique gère normalement MQTT localement.
     entrypoint: >
       sh -c "touch /mosquitto/config/password_file.txt && 
              mosquitto_passwd -b /mosquitto/config/password_file.txt $$MQTT_USERNAME $$MQTT_PASSWORD && 

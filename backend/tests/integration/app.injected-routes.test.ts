@@ -5,7 +5,10 @@ import { createApp, resetRateLimitStoreForTests } from "../../src/app.js";
 import type { AuthInstance } from "../../src/auth.js";
 import type { DatabaseClient } from "../../src/db/client.js";
 import { env } from "../../src/env.js";
-import type { RemoteScoreClaimStarter } from "../../src/services/remote-score-claim-client.js";
+import type {
+  RemoteScoreClaimStatusChecker,
+  RemoteScoreClaimStarter,
+} from "../../src/services/remote-score-claim-client.js";
 
 type AppSession = {
   session: {
@@ -24,6 +27,7 @@ function createRouteTestApp(
     db?: Partial<DatabaseClient>;
     envOverrides?: Partial<typeof env>;
     getSession?: (headers: Record<string, unknown>) => Promise<AppSession | null>;
+    remoteScoreClaimStatusChecker?: RemoteScoreClaimStatusChecker;
     remoteScoreClaimStarter?: RemoteScoreClaimStarter;
   } = {},
 ) {
@@ -45,6 +49,11 @@ function createRouteTestApp(
     getSession:
       options.getSession ??
       (async () => null),
+    remoteScoreClaimStatusChecker:
+      options.remoteScoreClaimStatusChecker ??
+      (async () => {
+        throw new Error("remote score claim status checker not configured in test");
+      }),
     remoteScoreClaimStarter:
       options.remoteScoreClaimStarter ??
       (async () => {
@@ -262,6 +271,57 @@ describe("app injected routes", () => {
     expect(response.status).toBe(503);
     expect(response.body).toEqual({
       error: "remote_score_claim_not_configured",
+    });
+  });
+
+  it("relays score claim status lookups to the remote VPS when remote mode is enabled", async () => {
+    const claimCode = "ABCDEFGHIJKLMNOPQRSTUVWX12345678";
+    const playedAt = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 60_000).toISOString();
+    const remoteScoreClaimStatusChecker = vi.fn(async () => ({
+      body: {
+        approvedAt: null,
+        expiresAt,
+        game: {
+          finalScore: 654321,
+          id: 91,
+          playedAt,
+          playedDurationSeconds: 95,
+        },
+        status: "pending" as const,
+        user: null,
+      },
+      statusCode: 200 as const,
+    }));
+    const app = createRouteTestApp({
+      envOverrides: {
+        borneToken: "cabinet-secret",
+        globalApiUrl: "https://scores.example.test/",
+        scoreClaimMode: "remote",
+      },
+      remoteScoreClaimStatusChecker,
+    });
+
+    const response = await request(app).get(
+      `/api/score-claims/status/${claimCode}`,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      approvedAt: null,
+      expiresAt,
+      game: {
+        finalScore: 654321,
+        id: 91,
+        playedAt,
+        playedDurationSeconds: 95,
+      },
+      status: "pending",
+      user: null,
+    });
+    expect(remoteScoreClaimStatusChecker).toHaveBeenCalledWith({
+      claimCode,
+      globalApiUrl: "https://scores.example.test/",
     });
   });
 

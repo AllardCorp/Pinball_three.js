@@ -112,11 +112,15 @@ Le flux QR code avec VPS est détaillé dans [docs/score-claim-vps.md](docs/scor
 En production, les migrations sont exécutées par le service `migrate` avant le démarrage du backend.
 Il n'y a pas d'interface d'administration de la base exposée.
 
-Commande de déploiement :
+Commande de déploiement VPS :
 
 ```bash
-docker compose -p flipper-project -f deploy/docker-compose.yml up -d --build
+docker compose -p flipper-project -f deploy/docker-compose.vps.yml up -d --build
 ```
+
+Le fichier `deploy/docker-compose.yml` reste réservé au déploiement du flipper
+physique via `fliphetic.toml`. Il build le frontend complet avec
+`VITE_APP_TARGET=flipper` par défaut.
 
 ---
 

@@ -14,7 +14,9 @@ import { createHttpError, requestErrorHandler } from "./http/errors.js";
 import { resetRateLimitStoreForTests } from "./http/rate-limit.js";
 import { registerScoreClaimRoutes } from "./routes/score-claim-routes.js";
 import {
+  getRemoteScoreClaimStatus,
   startRemoteScoreClaim,
+  type RemoteScoreClaimStatusChecker,
   type RemoteScoreClaimStarter,
 } from "./services/remote-score-claim-client.js";
 
@@ -28,6 +30,7 @@ type BackendAppDependencies = {
   db: DatabaseClient;
   env: typeof defaultEnv;
   getSession: GetSession;
+  remoteScoreClaimStatusChecker: RemoteScoreClaimStatusChecker;
   remoteScoreClaimStarter: RemoteScoreClaimStarter;
 };
 
@@ -45,6 +48,8 @@ export function createApp(
   const env = dependencies.env ?? defaultEnv;
   const remoteScoreClaimStarter =
     dependencies.remoteScoreClaimStarter ?? startRemoteScoreClaim;
+  const remoteScoreClaimStatusChecker =
+    dependencies.remoteScoreClaimStatusChecker ?? getRemoteScoreClaimStatus;
   const getSession =
     dependencies.getSession ??
     // L'application n'a besoin que d'une forme minimale de session.
@@ -140,6 +145,7 @@ export function createApp(
     db,
     env,
     getSession,
+    remoteScoreClaimStatusChecker,
     remoteScoreClaimStarter,
   });
 
