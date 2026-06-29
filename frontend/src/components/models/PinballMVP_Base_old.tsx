@@ -5,15 +5,15 @@ import { useGLTF } from "@react-three/drei";
 import type { GLTF } from "three-stdlib";
 import type { JSX } from "react";
 import { RigidBody, CoefficientCombineRule } from "@react-three/rapier";
-import Flipper from "@/components/Flipper";
-import Kickback from "@/components/Kickback";
-import Slingshot from "@/components/Slingshot";
-import Bumper from "@/components/Bumper";
-import Ball from "@/components/Ball";
-import LauncherGate from "@/components/LauncherGate";
-import DeathZone from "@/components/DeathZone";
-import GoldMine from "@/components/GoldMine";
-import ScoreTarget from "@/components/ScoreTarget";
+import Flipper from "@/components/pinball/Flipper";
+import Kickback from "@/components/pinball/Kickback";
+import Slingshot from "@/components/pinball/Slingshot";
+import Bumper from "@/components/pinball/Bumper";
+import Ball from "@/components/pinball/Ball";
+import LauncherGate from "@/components/pinball/LauncherGate";
+import DeathZone from "@/components/pinball/DeathZone";
+import GoldMine from "@/components/pinball/GoldMine";
+import ScoreTarget from "@/components/pinball/ScoreTarget";
 
 type GLTFResult = GLTF & {
   nodes: {

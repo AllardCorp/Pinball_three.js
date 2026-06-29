@@ -15,10 +15,12 @@
   "dependencies": {
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
+    "@react-three/postprocessing": "^3.0.4",
     "@react-three/rapier": "^2.2.0",
     "@tailwindcss/vite": "^4.2.1",
     "better-auth": "^1.6.5",
     "mqtt": "^5.15.0",
+    "postprocessing": "6.37",
     "qrcode": "^1.5.4",
     "r3f-perf": "~7.2.3",
     "react": "^19.2.0",

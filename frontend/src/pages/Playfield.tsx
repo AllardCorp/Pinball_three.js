@@ -3,16 +3,22 @@ import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
 import { Perf } from "r3f-perf";
 import { Environment } from "@react-three/drei";
-import { Leva, button, useControls } from "leva";
-
+import { Leva } from "leva";
+import {
+  EffectComposer,
+  Bloom,
+  ToneMapping,
+} from "@react-three/postprocessing";
+import { ToneMappingMode } from "postprocessing";
 import ScoreClaimControlPanel from "../components/score-claim/ScoreClaimControlPanel";
 import Experience from "../experience/Experience";
-import Loader from "../components/Loader";
+import Loader from "../components/utils/Loader";
 import { useAppMode } from "../hooks/useAppMode";
 import { useScoreClaimSession } from "../hooks/useScoreClaimSession";
 import { useKeyboardControls } from "../mqtt/useKeyboardControls";
 import { useGameStore } from "@/store/gameStore/useGameStore";
 import { useInputStore } from "@/store/inputStore/useInputStore";
+import { useGameDebug } from "@/config/useGameDebug";
 
 export default function Playfield() {
   const { isArcadeMode, mode } = useAppMode();
@@ -39,25 +45,7 @@ export default function Playfield() {
     }
   }, [startPressed, isPlaying, startGame, updateInputs]);
 
-  useControls("Game Lifecycle", {
-    "Start Solo (1P)": button(() => startGame(1)),
-    "Start Versus (2P)": button(() => startGame(2)),
-    "Start Match (3P)": button(() => startGame(3)),
-    "Start Arcade (4P)": button(() => startGame(4)),
-  });
-
-  const { perfVisible } = useControls({
-    perfVisible: true,
-  });
-  const { rapierDebug } = useControls("rapier", {
-    rapierDebug: true,
-  });
-
-  const { gravityX, gravityY, gravityZ } = useControls("Gravity Controls", {
-    gravityX: { value: 0, min: -20, max: 20, step: 0.1 },
-    gravityY: { value: -80, min: -100, max: 20, step: 0.1 },
-    gravityZ: { value: 20, min: -60, max: 20, step: 0.1 },
-  });
+  const { rapierDebug, gravity, perfVisible } = useGameDebug();
 
   return (
     <div className="relative h-screen w-screen">
@@ -77,9 +65,22 @@ export default function Playfield() {
           <color attach="background" args={["skyblue"]} />
           {perfVisible && <Perf position="top-left" showGraph />}
           <Environment preset="forest" />
-          <Physics debug={rapierDebug} gravity={[gravityX, gravityY, gravityZ]}>
+          <Physics
+            debug={rapierDebug}
+            gravity={[gravity.x, gravity.y, gravity.z]}
+          >
             <Experience />
           </Physics>
+          <EffectComposer>
+            <Bloom
+              luminanceThreshold={2} // Seuil minimal pour pour le bloom (isole l'épée du plateau)
+              luminanceSmoothing={0} // Empêche la diffusion du bloom sur les autres objets (plateau, personnages) pour éviter un effet brouillard
+              mipmapBlur // Utilise un flou basé sur les mipmaps pour un bloom plus naturel
+              intensity={1.2}
+            />
+            {/* Attribution du Tone Maping pour des couleurs intenses */}
+            <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+          </EffectComposer>
         </Canvas>
       </Suspense>
     </div>
