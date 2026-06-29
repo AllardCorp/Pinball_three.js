@@ -1,6 +1,7 @@
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import { useControls } from "leva";
 import { useGameStore } from "@/store/gameStore/useGameStore";
+import { SWORD_SPAWN_TIMERS } from "@/config/gameBalancingConfig";
 
 type LuncherGateProps = {
   nodes: any;
@@ -9,13 +10,15 @@ type LuncherGateProps = {
 export default function LauncherGate({ nodes, materials }: LuncherGateProps) {
   const ballInLauncher = useGameStore((state) => state.ballInLauncher);
   const setBallInLauncher = useGameStore((state) => state.setBallInLauncher);
-  const { gateStartX, gateStartY, gateStartZ } = useControls(
-    "Gate sensors Position",
+  const scheduleSwordSpawn = useGameStore((state) => state.scheduleSwordSpawn);
+
+  // Pas de la config leva global car utile pour le debug et pas pour le gameplay
+  const { position } = useControls(
+    "Launch EndGate sensors Position",
     {
-      gateStartX: { value: 8.4, min: -20, max: 20, step: 0.1 },
-      gateStartY: { value: -1.6, min: -20, max: 20, step: 0.1 },
-      gateStartZ: { value: 5.9, min: -20, max: 80, step: 0.1 },
+      position: { value: [8.4, -1.6, 5.9], step: 0.1 },
     },
+    { collapsed: true },
   );
   return (
     <group>
@@ -32,10 +35,12 @@ export default function LauncherGate({ nodes, materials }: LuncherGateProps) {
             console.log("Bille confirmé !");
             setTimeout(() => {
               setBallInLauncher(false);
+
+              scheduleSwordSpawn(SWORD_SPAWN_TIMERS.initial);
             }, 500); // Délai pour être sûr que la bille soit bien passée
           }
         }}
-        position={[gateStartX, gateStartY, gateStartZ]}
+        position={position}
         rotation={[0, Math.PI / 2.6, 0]}
       >
         <CuboidCollider args={[1, 1, 0.2]} />

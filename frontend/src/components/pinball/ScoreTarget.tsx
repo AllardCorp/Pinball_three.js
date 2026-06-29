@@ -2,19 +2,22 @@ import { RigidBody, type CollisionEnterPayload } from "@react-three/rapier";
 import { useRef } from "react";
 import * as THREE from "three";
 import { useGameStore } from "@/store/gameStore/useGameStore";
+import { type PlayfieldZone } from "@/config/gameBalancingConfig";
 
 type ScoreTargetProps = {
   geometry: THREE.BufferGeometry;
   position: [number, number, number];
   points?: number;
+  zone?: PlayfieldZone;
 };
 // Fakir Targets
 export default function ScoreTarget({
   geometry,
   position,
   points = 50,
+  zone = "Neutral",
 }: ScoreTargetProps) {
-  const addScore = useGameStore((state) => state.addScore);
+  const addZoneScore = useGameStore((state) => state.addZoneScore);
   const lastHitTime = useRef<number>(0);
 
   const handleCollision = (e: CollisionEnterPayload) => {
@@ -24,7 +27,7 @@ export default function ScoreTarget({
       if (now - lastHitTime.current < 250) return;
 
       lastHitTime.current = now;
-      addScore(points);
+      addZoneScore(points, zone);
 
       console.log(`+${points} points !`);
     }
