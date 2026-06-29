@@ -3,6 +3,8 @@ import { type GameState, channel } from "./gameStore.types";
 import { createPlayerSlice } from "./slices/createPlayerSlice";
 import { createPlayfieldSlice } from "./slices/createPlayfieldSlice";
 import { createCoreSlice } from "./slices/createCoreSlice";
+import { createMultiplierSlice } from "./slices/createMultiplierSlice";
+import { createClassSlice } from "./slices/createClassSlice";
 
 export const useGameStore = create<GameState>()((...a) => {
   const [set] = a; // On extrait 'set' pour l'écouteur du channel
@@ -20,5 +22,7 @@ export const useGameStore = create<GameState>()((...a) => {
     ...createPlayerSlice(...a),
     ...createPlayfieldSlice(...a),
     ...createCoreSlice(...a),
+    ...createMultiplierSlice(...a),
+    ...createClassSlice(...a),
   };
 });

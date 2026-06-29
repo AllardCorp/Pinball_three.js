@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { RigidBody, type CollisionEnterPayload } from "@react-three/rapier";
 import * as THREE from "three";
-import { useControls } from "leva";
 import { useGameStore } from "@/store/gameStore/useGameStore";
-import ObjectSound from "./ObjectSound";
+import ObjectSound from "@/components/sounds/ObjectSound";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
+import { useGameDebug } from "@/config/useGameDebug";
+import { SCORE_VALUES } from "@/config/gameBalancingConfig";
 
 type SlingshotProps = {
   geometry: THREE.BufferGeometry;
@@ -20,14 +21,12 @@ export default function Slingshot({
 }: SlingshotProps) {
   const [hitCount, setHitCount] = useState(0);
   const addScore = useGameStore((state) => state.addScore);
-  const { restitution, force } = useControls("Slingshot Controls", {
-    restitution: { value: 0.2, min: 0, max: 1, step: 0.1 },
-    force: { value: 12, min: 0, max: 30, step: 0.1 },
-  });
+  const { slingshotsRestitution, force } = useGameDebug();
+
   const handleCollision = (e: CollisionEnterPayload) => {
     // e.other.rigidBody = la bille qui a touché le slingshot
     if (e.other.rigidBody) {
-      // La puissance du coup
+      // Puissance du coup
       const forceMultiplier = force;
 
       // Convertion de la direction en Vecteur mathématique et on applique la force
@@ -35,7 +34,7 @@ export default function Slingshot({
         .normalize() // S'assure que la direction est pure
         .multiplyScalar(forceMultiplier);
 
-      addScore(100);
+      addScore(SCORE_VALUES.slingshot);
       // Frappe la bille ! ("true" sert à réveiller la bille si elle dormait)
       e.other.rigidBody.applyImpulse(impulse, true);
       setHitCount((prev) => prev + 1);
@@ -46,7 +45,7 @@ export default function Slingshot({
     <RigidBody
       type="fixed"
       colliders="hull"
-      restitution={restitution}
+      restitution={slingshotsRestitution}
       position={position}
       rotation={rotation}
       onCollisionEnter={handleCollision}

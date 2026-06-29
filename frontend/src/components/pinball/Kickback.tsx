@@ -1,10 +1,11 @@
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
-import { useControls } from "leva";
 import type { BufferGeometry, Material } from "three";
 import { useGameStore } from "@/store/gameStore/useGameStore";
 import { useState } from "react";
-import ObjectSound from "./ObjectSound";
+import ObjectSound from "@/components/sounds/ObjectSound";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
+import { useGameDebug } from "@/config/useGameDebug";
+import { SCORE_VALUES } from "@/config/gameBalancingConfig";
 
 type KickbackProps = {
   side: "left" | "right";
@@ -33,10 +34,7 @@ export default function Kickback({
   const useKickback = useGameStore((state) => state.useKickback);
   const [kickCount, setKickCount] = useState(0);
   const addScore = useGameStore((state) => state.addScore);
-  const { leftOrientation, rightOrientation } = useControls("Kickbacks", {
-    leftOrientation: { value: 6, min: -100, max: 100, step: 1 },
-    rightOrientation: { value: -6, min: -100, max: 100, step: 1 },
-  });
+  const { leftOrientation, rightOrientation } = useGameDebug();
   return (
     <group>
       {/* CAPTEUR */}
@@ -66,7 +64,7 @@ export default function Kickback({
               setKickCount((prev) => prev + 1);
             }, 1000);
 
-            addScore(2500);
+            addScore(SCORE_VALUES.kickback);
             // Fermeture de la porte après 300ms
             setTimeout(() => {
               useKickback(side);
