@@ -9,8 +9,8 @@ strategy = "branch"
 ref      = "main"                   
 
 [screens]
-playfield = { service = "frontend", port = 80, path = "/playfield" }
-backglass = { service = "frontend", port = 80, path = "/backglass" }
+playfield = { service = "frontend", port = 80, path = "/playfield?mode=arcade" }
+backglass = { service = "frontend", port = 80, path = "/backglass?mode=arcade" }
 dmd       = { service = "frontend", port = 80, path = "/dmd" }
 
 [compose]
