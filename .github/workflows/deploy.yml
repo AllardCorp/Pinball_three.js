@@ -9,7 +9,6 @@ on:
       - completed
     branches:
       - main
-      - feat/configuration-vps
 
 
 jobs:
