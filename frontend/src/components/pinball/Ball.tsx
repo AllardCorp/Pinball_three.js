@@ -35,7 +35,7 @@ export default function Ball({ id, origin, position }: BallProps) {
     (state) => state.warriorImpulseTrigger,
   );
 
-  const launchBall = useInputStore((state) => state.buttons.launch_ball);
+  const launchBall = useInputStore((state) => state.buttons.front_white);
   const prevLaunchBall = useRef(false);
 
   const { mass, restitution, size } = useGameDebug();
