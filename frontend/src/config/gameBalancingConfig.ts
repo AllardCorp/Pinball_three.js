@@ -31,21 +31,18 @@ export const CLASS_POWER_MESSAGES: Record<PlayerClass, string> = {
 
 // Réglages spécifiques au pouvoir de l'Elfe
 export const ELF_POWER_CONFIG = {
-  multiplierValue: 4,
-  durationMs: 15000,
   possibleTargets: [
     "lightRoad",
-    "fakirSimple",
-    "fakirMedium",
-    "fakirHard",
-    "mine",
+    "fakir",
+    "rampHabitRight",
+    "rampHabitLeft",
+    // "mine",
     "gems",
   ] as const,
 };
 
 // Réglages spécifiques au pouvoir du guerrier
 export const WARRIOR_POWER_CONFIG = {
-  // Ajuste ces valeurs selon tes tests. y donne un petit saut, -z propulse vers le haut du plateau
   impulseForce: { x: 0, y: 0, z: -60 },
 };
 
@@ -66,7 +63,7 @@ export const CLASS_COOLDOWNS: Record<PlayerClass, number> = {
   Necromancer: 60000,
   Elf: 20000,
   Warrior: 10000,
-  Dwarf: 15000,
+  Dwarf: 30000,
   None: 0,
 };
 
@@ -96,7 +93,7 @@ export const SWORD_POSITIONS: [number, number, number][] = [
 ];
 // Timer de spawn de l'épée
 export const SWORD_SPAWN_TIMERS = {
-  initial: 10000, // 20s après le lancement de la bille
+  initial: 10000, // 10s après le lancement de la bille
   respawn: 30000, // 30s après avoir été ramassée
 };
 
@@ -108,20 +105,23 @@ export const SCORE_VALUES: Record<string, number> = {
   minePlank: 2500,
   fakirTarget: 500,
   gemsToggle: 5000,
-
-  // Classes
-  dwarfPerk: 5000,
+  lightningRoadSensor: 500,
+  lightningRoadJackpot: 5000,
+  mineEntrance: 1000,
+  drumBumper: 1000,
+  sewerBonus: 3000,
 };
 
 // LOGIQUE DU MULTIPLICATEUR
 // Les sources de multiplicateurs
 export type MultiplierSource =
   | "lightRoad"
-  | "fakirSimple"
-  | "fakirMedium"
-  | "mine"
-  | "fakirHard"
+  | "fakir"
+  | "dwarfMultiplier"
+  // | "mine"
   | "gems"
+  | "rampHabitRight"
+  | "rampHabitLeft"
   | "sunBonus";
 
 // Configuration de base des multiplicateurs (valeur et durée)
@@ -130,11 +130,11 @@ export const MULTIPLIERS_CONFIG: Record<
   { value: number; durationMs: number }
 > = {
   lightRoad: { value: 2, durationMs: 10000 },
-  fakirSimple: { value: 4, durationMs: 15000 },
-  fakirMedium: { value: 6, durationMs: 15000 },
-  mine: { value: 8, durationMs: 15000 }, // Le passif du Nain pourra l'écraser plus tard
-  fakirHard: { value: 10, durationMs: 15000 },
+  fakir: { value: 4, durationMs: 15000 },
+  rampHabitRight: { value: 6, durationMs: 20000 },
+  rampHabitLeft: { value: 8, durationMs: 20000 },
   gems: { value: 12, durationMs: 30000 },
+  dwarfMultiplier: { value: 12, durationMs: 20000 },
   sunBonus: { value: 50, durationMs: 50000 },
 };
 
@@ -142,17 +142,21 @@ export const MULTIPLIERS_CONFIG: Record<
 export const CLASS_MULTIPLIER_OVERRIDES: Partial<
   Record<PlayerClass, Partial<Record<MultiplierSource, number>>>
 > = {
-  Dwarf: {
-    mine: 12, // Le Nain écrase le x8 de la mine pour le remplacer par un x12
-  },
+  // Dwarf: {
+  //   mine: 12, // Le Nain écrase le x8 de la mine pour le remplacer par un x12
+  // },
 };
 
 // Les conditions requises pour déclencher le méga Sun Bonus
 export const SUN_BONUS_REQUIRED_SOURCES: MultiplierSource[] = [
   "lightRoad",
-  "fakirSimple",
-  "fakirMedium",
-  "fakirHard",
-  "mine",
+  "fakir",
+  "rampHabitRight",
+  "rampHabitLeft",
+  // "mine",
   "gems",
 ];
+
+// BILLE
+// Nombre maximum de balles simultanées dans le jeu
+export const MAX_BALLS = 3;

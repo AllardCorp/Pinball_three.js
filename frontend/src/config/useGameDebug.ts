@@ -25,8 +25,12 @@ export function useGameDebug() {
     Multipliers: folder(
       {
         "Reset Multiplier": button(() => resetMultipliers()),
-        "gems 20s": button(() => activateMultiplier("gems")),
-        "mine 25s": button(() => activateMultiplier("mine")),
+        gems: button(() => activateMultiplier("gems")),
+        lightRoad: button(() => activateMultiplier("lightRoad")),
+        rampHabitRight: button(() => activateMultiplier("rampHabitRight")),
+        rampHabitLeft: button(() => activateMultiplier("rampHabitLeft")),
+        fakir: button(() => activateMultiplier("fakir")),
+        dwarfMultiplier: button(() => activateMultiplier("dwarfMultiplier")),
       },
       { collapsed: true },
     ),

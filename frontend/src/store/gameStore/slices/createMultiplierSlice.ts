@@ -44,13 +44,8 @@ export const createMultiplierSlice: StateCreator<
       const now = Date.now();
       const currentClass = get().activeClass;
 
-      // Vérifie si la configuration accorde un passe-droit à cette classe pour cette source
       const overrideValue = CLASS_MULTIPLIER_OVERRIDES[currentClass]?.[source];
 
-      // L'ordre de priorité :
-      // 1. Valeur forcée manuellement (customValue)
-      // 2. Surcharge de classe (overrideValue - ex: le x12 du Nain)
-      // 3. Valeur de base (MULTIPLIERS_CONFIG - ex: le x8 normal)
       const finalValue =
         customValue ?? overrideValue ?? MULTIPLIERS_CONFIG[source].value;
 
@@ -67,7 +62,11 @@ export const createMultiplierSlice: StateCreator<
       };
 
       setAndSync({ activeMultipliers: newMultipliers });
-      get().checkSunBonus();
+
+      // Ne vérifie pas le Sun Bonus si on est déjà en train de l'activer pour éviter une récursion infinie
+      if (source !== "sunBonus") {
+        get().checkSunBonus();
+      }
     },
 
     getCurrentMultiplier: () => {
@@ -86,6 +85,9 @@ export const createMultiplierSlice: StateCreator<
     },
 
     checkSunBonus: () => {
+      // Si déjà actif, on return
+      if (get().isUndeathActive) return;
+
       const now = Date.now();
       const multipliers = get().activeMultipliers;
 
@@ -93,13 +95,13 @@ export const createMultiplierSlice: StateCreator<
         (source) => multipliers[source] && multipliers[source].expiresAt > now,
       );
 
-      if (allActive && !get().isUndeathActive) {
+      if (allActive) {
         console.log("🌞 CONDITIONS DU SUN BONUS REMPLIES ! 🌞");
 
-        // Le store connaît déjà les valeurs du sunBonus via la config
-        get().activateMultiplier("sunBonus");
-
+        // Passe à true AVANT d'activer le multiplicateur pour verrouiller l'état
         setAndSync({ isUndeathActive: true });
+
+        get().activateMultiplier("sunBonus");
         get().displayMessage("🌞 SUN BONUS ACTIVÉ ! x50 + UNDEATH 🌞", 4000);
 
         setTimeout(() => {

@@ -12,6 +12,7 @@ export interface PlayfieldSlice {
   addScoreMultiplier: () => void;
   removeScoreMultiplier: () => void;
   incrementMine: () => void;
+  setMineHits: (hits: number) => void;
   resetMine: () => void;
   toggleRuby: (id: 0 | 1 | 2) => void;
 }
@@ -53,6 +54,9 @@ export const createPlayfieldSlice: StateCreator<
       if (currentHits < 3) {
         setAndSync({ mineHits: currentHits + 1 });
       }
+    },
+    setMineHits: (hits: number) => {
+      setAndSync({ mineHits: hits });
     },
 
     resetMine: () => {

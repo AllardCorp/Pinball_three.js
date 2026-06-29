@@ -11,8 +11,14 @@ export default function DeathZone() {
       sensor
       onIntersectionEnter={(e) => {
         if (e.other.rigidBodyObject?.name === "ball") {
-          console.log("Bille perdue !");
-          loseBall();
+          // Récuération de l'ID de la bille
+          const ballId = e.other.rigidBodyObject.userData?.id;
+
+          if (ballId) {
+            console.log(`Bille tombée : ${ballId}`);
+
+            loseBall(ballId);
+          }
         }
       }}
     >

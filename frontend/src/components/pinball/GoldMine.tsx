@@ -10,7 +10,6 @@ import { useGameStore } from "@/store/gameStore/useGameStore";
 import ObjectSound from "@/components/sounds/ObjectSound";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 import { SCORE_VALUES } from "@/config/gameBalancingConfig";
-
 // --- TYPES POUR LE SYSTÈME DE POUSSIÈRE ---
 export interface DustEffectRef {
   emit: (origin: THREE.Vector3) => void;
@@ -76,8 +75,8 @@ const DustEffect = forwardRef<DustEffectRef, { plankColor: string }>(
 
             // Vitesse d'explosion : Plus radiale pour un effet "puff"
             p.velocity.set(
-              (Math.random() - 0.5) * 4.0, // x (vitesse latérale augmentée)
-              (Math.random() + 0.5) * 2.5, // y (plus vers le haut)
+              (Math.random() - 0.5) * 4.0, // x
+              (Math.random() + 0.5) * 2.5, // y
               (Math.random() - 0.5) * 4.0, // z
             );
             countEmitted++;
@@ -158,15 +157,13 @@ const DustEffect = forwardRef<DustEffectRef, { plankColor: string }>(
     );
   },
 );
-// ==============================================================================
-// --- 2. COMPOSANT PRINCIPAL : GOLD MINE ---
-// ==============================================================================
+// COMPOSANT PRINCIPAL : GOLD MINE
 export default function GoldMine({ nodes, materials }: GoldMineProps) {
   const displayMessage = useGameStore((state) => state.displayMessage);
   const mineHits = useGameStore((state) => state.mineHits);
   const incrementMine = useGameStore((state) => state.incrementMine);
   const addScore = useGameStore((state) => state.addScore);
-  const activateMultiplier = useGameStore((state) => state.activateMultiplier);
+  const addZoneScore = useGameStore((state) => state.addZoneScore);
   const dustRef = useRef<DustEffectRef>(null!);
 
   const lastHitTime = useRef<number>(0);
@@ -179,7 +176,7 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
       lastHitTime.current = now;
 
       if (mineHits < 3) {
-        // Utilise la position de la bille !
+        // Utilise la position de la bille
         if (e.other.rigidBody) {
           const ballPos = e.other.rigidBody.translation();
           // Émet la poussière exactement là où se trouve la bille
@@ -274,7 +271,8 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
           if (e.other.rigidBodyObject?.name === "ball" && e.other.rigidBody) {
             console.log("Jackpot ! La bille est dans la mine !");
 
-            activateMultiplier("mine");
+            addZoneScore(SCORE_VALUES.mineEntrance, "Mine");
+
             e.other.rigidBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
             e.other.rigidBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
 

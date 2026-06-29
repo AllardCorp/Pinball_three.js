@@ -15,7 +15,6 @@ import { SCORE_VALUES } from "@/config/gameBalancingConfig";
 type BumperProps = {
   id: 0 | 1 | 2;
   colliderGeometry: THREE.BufferGeometry;
-  // On récupère le node react des bumpers
   visualNode: React.ReactNode;
   rubyGeometry: THREE.BufferGeometry;
   rubyMaterial: THREE.Material;
@@ -40,7 +39,6 @@ export default function Bumper({
   const [hitCount, setHitCount] = useState(0);
 
   const rigidBodyRef = useRef<RapierRigidBody>(null);
-  // Utilisation d'un Group à la place d'un Mesh
   const visualGroupRef = useRef<THREE.Group>(null);
   const lastHitTime = useRef<number>(0);
 

@@ -11,7 +11,7 @@ import {
   ELF_POWER_CONFIG,
   SWORD_POSITIONS,
   SWORD_SPAWN_TIMERS,
-  SCORE_VALUES,
+  MAX_BALLS,
 } from "@/config/gameBalancingConfig";
 
 export interface ClassSlice {
@@ -123,7 +123,8 @@ export const createClassSlice: StateCreator<GameState, [], [], ClassSlice> = (
       if (
         !state.isPlaying ||
         state.activeClass === "None" ||
-        state.isPowerOnCooldown
+        state.isPowerOnCooldown ||
+        state.ballInLauncher
       )
         return;
 
@@ -146,7 +147,7 @@ export const createClassSlice: StateCreator<GameState, [], [], ClassSlice> = (
             const randomMult =
               inactiveOnes[Math.floor(Math.random() * inactiveOnes.length)];
 
-            // Le MultiplierSlice ira chercher tout seul la durée et la puissance dans la config
+            // Activation du multiplicateur choisi
             get().activateMultiplier(randomMult);
 
             get().displayMessage(
@@ -162,6 +163,14 @@ export const createClassSlice: StateCreator<GameState, [], [], ClassSlice> = (
           }
           break;
         case "Necromancer":
+          const currentBalls = get().activeBalls.length;
+
+          if (currentBalls < MAX_BALLS && !get().ballInLauncher) {
+            get().addBall("cannon");
+            get().displayMessage("💀 ÉVEIL DES MORTS !", 3000);
+          } else {
+            return; // Annule le cooldown si le pouvoir ne peut pas être utilisé
+          }
           break;
 
         case "Warrior":
@@ -172,8 +181,10 @@ export const createClassSlice: StateCreator<GameState, [], [], ClassSlice> = (
           break;
 
         case "Dwarf":
-          get().addScore(SCORE_VALUES.dwarfPerk); // Bonus immédiat pour le Nain
-          get().displayMessage("Vous avez trouvez de l'or !", 3000);
+          get().activateMultiplier("dwarfMultiplier");
+          get().setMineHits(3); // Retire les planches de la mine
+
+          get().displayMessage("Pouvoir du nain", 3000);
           break;
       }
 

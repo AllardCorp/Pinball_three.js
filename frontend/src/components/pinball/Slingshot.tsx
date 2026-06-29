@@ -26,7 +26,7 @@ export default function Slingshot({
   const handleCollision = (e: CollisionEnterPayload) => {
     // e.other.rigidBody = la bille qui a touché le slingshot
     if (e.other.rigidBody) {
-      // La puissance du coup
+      // Puissance du coup
       const forceMultiplier = force;
 
       // Convertion de la direction en Vecteur mathématique et on applique la force

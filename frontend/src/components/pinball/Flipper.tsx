@@ -25,7 +25,6 @@ export default function Flipper({
   side,
 }: FlipperProps) {
   const { upForce, downForce } = useGameDebug();
-  // 2. On indique à TypeScript le type exact de la référence
   const flipperRef = useRef<RapierRigidBody>(null);
 
   const isActive = useInputStore((state) =>
@@ -39,7 +38,6 @@ export default function Flipper({
     [position],
   );
 
-  // 3. On remplace "state" par "_" pour indiquer qu'on ignore le premier paramètre
   useFrame((_, delta) => {
     if (!flipperRef.current) return;
     const speed = isActive ? upForce : downForce; // Vitesse de levée | Vitesse de descente du flipper
@@ -75,18 +73,18 @@ export default function Flipper({
       type="kinematicPosition"
       ccd={true}
       colliders="hull"
-      position={position} // Le RigidBody se place aux bonnes coordonnées
+      position={position}
       restitution={0.2}
       friction={0.2}
       // Sécurité supplémentaire pour empêcher toute glissade physique
       enabledTranslations={[false, false, false]}
     >
-      {/* 1. Le mesh de collision (invisible) */}
+      {/* Mesh de collision (invisible) */}
       <mesh geometry={colliderGeometry}>
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      {/* 2. Le mesh visuel ! (Remarque : pas de position ni de rotation ici !) */}
+      {/* Mesh visuel */}
       <mesh geometry={visualGeometry} material={visualMaterial} />
       {/* Le son s'active quand isActive devient 'true' (flipper monte) */}
       <ObjectSound {...SOUNDS_CONFIG.flipper.up} playTrigger={isActive} />
