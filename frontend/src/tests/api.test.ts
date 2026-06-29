@@ -28,15 +28,76 @@ describe("api", () => {
     vi.stubGlobal("window", {
       location: {
         hostname: "frontend.pinball.test",
+        origin: "https://frontend.pinball.test",
         protocol: "https:",
       },
     });
 
     const { apiEndpoint, apiUrl } = await importApi();
 
-    expect(apiUrl).toBe("https://frontend.pinball.test:3000");
+    expect(apiUrl).toBe("https://frontend.pinball.test");
     expect(apiEndpoint("/auth/session")).toBe(
-      "https://frontend.pinball.test:3000/auth/session",
+      "https://frontend.pinball.test/auth/session",
+    );
+  });
+
+  it("utilise l'origine du frontend en production flipper avec le fallback localhost", async () => {
+    vi.stubEnv("VITE_APP_TARGET", "flipper");
+    vi.stubEnv("VITE_API_URL", "http://localhost:3000");
+    vi.stubGlobal("window", {
+      location: {
+        hostname: "localhost",
+        origin: "http://localhost",
+        port: "",
+        protocol: "http:",
+      },
+    });
+
+    const { apiEndpoint, apiUrl } = await importApi();
+
+    expect(apiUrl).toBe("http://localhost");
+    expect(apiEndpoint("/api/score-claims/start")).toBe(
+      "http://localhost/api/score-claims/start",
+    );
+  });
+
+  it("ignore VITE_API_URL en production flipper pour passer par Nginx", async () => {
+    vi.stubEnv("VITE_APP_TARGET", "flipper");
+    vi.stubEnv("VITE_API_URL", "https://pinball.dev-christopher.fr");
+    vi.stubGlobal("window", {
+      location: {
+        hostname: "localhost",
+        origin: "http://localhost",
+        port: "",
+        protocol: "http:",
+      },
+    });
+
+    const { apiEndpoint, apiUrl } = await importApi();
+
+    expect(apiUrl).toBe("http://localhost");
+    expect(apiEndpoint("/api/score-claims/start")).toBe(
+      "http://localhost/api/score-claims/start",
+    );
+  });
+
+  it("conserve l'URL backend explicite pendant le dev Vite", async () => {
+    vi.stubEnv("VITE_APP_TARGET", "flipper");
+    vi.stubEnv("VITE_API_URL", "http://localhost:3000");
+    vi.stubGlobal("window", {
+      location: {
+        hostname: "localhost",
+        origin: "http://localhost:5173",
+        port: "5173",
+        protocol: "http:",
+      },
+    });
+
+    const { apiEndpoint, apiUrl } = await importApi();
+
+    expect(apiUrl).toBe("http://localhost:3000");
+    expect(apiEndpoint("/api/score-claims/start")).toBe(
+      "http://localhost:3000/api/score-claims/start",
     );
   });
 
