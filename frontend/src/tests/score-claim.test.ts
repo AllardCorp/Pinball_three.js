@@ -6,6 +6,11 @@ import {
   getScoreClaimPhaseLabel,
 } from "../lib/score-claim-copy";
 import {
+  createGameOverScoreClaimInput,
+  getFinalScoreForClaim,
+  getPlayedDurationSecondsForClaim,
+} from "../lib/score-claim-gameover";
+import {
   clearScoreClaimSessionSnapshot,
   createIdleScoreClaimSessionSnapshot,
   readScoreClaimSessionSnapshot,
@@ -25,52 +30,49 @@ const phaseExpectations: Array<{
     phase: "idle",
     label: "Prêt",
     dmdMessage: "GAME OVER",
-    description: "Lancez une fin de partie technique pour tester le flux.",
+    description: "Le QR code apparaîtra à la fin de la partie.",
   },
   {
     phase: "submitting",
-    label: "Sauvegarde du score",
+    label: "Préparation du QR code",
     dmdMessage: "SAVING SCORE",
-    description:
-      "La borne enregistre le score final et évalue s'il doit être claimable.",
+    description: "Sauvegarde du score en cours...",
   },
   {
     phase: "discarded",
-    label: "Score ignoré",
+    label: "Score non enregistré",
     dmdMessage: "SCORE NOT SAVED",
-    description: "Le backend a décidé de ne pas conserver ce score.",
+    description: "Ce score n'a pas été conservé.",
   },
   {
     phase: "saved",
-    label: "Score sauvegardé",
+    label: "Score enregistré",
     dmdMessage: "SCORE SAVED",
-    description:
-      "Le score est conservé, mais aucun rattachement mobile n'est proposé.",
+    description: "Le score est enregistré.",
   },
   {
     phase: "claim_pending",
-    label: "En attente de scan",
+    label: "Scannez le QR code",
     dmdMessage: "SCAN TO CLAIM",
-    description:
-      "Le score est sauvegardé et attend une confirmation explicite sur le téléphone.",
+    description: "Scannez avec votre téléphone pour rattacher le score.",
   },
   {
     phase: "claim_approved",
-    label: "Score rattaché",
+    label: "Score enregistré",
     dmdMessage: "SCORE LINKED",
-    description: "Le score est désormais rattaché à un compte joueur.",
+    description: "Le score est rattaché à un compte joueur.",
   },
   {
     phase: "claim_expired",
-    label: "Claim expiré",
+    label: "QR code expiré",
     dmdMessage: "CLAIM EXPIRED",
-    description: "La fenêtre de rattachement est terminée.",
+    description: "Ce QR code n'est plus utilisable.",
   },
   {
     phase: "error",
-    label: "Erreur",
+    label: "QR code indisponible",
     dmdMessage: "",
-    description: "Le flux de claim a échoué.",
+    description: "Impossible d'afficher le QR code pour le moment.",
   },
 ];
 
@@ -209,5 +211,37 @@ describe("score-claim session store", () => {
 
     const unsubscribe = subscribeToScoreClaimSessionSnapshot(vi.fn());
     expect(() => unsubscribe()).not.toThrow();
+  });
+});
+
+describe("score-claim game over input", () => {
+  it("utilise le meilleur score réel de la partie", () => {
+    expect(getFinalScoreForClaim([12_000, 98_500, 42_000])).toBe(98_500);
+  });
+
+  it("normalise les scores invalides avant envoi au backend", () => {
+    expect(getFinalScoreForClaim([Number.NaN, -50, 12.9])).toBe(12);
+  });
+
+  it("applique la durée minimale métier pour un score positif très court", () => {
+    expect(getPlayedDurationSecondsForClaim(1_000, 3_500, 10_000)).toBe(20);
+  });
+
+  it("conserve la durée réelle quand elle dépasse le minimum", () => {
+    expect(getPlayedDurationSecondsForClaim(1_000, 35_100, 10_000)).toBe(35);
+  });
+
+  it("prépare le payload automatique de fin de partie", () => {
+    expect(
+      createGameOverScoreClaimInput({
+        endedAtMs: 31_000,
+        scores: [1_000, 25_000],
+        startedAtMs: 1_000,
+      }),
+    ).toEqual({
+      finalScore: 25_000,
+      playedDurationSeconds: 30,
+      requestClaim: true,
+    });
   });
 });

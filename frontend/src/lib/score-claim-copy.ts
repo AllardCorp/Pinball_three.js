@@ -5,19 +5,19 @@ export function getScoreClaimPhaseLabel(phase: ScoreClaimSessionPhase) {
     case "idle":
       return "Prêt";
     case "submitting":
-      return "Sauvegarde du score";
+      return "Préparation du QR code";
     case "discarded":
-      return "Score ignoré";
+      return "Score non enregistré";
     case "saved":
-      return "Score sauvegardé";
+      return "Score enregistré";
     case "claim_pending":
-      return "En attente de scan";
+      return "Scannez le QR code";
     case "claim_approved":
-      return "Score rattaché";
+      return "Score enregistré";
     case "claim_expired":
-      return "Claim expiré";
+      return "QR code expiré";
     case "error":
-      return "Erreur";
+      return "QR code indisponible";
   }
 }
 
@@ -45,20 +45,20 @@ export function getScoreClaimDmdMessage(snapshot: ScoreClaimSessionSnapshot) {
 export function getScoreClaimDescription(snapshot: ScoreClaimSessionSnapshot) {
   switch (snapshot.phase) {
     case "idle":
-      return "Lancez une fin de partie technique pour tester le flux.";
+      return "Le QR code apparaîtra à la fin de la partie.";
     case "submitting":
-      return "La borne enregistre le score final et évalue s'il doit être claimable.";
+      return "Sauvegarde du score en cours...";
     case "discarded":
-      return "Le backend a décidé de ne pas conserver ce score.";
+      return "Ce score n'a pas été conservé.";
     case "saved":
-      return "Le score est conservé, mais aucun rattachement mobile n'est proposé.";
+      return "Le score est enregistré.";
     case "claim_pending":
-      return "Le score est sauvegardé et attend une confirmation explicite sur le téléphone.";
+      return "Scannez avec votre téléphone pour rattacher le score.";
     case "claim_approved":
-      return "Le score est désormais rattaché à un compte joueur.";
+      return "Le score est rattaché à un compte joueur.";
     case "claim_expired":
-      return "La fenêtre de rattachement est terminée.";
+      return "Ce QR code n'est plus utilisable.";
     case "error":
-      return snapshot.errorMessage ?? "Le flux de claim a échoué.";
+      return snapshot.errorMessage ?? "Impossible d'afficher le QR code pour le moment.";
   }
 }

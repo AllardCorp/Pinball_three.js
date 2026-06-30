@@ -24,6 +24,11 @@ export default function ScoreClaim() {
   const { approveScoreClaim, claim, feedback, isApproving, status } = useScoreClaim({
     claimCode,
   });
+  const approvedAccountLabel =
+    claim?.user?.username ??
+    session?.user.username ??
+    session?.user.email ??
+    "votre compte";
 
   if (!claimCode) {
     return (
@@ -111,15 +116,18 @@ export default function ScoreClaim() {
                   onClick={approveScoreClaim}
                   type="button"
                 >
-                  {isApproving ? "Association..." : "Associer ce score à mon compte"}
+                  {isApproving ? "Enregistrement..." : "Enregistrer mon score"}
                 </button>
               </div>
             )}
 
             {status === "approved" && (
-              <p className="rounded bg-slate-100 px-3 py-2 text-sm text-slate-700">
-                Ce score est déjà rattaché à un compte.
-              </p>
+              <div className="rounded border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-900">
+                <p className="font-semibold">Score enregistré.</p>
+                <p className="mt-1">
+                  Ce score est rattaché à {approvedAccountLabel}.
+                </p>
+              </div>
             )}
           </div>
         )}

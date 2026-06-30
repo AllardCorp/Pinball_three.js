@@ -180,6 +180,10 @@ function getMultiplierMessage(
   return "ROLL FOR INITIATIVE";
 }
 
+function isRubyBonusMessage(screenMessage: string | null) {
+  return screenMessage ? /rubis|ruby/i.test(screenMessage) : false;
+}
+
 function getBackgroundEffect({
   backgroundEffect,
   isSunBonusActive,
@@ -199,7 +203,7 @@ function getBackgroundEffect({
     return "sun";
   }
 
-  if (rubiesActive.every(Boolean)) {
+  if (rubiesActive.every(Boolean) || isRubyBonusMessage(screenMessage)) {
     return "ruby";
   }
 

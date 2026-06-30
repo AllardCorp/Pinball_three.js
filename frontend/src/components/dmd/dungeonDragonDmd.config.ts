@@ -3,6 +3,7 @@ import warriorShieldUrl from "@/assets/dmd/bouclier-dmd.png";
 import necromancerSkullUrl from "@/assets/dmd/crane-dmd.png";
 import mineOpeningSpriteUrl from "@/assets/dmd/anime-mine.png";
 import dwarfHammerUrl from "@/assets/dmd/marteau-dmd.png";
+import rubyRewardSpriteUrl from "@/assets/dmd/rubis-dmd.png";
 import type { DmdViewModel } from "@/lib/dmd-messages";
 
 // Contrat visuel du thème Dungeons & Dragon pour le DMD.
@@ -47,6 +48,14 @@ export const MINE_SPRITE_FRAME_HEIGHT = 48;
 export const MINE_SPRITE_FRAME_WIDTH = 64;
 export const MINE_OPENING_SPRITE_URL = mineOpeningSpriteUrl;
 
+// Sprite sheet du bonus rubis.
+// `rubis.png` est l'image source de travail ; `rubis-dmd.png` est la version
+// optimisée pour la matrice DMD afin d'éviter de charger 770 Ko en production.
+export const RUBY_SPRITE_FRAME_COUNT = 10;
+export const RUBY_SPRITE_FRAME_HEIGHT = 38;
+export const RUBY_SPRITE_FRAME_WIDTH = 62;
+export const RUBY_SPRITE_URL = rubyRewardSpriteUrl;
+
 /**
  * Repère principal du DMD.
  *
@@ -80,9 +89,9 @@ export const LIVE_LAYOUT = {
   score: {
     centerX: 96,
     impactY: 19,
-    mineMaxWidth: 96,
-    minePreferredScale: 2,
-    mineY: 4,
+    eventMaxWidth: 96,
+    eventPreferredScale: 2,
+    eventY: 4,
     maxWidth: 100,
     normalY: 19,
   },
@@ -106,6 +115,22 @@ export const LIVE_LAYOUT = {
     centerX: 96,
     centerY: 39,
     frameHold: 6,
+  },
+  // Effet affiché quand les trois rubis sont actifs.
+  // `centerX/centerY` déplacent l'animation, `alpha` règle sa visibilité,
+  // `frameHold` règle sa vitesse, et les rayons pilotent les étincelles.
+  rubyAnimation: {
+    alpha: 0.86,
+    centerX: 96,
+    centerY: 38,
+    frameHold: 6.5,
+    maxRadiusX: 31,
+    maxRadiusY: 17,
+    minRadiusX: 16,
+    minRadiusY: 9,
+    sparkleCount: 18,
+    sparkleRadiusX: 47,
+    sparkleRadiusY: 22,
   },
 } as const;
 

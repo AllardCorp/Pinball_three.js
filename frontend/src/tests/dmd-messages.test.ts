@@ -259,6 +259,28 @@ describe("dmd-messages", () => {
     expect(viewModel.mineText).toBe("MINE 2/3");
   });
 
+  it("declenche l'effet rubis quand les trois rubis sont actifs", () => {
+    const viewModel = buildViewModel({
+      rubiesActive: [true, true, true],
+      scores: [36000],
+    });
+
+    expect(viewModel.id).toBe("live-score");
+    expect(viewModel.backgroundEffect).toBe("ruby");
+  });
+
+  it("garde l'effet rubis visible pendant le message de bonus", () => {
+    const viewModel = buildViewModel({
+      rubiesActive: [false, false, false],
+      screenMessage: "TROIS RUBIS - 5000",
+      scores: [41000],
+    });
+
+    expect(viewModel.id).toBe("live-score");
+    expect(viewModel.eventMessage).toBe("TROIS RUBIS - 5000");
+    expect(viewModel.backgroundEffect).toBe("ruby");
+  });
+
   it("remplace la piste de multiplicateurs par le bonus soleil x50", () => {
     const viewModel = buildViewModel({
       activeMultipliers: [2, 6, 8, 12],

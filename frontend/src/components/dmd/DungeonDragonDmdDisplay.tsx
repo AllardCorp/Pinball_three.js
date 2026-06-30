@@ -16,6 +16,10 @@ import {
   MINE_SPRITE_FRAME_COUNT,
   MINE_SPRITE_FRAME_HEIGHT,
   MINE_SPRITE_FRAME_WIDTH,
+  RUBY_SPRITE_FRAME_COUNT,
+  RUBY_SPRITE_FRAME_HEIGHT,
+  RUBY_SPRITE_FRAME_WIDTH,
+  RUBY_SPRITE_URL,
   SCENE_LAYOUT,
   type ClassIcon,
   type DiodeTone,
@@ -420,22 +424,93 @@ function drawRubyBackground(
   context: CanvasRenderingContext2D,
   metrics: RenderMetrics,
   frame: number,
+  rubyFrames: DmdSpriteFrames,
 ) {
-  const pulse = 0.3 + Math.sin(frame * 0.22) * 0.1;
-  const rubyCenters = [
-    [78, 29],
-    [96, 24],
-    [114, 29],
-  ] as const;
+  const layout = LIVE_LAYOUT.rubyAnimation;
 
-  rubyCenters.forEach(([centerX, centerY]) => {
-    for (let offset = 0; offset <= 8; offset += 1) {
-      drawDiode(context, metrics, centerX + offset, centerY - offset, "danger", pulse);
-      drawDiode(context, metrics, centerX - offset, centerY - offset, "danger", pulse);
-      drawDiode(context, metrics, centerX + offset, centerY + offset, "danger", pulse);
-      drawDiode(context, metrics, centerX - offset, centerY + offset, "danger", pulse);
+  if (rubyFrames.length > 0) {
+    const frameIndex =
+      Math.floor(frame / layout.frameHold) % Math.max(1, rubyFrames.length);
+    const rubyFrame = rubyFrames[frameIndex];
+    const x = Math.round(layout.centerX - RUBY_SPRITE_FRAME_WIDTH / 2);
+    const y = Math.round(layout.centerY - RUBY_SPRITE_FRAME_HEIGHT / 2);
+    const pulse = 0.9 + Math.sin(frame * 0.18) * 0.08;
+
+    // Chemin principal : sprite sheet optimisée depuis l'image source rubis.
+    // La frame est déjà au format DMD 62x38 ; le renderer ne fait donc qu'un
+    // drawPattern léger, comme pour l'ouverture de mine.
+    drawPattern(
+      context,
+      metrics,
+      rubyFrame,
+      x,
+      y,
+      1,
+      "danger",
+      Math.min(1, layout.alpha * pulse),
+    );
+    drawPattern(context, metrics, rubyFrame, x, y, 1, "bright", 0.18);
+    return;
+  }
+
+  const animationStep = Math.floor(frame / layout.frameHold);
+  const grow = (Math.sin(animationStep * 0.44) + 1) / 2;
+  const radiusX = Math.round(
+    layout.minRadiusX + (layout.maxRadiusX - layout.minRadiusX) * grow,
+  );
+  const radiusY = Math.round(
+    layout.minRadiusY + (layout.maxRadiusY - layout.minRadiusY) * grow,
+  );
+  const shine = 0.72 + grow * 0.22;
+
+  // Fallback si la sprite sheet ne charge pas : le DMD garde un feedback rubis
+  // lisible au lieu d'afficher seulement le score.
+  for (let y = -radiusY; y <= radiusY; y += 1) {
+    const rowRatio = 1 - Math.abs(y) / Math.max(1, radiusY);
+    const rowWidth = Math.max(1, Math.round(radiusX * rowRatio));
+
+    for (let x = -rowWidth; x <= rowWidth; x += 1) {
+      const edgeDistance = Math.abs(Math.abs(x) - rowWidth);
+      const isOutline = edgeDistance <= 1 || Math.abs(y) >= radiusY - 1;
+      const isFacet =
+        Math.abs(x - Math.round(y * 0.55)) <= 1 ||
+        Math.abs(x + Math.round(y * 0.4)) <= 1 ||
+        y === Math.round(-radiusY * 0.3);
+      const tone: DiodeTone = isOutline || isFacet ? "bright" : "danger";
+      const alpha = isOutline
+        ? layout.alpha
+        : isFacet
+          ? 0.78
+          : 0.42 + rowRatio * 0.24;
+
+      drawDiode(
+        context,
+        metrics,
+        layout.centerX + x,
+        layout.centerY + y,
+        tone,
+        Math.min(1, alpha * shine),
+      );
     }
-  });
+  }
+
+  // Les éclats restent autour du rubis et non sous forme d'objets décoratifs :
+  // ils renforcent le feedback de bonus sans concurrencer le score.
+  for (let index = 0; index < layout.sparkleCount; index += 1) {
+    const angle = frame * 0.05 + index * ((Math.PI * 2) / layout.sparkleCount);
+    const distancePulse = 0.75 + Math.sin(frame * 0.08 + index) * 0.18;
+    const sparkleX = Math.round(
+      layout.centerX + Math.cos(angle) * layout.sparkleRadiusX * distancePulse,
+    );
+    const sparkleY = Math.round(
+      layout.centerY +
+        Math.sin(angle * 1.35) * layout.sparkleRadiusY * distancePulse,
+    );
+    const tone: DiodeTone = index % 4 === 0 ? "bright" : "amber";
+    const alpha = 0.44 + Math.sin(frame * 0.16 + index) * 0.22;
+
+    drawDiode(context, metrics, sparkleX, sparkleY, tone, alpha);
+  }
 }
 
 function drawMineBackground(
@@ -481,26 +556,69 @@ function drawMineBackground(
   }
 }
 
+type LiveBackgroundEffectResources = {
+  mineFrames: DmdSpriteFrames;
+  rubyFrames: DmdSpriteFrames;
+};
+
+type LiveBackgroundEffectDefinition = {
+  draw: (
+    context: CanvasRenderingContext2D,
+    metrics: RenderMetrics,
+    frame: number,
+    resources: LiveBackgroundEffectResources,
+  ) => void;
+  occupiesCenter: boolean;
+};
+
+// Registre des effets live du DMD.
+// Chaque entrée décrit son rendu et son impact de layout. Cette séparation
+// évite d'éparpiller des conditions `mine || ruby || ...` dans le renderer et
+// rend l'ajout d'un futur effet plus simple à expliquer en code review.
+const LIVE_BACKGROUND_EFFECTS: Partial<
+  Record<DmdViewModel["backgroundEffect"], LiveBackgroundEffectDefinition>
+> = {
+  mine: {
+    draw: (context, metrics, frame, resources) => {
+      drawMineBackground(context, metrics, frame, resources.mineFrames);
+    },
+    occupiesCenter: true,
+  },
+  ruby: {
+    draw: (context, metrics, frame, resources) => {
+      drawRubyBackground(context, metrics, frame, resources.rubyFrames);
+    },
+    occupiesCenter: true,
+  },
+  sun: {
+    draw: (context, metrics, frame) => {
+      drawSunBackground(context, metrics, frame);
+    },
+    occupiesCenter: false,
+  },
+};
+
+function getLiveBackgroundEffect(
+  effect: DmdViewModel["backgroundEffect"],
+) {
+  return LIVE_BACKGROUND_EFFECTS[effect];
+}
+
 function drawLiveBackgroundEffect(
   context: CanvasRenderingContext2D,
   metrics: RenderMetrics,
   viewModel: DmdViewModel,
   frame: number,
   mineFrames: DmdSpriteFrames,
+  rubyFrames: DmdSpriteFrames,
 ) {
-  if (viewModel.backgroundEffect === "sun") {
-    drawSunBackground(context, metrics, frame);
+  const effectDefinition = getLiveBackgroundEffect(viewModel.backgroundEffect);
+
+  if (!effectDefinition) {
     return;
   }
 
-  if (viewModel.backgroundEffect === "ruby") {
-    drawRubyBackground(context, metrics, frame);
-    return;
-  }
-
-  if (viewModel.backgroundEffect === "mine") {
-    drawMineBackground(context, metrics, frame, mineFrames);
-  }
+  effectDefinition.draw(context, metrics, frame, { mineFrames, rubyFrames });
 }
 
 function drawLives(
@@ -580,32 +698,34 @@ function drawScore(
   metrics: RenderMetrics,
   viewModel: DmdViewModel,
   scoreImpact: number,
-  isMineAnimationActive = false,
+  isCentralAnimationActive = false,
 ) {
   const hasImpact = scoreImpact > 0;
-  const preferredScale = isMineAnimationActive
-    ? LIVE_LAYOUT.score.minePreferredScale
+  const preferredScale = isCentralAnimationActive
+    ? LIVE_LAYOUT.score.eventPreferredScale
     : hasImpact
       ? 5
       : 4;
   const scale = fitTextScale(
     viewModel.scoreText,
     preferredScale,
-    isMineAnimationActive
-      ? LIVE_LAYOUT.score.mineMaxWidth
+    isCentralAnimationActive
+      ? LIVE_LAYOUT.score.eventMaxWidth
       : LIVE_LAYOUT.score.maxWidth,
   );
   const scoreWidth = measureBitmapText(viewModel.scoreText, scale);
   const x = Math.round(LIVE_LAYOUT.score.centerX - scoreWidth / 2);
-  const y = isMineAnimationActive
-    ? LIVE_LAYOUT.score.mineY
+  const y = isCentralAnimationActive
+    ? LIVE_LAYOUT.score.eventY
     : hasImpact
       ? LIVE_LAYOUT.score.impactY
       : LIVE_LAYOUT.score.normalY;
 
   // Un seul score est dessiné par frame : l'impact vient de la taille/couleur,
   // pas d'un second score fantôme qui se superpose à l'arrière-plan.
-  // Pendant l'animation mine, le score se met en haut et libère la zone centrale.
+  // Pendant un effet central rare, le score se met en haut et libère la zone
+  // d'animation. La mine et le rubis partagent volontairement cette règle pour
+  // éviter les superpositions et rendre le DMD plus modulable.
   drawBitmapText(
     context,
     metrics,
@@ -750,15 +870,24 @@ function drawLiveScore(
   viewModel: DmdViewModel,
   iconPatterns: DmdIconPatterns,
   mineFrames: DmdSpriteFrames,
+  rubyFrames: DmdSpriteFrames,
   frame: number,
   scoreImpact: number,
 ) {
-  const isMineAnimationActive = viewModel.backgroundEffect === "mine";
+  const effectDefinition = getLiveBackgroundEffect(viewModel.backgroundEffect);
+  const isCentralAnimationActive = effectDefinition?.occupiesCenter ?? false;
 
   // Ordre de dessin important :
   // 1. effets de fond, 2. infos persistantes, 3. score, 4. messages.
   // Ainsi le score reste toujours lisible au-dessus des animations.
-  drawLiveBackgroundEffect(context, metrics, viewModel, frame, mineFrames);
+  drawLiveBackgroundEffect(
+    context,
+    metrics,
+    viewModel,
+    frame,
+    mineFrames,
+    rubyFrames,
+  );
   drawBitmapText(
     context,
     metrics,
@@ -771,11 +900,12 @@ function drawLiveScore(
   );
   drawLives(context, metrics, viewModel, frame);
   drawClassIcon(context, metrics, viewModel.activeClass, iconPatterns, frame);
-  drawScore(context, metrics, viewModel, scoreImpact, isMineAnimationActive);
+  drawScore(context, metrics, viewModel, scoreImpact, isCentralAnimationActive);
 
-  // L'animation mine occupe temporairement la zone centrale/basse.
-  // On masque donc multiplicateurs et message pour éviter toute superposition.
-  if (isMineAnimationActive) {
+  // Les animations centrales rares occupent temporairement le centre et la
+  // zone basse. On masque donc multiplicateurs et message pour garder une seule
+  // information forte à l'écran.
+  if (isCentralAnimationActive) {
     return;
   }
 
@@ -902,6 +1032,7 @@ function renderFrame(
   viewModel: DmdViewModel,
   iconPatterns: DmdIconPatterns,
   mineFrames: DmdSpriteFrames,
+  rubyFrames: DmdSpriteFrames,
   frame: number,
   scoreImpact: number,
 ) {
@@ -933,6 +1064,7 @@ function renderFrame(
       viewModel,
       iconPatterns,
       mineFrames,
+      rubyFrames,
       frame,
       scoreImpact,
     );
@@ -952,6 +1084,7 @@ export default function DungeonDragonDmdDisplay({
   const scoreImpactRef = useRef(0);
   const iconPatternsRef = useRef<DmdIconPatterns>({});
   const mineFramesRef = useRef<DmdSpriteFrames>([]);
+  const rubyFramesRef = useRef<DmdSpriteFrames>([]);
 
   useEffect(() => {
     // Quand le score augmente, on déclenche un court impact visuel.
@@ -1026,6 +1159,25 @@ export default function DungeonDragonDmdDisplay({
         console.error(error);
       });
 
+    // Chargement de l'animation rubis : la source lourde est convertie en amont
+    // vers `rubis-dmd.png`, puis cette version légère est rasterisée une seule fois.
+    void rasterizeSpriteSheetToDmdFrames(
+      RUBY_SPRITE_URL,
+      RUBY_SPRITE_FRAME_WIDTH,
+      RUBY_SPRITE_FRAME_HEIGHT,
+      RUBY_SPRITE_FRAME_COUNT,
+    )
+      .then((frames) => {
+        if (!frames || !isMounted) {
+          return;
+        }
+
+        rubyFramesRef.current = frames;
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+
     const resizeCanvas = () => {
       const rect = canvas.getBoundingClientRect();
       const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
@@ -1036,8 +1188,8 @@ export default function DungeonDragonDmdDisplay({
     const draw = (time: number) => {
       animationFrameId = window.requestAnimationFrame(draw);
 
-      // Limite volontairement le rendu à 60 FPS : suffisant pour un DMD,
-      // et moins coûteux pendant que le playfield Three.js tourne.
+      // Limite volontairement le rendu au FRAME_RATE configuré : suffisant
+      // pour un DMD, et moins coûteux pendant que le playfield Three.js tourne.
       if (time - lastFrameTime < 1000 / FRAME_RATE) {
         return;
       }
@@ -1050,6 +1202,7 @@ export default function DungeonDragonDmdDisplay({
         latestViewModelRef.current,
         iconPatternsRef.current,
         mineFramesRef.current,
+        rubyFramesRef.current,
         frameRef.current,
         scoreImpactRef.current,
       );

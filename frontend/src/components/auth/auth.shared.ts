@@ -28,6 +28,10 @@ export function getAuthErrorFeedback(
     return `Ce compte ${providerLabel} est déjà associé à un autre joueur.`;
   }
 
+  if (errorCode === "email_not_found") {
+    return `${providerLabel} n'a pas transmis d'adresse email. Utilise une connexion par email ou rends ton email visible côté ${providerLabel}.`;
+  }
+
   return "La connexion via le fournisseur tiers a échoué. Réessaie ou choisis une autre méthode.";
 }
 

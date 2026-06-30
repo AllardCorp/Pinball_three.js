@@ -75,7 +75,14 @@ export const createPlayfieldSlice: StateCreator<
       setAndSync({ rubiesActive: currentRubies });
 
       if (currentRubies.every((ruby) => ruby === true)) {
-        get().addScore(5000); // 👈 Slices can call actions from other slices via get() !
+        get().addScore(5000);
+
+        // Les rubis sont réinitialisés juste après le bonus pour le gameplay.
+        // Sans message transitoire, le DMD reçoit un état trop bref pour
+        // afficher l'animation. Ce message sert donc de signal d'affichage,
+        // sans changer la logique de collision ou de score.
+        get().displayMessage("TROIS RUBIS - 5000", 3500);
+
         setAndSync({ rubiesActive: [false, false, false] });
         console.log("Tous les rubis activés + 5000");
       }

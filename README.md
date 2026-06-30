@@ -118,6 +118,12 @@ Commande de déploiement VPS :
 docker compose -p flipper-project -f deploy/docker-compose.vps.yml up -d --build
 ```
 
+Commande Pour voir si un score à été bien rattaché à un utilisateur :
+
+```bash
+sudo docker exec pinball-postgres sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT scr.claim_code, scr.status, scr.user_id, u.email, scr.approved_at FROM score_claim_requests scr LEFT JOIN users u ON u.id = scr.user_id ORDER BY scr.created_at DESC LIMIT 10;"'
+```
+
 Le fichier `deploy/docker-compose.yml` reste réservé au déploiement du flipper
 physique via `fliphetic.toml`. Il build le frontend complet avec
 `VITE_APP_TARGET=flipper` par défaut.

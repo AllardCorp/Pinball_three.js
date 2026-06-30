@@ -1,11 +1,10 @@
 import { useGameStore } from "@/store/gameStore/useGameStore";
-import ScoreClaimQrCode from "../components/score-claim/ScoreClaimQrCode";
+import BackglassScoreClaimPanel from "../components/score-claim/BackglassScoreClaimPanel";
 import { useAppMode } from "../hooks/useAppMode";
 import { useScoreClaimSession } from "../hooks/useScoreClaimSession";
-import { getScoreClaimPhaseLabel } from "../lib/score-claim-copy";
 
 export default function Backglass() {
-  const { mode } = useAppMode();
+  const { isArcadeMode, mode } = useAppMode();
   const { snapshot } = useScoreClaimSession({ enabled: false, mode });
 
   // 1. Données globales de la partie
@@ -85,9 +84,9 @@ export default function Backglass() {
             <div className="mt-4">
               <p className="mb-2">Rubis Actifs:</p>
               <ul className="flex gap-4">
-                {rubiesActive.map((rubi, i) => (
+                {rubiesActive.map((rubi, index) => (
                   <li
-                    key={i}
+                    key={index}
                     className={
                       rubi
                         ? "w-6 h-6 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]"
@@ -125,40 +124,11 @@ export default function Backglass() {
         </div>
       )}
 
-      {(snapshot.claim?.verificationUrl ||
-        snapshot.user?.username ||
-        snapshot.game) && (
-        <aside className="absolute right-6 top-6 w-80 rounded-2xl border border-white/10 bg-black/70 p-4 text-sm shadow-lg backdrop-blur">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-            Score Claim
-          </p>
-          <h2 className="mt-2 text-lg font-semibold">
-            {getScoreClaimPhaseLabel(snapshot.phase)}
-          </h2>
-
-          {snapshot.game && (
-            <p className="mt-3 text-slate-300">
-              Score sauvegardé : {snapshot.game.finalScore}
-            </p>
-          )}
-
-          {snapshot.claim?.verificationUrl && (
-            <div className="mt-4 flex flex-col items-center">
-              <ScoreClaimQrCode
-                verificationUrl={snapshot.claim.verificationUrl}
-              />
-              <p className="mt-3 text-center text-xs text-slate-300">
-                Scannez pour rattacher le score à votre compte.
-              </p>
-            </div>
-          )}
-
-          {snapshot.user?.username && (
-            <p className="mt-4 text-slate-300">
-              Score rattaché à {snapshot.user.username}
-            </p>
-          )}
-        </aside>
+      {isArcadeMode && !isPlaying && (
+        <BackglassScoreClaimPanel
+          className="absolute right-6 top-6 w-80"
+          snapshot={snapshot}
+        />
       )}
     </div>
   );

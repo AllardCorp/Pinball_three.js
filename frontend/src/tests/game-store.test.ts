@@ -147,6 +147,7 @@ describe("useGameStore", () => {
     expect(useGameStore.getState().leftKickbackActive).toBe(false);
     expect(useGameStore.getState().rightKickbackActive).toBe(false);
 
+    vi.useFakeTimers();
     useGameStore.getState().toggleRuby(0);
     useGameStore.getState().toggleRuby(1);
     useGameStore.getState().toggleRuby(2);
@@ -157,6 +158,10 @@ describe("useGameStore", () => {
       false,
     ]);
     expect(useGameStore.getState().scores).toEqual([5_000]);
+    expect(useGameStore.getState().screenMessage).toBe("TROIS RUBIS - 5000");
+
+    vi.advanceTimersByTime(3500);
+    expect(useGameStore.getState().screenMessage).toBeNull();
   });
 
   it("fait tourner les joueurs puis termine la partie quand toutes les billes sont perdues", async () => {

@@ -12,6 +12,10 @@ function loadImage(source: string) {
   });
 }
 
+function getLuminance(red: number, green: number, blue: number) {
+  return red * 0.2126 + green * 0.7152 + blue * 0.0722;
+}
+
 // Convertit une image en motif binaire compatible DMD.
 // Les pictos de classes sont préparés en noir sur fond transparent.
 // Convention retenue :
@@ -49,7 +53,7 @@ export async function rasterizeImageToDmdPattern(
       const green = pixels[index + 1];
       const blue = pixels[index + 2];
       const alpha = pixels[index + 3];
-      const luminance = red * 0.2126 + green * 0.7152 + blue * 0.0722;
+      const luminance = getLuminance(red, green, blue);
 
       // Seuils volontairement simples : les assets sont préparés pour être
       // noir/transparents, donc on n'a pas besoin d'algorithme complexe.
@@ -114,7 +118,7 @@ export async function rasterizeSpriteSheetToDmdFrames(
         const green = pixels[index + 1];
         const blue = pixels[index + 2];
         const alpha = pixels[index + 3];
-        const luminance = red * 0.2126 + green * 0.7152 + blue * 0.0722;
+        const luminance = getLuminance(red, green, blue);
 
         // Pour les animations, la convention est inversée par rapport aux
         // icônes : pixel blanc = diode allumée, fond noir = transparent.

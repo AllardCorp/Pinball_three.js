@@ -99,7 +99,7 @@ export function useScoreClaimSession({
         if (!response.ok) {
           const nextSnapshot = stampSnapshot({
             ...snapshot,
-            errorMessage: "Impossible de récupérer le statut du claim.",
+            errorMessage: "QR CODE EXPIRÉ",
             phase: "error",
           });
           setSnapshot(nextSnapshot);
