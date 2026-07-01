@@ -4,6 +4,7 @@ import {
   type GameState,
   syncState,
 } from "../gameStore.types";
+import { SCORE_VALUES } from "@/config/gameBalancingConfig";
 
 export interface PlayfieldSlice {
   scoreMultiplier: number;
@@ -15,6 +16,7 @@ export interface PlayfieldSlice {
   addScoreMultiplier: () => void;
   removeScoreMultiplier: () => void;
   incrementMine: () => void;
+  setMineHits: (hits: number) => void;
   resetMine: () => void;
   toggleRuby: (id: 0 | 1 | 2) => void;
 }
@@ -59,6 +61,9 @@ export const createPlayfieldSlice: StateCreator<
         setAndSync({ mineHits: currentHits + 1 });
       }
     },
+    setMineHits: (hits: number) => {
+      setAndSync({ mineHits: hits });
+    },
 
     resetMine: () => {
       setAndSync({ mineHits: 0 });
@@ -75,16 +80,17 @@ export const createPlayfieldSlice: StateCreator<
       setAndSync({ rubiesActive: currentRubies });
 
       if (currentRubies.every((ruby) => ruby === true)) {
-        get().addScore(5000);
+        get().addScore(SCORE_VALUES.gemsToggle);
+        get().activateMultiplier("gems");
 
         // Les rubis sont réinitialisés juste après le bonus pour le gameplay.
         // Sans message transitoire, le DMD reçoit un état trop bref pour
         // afficher l'animation. Ce message sert donc de signal d'affichage,
         // sans changer la logique de collision ou de score.
-        get().displayMessage("TROIS RUBIS - 5000", 3500);
+        get().displayMessage(`TROIS RUBIS - ${SCORE_VALUES.gemsToggle}`, 3500);
 
         setAndSync({ rubiesActive: [false, false, false] });
-        console.log("Tous les rubis activés + 5000");
+        console.log("Tous les rubis activés");
       }
     },
 

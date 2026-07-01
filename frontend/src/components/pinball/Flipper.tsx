@@ -1,11 +1,11 @@
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { useControls } from "leva";
 import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import * as THREE from "three";
-import ObjectSound from "./ObjectSound";
+import ObjectSound from "@/components/sounds/ObjectSound";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
 import { useInputStore } from "@/store/inputStore/useInputStore";
+import { useGameDebug } from "@/config/useGameDebug";
 
 type FlipperProps = {
   colliderGeometry: THREE.BufferGeometry;
@@ -24,11 +24,7 @@ export default function Flipper({
   rotation,
   side,
 }: FlipperProps) {
-  const { upForce, downForce } = useControls("Vitesse des flippers", {
-    upForce: { value: 55, min: 10, max: 80, step: 0.1 },
-    downForce: { value: 35, min: 10, max: 60, step: 0.1 },
-  });
-  // 2. On indique à TypeScript le type exact de la référence
+  const { upForce, downForce } = useGameDebug();
   const flipperRef = useRef<RapierRigidBody>(null);
 
   const isActive = useInputStore((state) =>
@@ -42,7 +38,6 @@ export default function Flipper({
     [position],
   );
 
-  // 3. On remplace "state" par "_" pour indiquer qu'on ignore le premier paramètre
   useFrame((_, delta) => {
     if (!flipperRef.current) return;
     const speed = isActive ? upForce : downForce; // Vitesse de levée | Vitesse de descente du flipper
@@ -78,18 +73,18 @@ export default function Flipper({
       type="kinematicPosition"
       ccd={true}
       colliders="hull"
-      position={position} // Le RigidBody se place aux bonnes coordonnées
+      position={position}
       restitution={0.2}
       friction={0.2}
       // Sécurité supplémentaire pour empêcher toute glissade physique
       enabledTranslations={[false, false, false]}
     >
-      {/* 1. Le mesh de collision (invisible) */}
+      {/* Mesh de collision (invisible) */}
       <mesh geometry={colliderGeometry}>
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      {/* 2. Le mesh visuel ! (Remarque : pas de position ni de rotation ici !) */}
+      {/* Mesh visuel */}
       <mesh geometry={visualGeometry} material={visualMaterial} />
       {/* Le son s'active quand isActive devient 'true' (flipper monte) */}
       <ObjectSound {...SOUNDS_CONFIG.flipper.up} playTrigger={isActive} />

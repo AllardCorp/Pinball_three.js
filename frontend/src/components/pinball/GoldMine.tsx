@@ -7,10 +7,9 @@ import { useRef, forwardRef, useImperativeHandle, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useGameStore } from "@/store/gameStore/useGameStore";
-import { useControls } from "leva";
-import ObjectSound from "./ObjectSound";
+import ObjectSound from "@/components/sounds/ObjectSound";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
-
+import { SCORE_VALUES } from "@/config/gameBalancingConfig";
 // --- TYPES POUR LE SYSTÈME DE POUSSIÈRE ---
 export interface DustEffectRef {
   emit: (origin: THREE.Vector3) => void;
@@ -76,8 +75,8 @@ const DustEffect = forwardRef<DustEffectRef, { plankColor: string }>(
 
             // Vitesse d'explosion : Plus radiale pour un effet "puff"
             p.velocity.set(
-              (Math.random() - 0.5) * 4.0, // x (vitesse latérale augmentée)
-              (Math.random() + 0.5) * 2.5, // y (plus vers le haut)
+              (Math.random() - 0.5) * 4.0, // x
+              (Math.random() + 0.5) * 2.5, // y
               (Math.random() - 0.5) * 4.0, // z
             );
             countEmitted++;
@@ -158,14 +157,13 @@ const DustEffect = forwardRef<DustEffectRef, { plankColor: string }>(
     );
   },
 );
-// ==============================================================================
-// --- 2. COMPOSANT PRINCIPAL : GOLD MINE ---
-// ==============================================================================
+// COMPOSANT PRINCIPAL : GOLD MINE
 export default function GoldMine({ nodes, materials }: GoldMineProps) {
   const displayMessage = useGameStore((state) => state.displayMessage);
   const mineHits = useGameStore((state) => state.mineHits);
   const incrementMine = useGameStore((state) => state.incrementMine);
   const addScore = useGameStore((state) => state.addScore);
+  const addZoneScore = useGameStore((state) => state.addZoneScore);
   const dustRef = useRef<DustEffectRef>(null!);
 
   const lastHitTime = useRef<number>(0);
@@ -178,7 +176,7 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
       lastHitTime.current = now;
 
       if (mineHits < 3) {
-        // Utilise la position de la bille !
+        // Utilise la position de la bille
         if (e.other.rigidBody) {
           const ballPos = e.other.rigidBody.translation();
           // Émet la poussière exactement là où se trouve la bille
@@ -188,7 +186,7 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
         }
 
         incrementMine();
-        addScore(500);
+        addScore(SCORE_VALUES.minePlank);
         console.log("Planche de la mine cassée ! Coups :", mineHits + 1);
       }
       if (mineHits + 1 === 3) {
@@ -196,21 +194,6 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
       }
     }
   };
-
-  // --- LEVA CONTROLS ---
-  const { startX, startY, startZ } = useControls("Mine teleporter Position", {
-    startX: { value: -12.8, min: -20, max: 20, step: 0.01 },
-    startY: { value: -8.8, min: -20, max: 20, step: 0.01 },
-    startZ: { value: 5.4, min: -40, max: 80, step: 0.01 },
-  });
-  const { rotationX, rotationY, rotationZ } = useControls(
-    "Mine teleporter rotation",
-    {
-      rotationX: { value: 0, min: -100, max: 100, step: 0.01 },
-      rotationY: { value: 3.7, min: -10, max: 10, step: 0.01 },
-      rotationZ: { value: 0, min: -10040, max: 100, step: 0.01 },
-    },
-  );
 
   return (
     <group>
@@ -282,11 +265,13 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
       <RigidBody
         type="fixed"
         sensor
-        position={[startX, startY, startZ]}
-        rotation={[rotationX, rotationY, rotationZ]}
+        position={[-12.8, -8.8, 5.4]}
+        rotation={[0, 3.7, 0]}
         onIntersectionEnter={(e) => {
           if (e.other.rigidBodyObject?.name === "ball" && e.other.rigidBody) {
             console.log("Jackpot ! La bille est dans la mine !");
+
+            addZoneScore(SCORE_VALUES.mineEntrance, "Mine");
 
             e.other.rigidBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
             e.other.rigidBody.setAngvel({ x: 0, y: 0, z: 0 }, true);

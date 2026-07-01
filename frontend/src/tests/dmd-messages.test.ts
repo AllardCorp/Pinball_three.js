@@ -355,11 +355,13 @@ describe("dmd-messages", () => {
 
     useGameStore.getState().startGame(1);
     useGameStore.getState().setBallInLauncher(false);
-    useGameStore.getState().addScoreMultiplier();
+    useGameStore.getState().activateMultiplier("lightRoad");
     useGameStore.getState().addScore(1500);
 
     const gameState = useGameStore.getState();
+    const currentMultiplier = gameState.getCurrentMultiplier();
     const viewModel = buildDmdViewModel({
+      activeMultipliers: [currentMultiplier],
       appMode: "arcade",
       ballInLauncher: gameState.ballInLauncher,
       ballsRemaining: gameState.ballsRemaining,
@@ -371,7 +373,7 @@ describe("dmd-messages", () => {
       rightKickbackActive: gameState.rightKickbackActive,
       rubiesActive: gameState.rubiesActive,
       scoreClaimSnapshot: createIdleScoreClaimSessionSnapshot(),
-      scoreMultiplier: gameState.scoreMultiplier,
+      scoreMultiplier: currentMultiplier,
       scores: gameState.scores,
       screenMessage: gameState.screenMessage,
     });

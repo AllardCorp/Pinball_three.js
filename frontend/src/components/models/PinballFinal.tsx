@@ -1,20 +1,28 @@
-import { useControls } from "leva";
+import { useGameDebug } from "@/config/useGameDebug";
 import * as THREE from "three";
 import { useGLTF } from "@react-three/drei";
 import type { GLTF } from "three-stdlib";
 import type { JSX } from "react";
 import { RigidBody, CoefficientCombineRule } from "@react-three/rapier";
-import Flipper from "@/components/Flipper";
-import Kickback from "@/components/Kickback";
-import Slingshot from "@/components/Slingshot";
-import Bumper from "@/components/Bumper";
-import Ball from "@/components/Ball";
-import LauncherGate from "@/components/LauncherGate";
-import DeathZone from "@/components/DeathZone";
-import GoldMine from "@/components/GoldMine";
-import ScoreTarget from "@/components/ScoreTarget";
-import HoleSensor from "@/components/HoleSensor";
+import Flipper from "@/components/pinball/Flipper";
+import Kickback from "@/components/pinball/Kickback";
+import Slingshot from "@/components/pinball/Slingshot";
+import Bumper from "@/components/pinball/Bumper";
+import Ball from "@/components/pinball/Ball";
+import LauncherGate from "@/components/pinball/LauncherGate";
+import DeathZone from "@/components/pinball/DeathZone";
+import GoldMine from "@/components/pinball/GoldMine";
+import ScoreTarget from "@/components/pinball/ScoreTarget";
+import HoleSensor from "@/components/pinball/HoleSensor";
+import ClassTriggerSword from "@/components/pinball/ClassTriggerSword";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
+import { SCORE_VALUES } from "@/config/gameBalancingConfig";
+import LightningRoad from "@/components/pinball/LightningRoad";
+import MultiplierSensor from "@/components/pinball/MultiplierSensor";
+import UndeathSaver from "@/components/pinball/UndeathSaver";
+import DrumBumper from "@/components/pinball/DrumBumper";
+import SewerSystem from "@/components/pinball/SewerSystem";
+import { useGameStore } from "@/store/gameStore/useGameStore";
 
 type GLTFResult = GLTF & {
   nodes: {
@@ -254,29 +262,33 @@ type GLTFResult = GLTF & {
   };
   animations: THREE.AnimationClip[];
 };
-
+// ⚠️LES MESHS COMMENTÉS SONT IMPORTANT POUR AIDER À L'IMPLÉMENTATION
 export default function Model(props: JSX.IntrinsicElements["group"]) {
   const { nodes, materials } = useGLTF(
     "/models/Pinball_BaseFinal.glb",
   ) as unknown as GLTFResult;
 
-  // Debug Leva
-  const { startX, startY, startZ } = useControls("Ball Position", {
-    startX: { value: 12.75, min: -20, max: 20, step: 0.1 },
-    startY: { value: -2.3, min: -20, max: 20, step: 0.1 },
-    startZ: { value: 30.46, min: -40, max: 80, step: 0.1 },
-  });
-  const { leftStrength, rightStrength } = useControls("Kickbacks", {
-    leftStrength: { value: 120, min: 0, max: 200, step: 1 },
-    rightStrength: { value: 120, min: 0, max: 200, step: 1 },
-  });
+  const { startingPosition } = useGameDebug();
+  const { leftStrength, rightStrength } = useGameDebug();
+  const activeBalls = useGameStore((state) => state.activeBalls);
+
   return (
     <>
       <GoldMine nodes={nodes} materials={materials} />
       <LauncherGate nodes={nodes} materials={materials} />
-      <Ball position={[startX, startY, startZ]} />
+      {activeBalls.map((ball) => (
+        <Ball
+          key={ball.id}
+          id={ball.id}
+          origin={ball.origin}
+          position={[
+            startingPosition.x,
+            startingPosition.y,
+            startingPosition.z,
+          ]}
+        />
+      ))}
       <DeathZone />
-
       {/* Sensor pour le trou */}
       <HoleSensor
         id="MainHole"
@@ -285,7 +297,23 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         defaultRot={[1.5, 0, 0]}
         defaultSize={[2.5, 1.3]}
       />
-      {/* A refaire */}
+      <MultiplierSensor
+        id="rampHabitLeft"
+        multiplierName="rampHabitLeft"
+        defaultPosition={[6.1, 2, -14.9]}
+      />
+      <MultiplierSensor
+        id="rampHabitRight"
+        multiplierName="rampHabitRight"
+        defaultPosition={[7.9, 2, -14.9]}
+      />
+      <MultiplierSensor
+        id="fakir"
+        multiplierName="fakir"
+        defaultPosition={[6.7, -0.3, -2.8]}
+        defaultRotation={[0, 0.37, 0]}
+        defaultSize={[0.1, 0.4, 3.3]}
+      />
       {/* <Bumper */}
       {/*   id={0} */}
       {/*   colliderGeometry={nodes.coll_bumpers001.geometry} */}
@@ -341,7 +369,6 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           </>
         }
       />
-
       {/* Bumper 1 */}
       <Bumper
         id={1}
@@ -367,7 +394,6 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           </>
         }
       />
-
       {/* Bumper 2 */}
       <Bumper
         id={2}
@@ -393,13 +419,13 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           </>
         }
       />
+      {/* Left Slingshot */}
       <Slingshot
         geometry={nodes.coll_left_sling_collision.geometry}
         position={[-7.708, -2.233, 16.596]}
         rotation={[0, 0, 0]}
         pushDirection={[1, 0, -1]}
       />
-      {/* Le droit renvoie la bille vers la gauche (-X) et vers le haut (-Z) */}
       {/* Right Slingshot */}
       <Slingshot
         geometry={nodes.coll_right_sling_collision.geometry}
@@ -447,12 +473,12 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         sensorPosition={[9.4, -2.3, 26.5]}
         kickStrength={rightStrength}
       />
-
       {/* --- CIBLES FAKIR (Donnent des points) --- */}
       <ScoreTarget
         geometry={nodes.coll_faquir_plank001.geometry}
         position={[9.866, -2.882, -14.48]}
-        points={150}
+        points={SCORE_VALUES.fakirTarget}
+        zone={"Fakir"}
       />
       {/* <ScoreTarget */}
       {/*   geometry={nodes.coll_faquir_plank002.geometry} */}
@@ -462,29 +488,162 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
       <ScoreTarget
         geometry={nodes.coll_faquir_plank003.geometry}
         position={[9.134, -0.452, -12.781]}
-        points={150}
+        points={SCORE_VALUES.fakirTarget}
+        zone={"Fakir"}
       />
       <ScoreTarget
         geometry={nodes.coll_faquir_plank004.geometry}
         position={[7.995, -0.452, -10.223]}
-        points={150}
+        points={SCORE_VALUES.fakirTarget}
+        zone={"Fakir"}
       />
       <ScoreTarget
         geometry={nodes.coll_faquir_plank005.geometry}
         position={[7.527, -0.452, -6]}
-        points={150}
+        points={SCORE_VALUES.fakirTarget}
+        zone={"Fakir"}
       />
-
       <ScoreTarget
         geometry={nodes.coll_faquir_plank006.geometry}
         position={[8.799, -0.452, -8.033]}
-        points={150}
+        points={SCORE_VALUES.fakirTarget}
+        zone={"Fakir"}
       />
       <ScoreTarget
         geometry={nodes.coll_faquir_plank007.geometry}
         position={[7.12, -0.452, -3.509]}
-        points={150}
+        points={SCORE_VALUES.fakirTarget}
+        zone={"Fakir"}
       />
+      <LightningRoad />
+      {/* Épée de sélection de classes */}
+      <ClassTriggerSword />
+      {/* Undeath Saver */}
+      <UndeathSaver />
+      {/* Drum Bumpers */}
+
+      <DrumBumper
+        id="drumTop"
+        position={[6.089, -2.032, -12.319]}
+        defaultDirection={[-1, 0, 0.18]}
+        defaultForce={20}
+        defaultSensorOffset={[-0.95, 0, 0.21]}
+        defaultSensorSize={[0.7, 0.8, 0.1]}
+        defaultSensorRotation={[0, -1.4, 0]}
+      >
+        <mesh
+          name="Cylinder008"
+          geometry={nodes.Cylinder008.geometry}
+          material={materials.M_wood_light}
+        />
+        <mesh
+          name="Cylinder008_1"
+          geometry={nodes.Cylinder008_1.geometry}
+          material={materials.M_wood_medium}
+        />
+        <mesh
+          name="Cylinder008_2"
+          geometry={nodes.Cylinder008_2.geometry}
+          material={materials.M_wood_dark}
+        />
+        <mesh
+          name="Cylinder008_3"
+          geometry={nodes.Cylinder008_3.geometry}
+          material={materials.M_drum}
+        />
+      </DrumBumper>
+      <DrumBumper
+        id="drumMid1"
+        position={[6.348, -2.032, -10.662]}
+        defaultDirection={[-0.54, 0, 0.08]}
+        defaultForce={20}
+        defaultSensorOffset={[-0.92, 0, 0.11]}
+        defaultSensorSize={[0.7, 0.8, 0.1]}
+        defaultSensorRotation={[0, 1.7, 0]}
+      >
+        <mesh
+          name="Cylinder007"
+          geometry={nodes.Cylinder007.geometry}
+          material={materials.M_wood_light}
+        />
+        <mesh
+          name="Cylinder007_1"
+          geometry={nodes.Cylinder007_1.geometry}
+          material={materials.M_wood_medium}
+        />
+        <mesh
+          name="Cylinder007_2"
+          geometry={nodes.Cylinder007_2.geometry}
+          material={materials.M_wood_dark}
+        />
+        <mesh
+          name="Cylinder007_3"
+          geometry={nodes.Cylinder007_3.geometry}
+          material={materials.M_drum}
+        />
+      </DrumBumper>
+      <DrumBumper
+        id="drumMid2"
+        position={[6.458, -2.032, -8.978]}
+        defaultDirection={[-1, 0, -0.04]}
+        defaultForce={20}
+        defaultSensorOffset={[-0.92, 0, 0.01]}
+        defaultSensorSize={[0.7, 0.8, 0.1]}
+        defaultSensorRotation={[0, -1.6, 0]}
+      >
+        <mesh
+          name="Cylinder004"
+          geometry={nodes.Cylinder004.geometry}
+          material={materials.M_wood_light}
+        />
+        <mesh
+          name="Cylinder004_1"
+          geometry={nodes.Cylinder004_1.geometry}
+          material={materials.M_wood_medium}
+        />
+        <mesh
+          name="Cylinder004_2"
+          geometry={nodes.Cylinder004_2.geometry}
+          material={materials.M_wood_dark}
+        />
+        <mesh
+          name="Cylinder004_3"
+          geometry={nodes.Cylinder004_3.geometry}
+          material={materials.M_drum}
+        />
+      </DrumBumper>
+      <DrumBumper
+        id="drumBot"
+        position={[6.199, -2.032, -7.173]}
+        defaultDirection={[-1, 0, -0.3]}
+        defaultForce={20}
+        defaultSensorOffset={[-0.9, 0, -0.33]}
+        defaultSensorSize={[0.7, 0.8, 0.1]}
+        defaultSensorRotation={[0, 1.27, 0]}
+      >
+        <mesh
+          name="Cylinder009"
+          geometry={nodes.Cylinder009.geometry}
+          material={materials.M_wood_light}
+        />
+        <mesh
+          name="Cylinder009_1"
+          geometry={nodes.Cylinder009_1.geometry}
+          material={materials.M_wood_medium}
+        />
+        <mesh
+          name="Cylinder009_2"
+          geometry={nodes.Cylinder009_2.geometry}
+          material={materials.M_wood_dark}
+        />
+        <mesh
+          name="Cylinder009_3"
+          geometry={nodes.Cylinder009_3.geometry}
+          material={materials.M_drum}
+        />
+      </DrumBumper>
+      {/* Système d'égout */}
+      <SewerSystem nodes={nodes} materials={materials} />
       <group {...props} dispose={null}>
         <group name="Scene">
           <group name="visual_TowerModel" position={[-13.618, -1.583, 2.318]}>
@@ -522,7 +681,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           {/*   material={materials.M_flipper_arm_left} */}
           {/*   position={[-5.001, -2.901, 26.34]} */}
           {/* /> */}
-          {/* <mesh */}
+
           {/*   name="visual_obj_flipper_right_bottom" */}
           {/*   geometry={nodes.visual_obj_flipper_right_bottom.geometry} */}
           {/*   material={materials.M_flipper_arm_right} */}
@@ -1102,112 +1261,112 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
               material={materials["M_stone_medium.002"]}
             />
           </group>
-          <mesh
-            name="visual_hight_playfield_bars_top"
-            geometry={nodes.visual_hight_playfield_bars_top.geometry}
-            material={materials["M_metal.003"]}
-            position={[2.423, -2.881, -18.566]}
-          />
+          {/* <mesh */}
+          {/*   name="visual_hight_playfield_bars_top" */}
+          {/*   geometry={nodes.visual_hight_playfield_bars_top.geometry} */}
+          {/*   material={materials["M_metal.003"]} */}
+          {/*   position={[2.423, -2.881, -18.566]} */}
+          {/* /> */}
           <mesh
             name="visual_super_rubber_class_coin"
             geometry={nodes.visual_super_rubber_class_coin.geometry}
             material={materials.M_in_coll}
             position={[5.517, -1.362, 19.445]}
           />
-          <group name="visual_drum" position={[6.458, -2.032, -8.978]}>
-            <mesh
-              name="Cylinder004"
-              geometry={nodes.Cylinder004.geometry}
-              material={materials.M_wood_light}
-            />
-            <mesh
-              name="Cylinder004_1"
-              geometry={nodes.Cylinder004_1.geometry}
-              material={materials.M_wood_medium}
-            />
-            <mesh
-              name="Cylinder004_2"
-              geometry={nodes.Cylinder004_2.geometry}
-              material={materials.M_wood_dark}
-            />
-            <mesh
-              name="Cylinder004_3"
-              geometry={nodes.Cylinder004_3.geometry}
-              material={materials.M_drum}
-            />
-          </group>
-          <group name="visual_drum001" position={[6.348, -2.032, -10.662]}>
-            <mesh
-              name="Cylinder007"
-              geometry={nodes.Cylinder007.geometry}
-              material={materials.M_wood_light}
-            />
-            <mesh
-              name="Cylinder007_1"
-              geometry={nodes.Cylinder007_1.geometry}
-              material={materials.M_wood_medium}
-            />
-            <mesh
-              name="Cylinder007_2"
-              geometry={nodes.Cylinder007_2.geometry}
-              material={materials.M_wood_dark}
-            />
-            <mesh
-              name="Cylinder007_3"
-              geometry={nodes.Cylinder007_3.geometry}
-              material={materials.M_drum}
-            />
-          </group>
-          <group name="visual_drum002" position={[6.089, -2.032, -12.319]}>
-            <mesh
-              name="Cylinder008"
-              geometry={nodes.Cylinder008.geometry}
-              material={materials.M_wood_light}
-            />
-            <mesh
-              name="Cylinder008_1"
-              geometry={nodes.Cylinder008_1.geometry}
-              material={materials.M_wood_medium}
-            />
-            <mesh
-              name="Cylinder008_2"
-              geometry={nodes.Cylinder008_2.geometry}
-              material={materials.M_wood_dark}
-            />
-            <mesh
-              name="Cylinder008_3"
-              geometry={nodes.Cylinder008_3.geometry}
-              material={materials.M_drum}
-            />
-          </group>
-          <group name="visual_drum003" position={[6.199, -2.032, -7.173]}>
-            <mesh
-              name="Cylinder009"
-              geometry={nodes.Cylinder009.geometry}
-              material={materials.M_wood_light}
-            />
-            <mesh
-              name="Cylinder009_1"
-              geometry={nodes.Cylinder009_1.geometry}
-              material={materials.M_wood_medium}
-            />
-            <mesh
-              name="Cylinder009_2"
-              geometry={nodes.Cylinder009_2.geometry}
-              material={materials.M_wood_dark}
-            />
-            <mesh
-              name="Cylinder009_3"
-              geometry={nodes.Cylinder009_3.geometry}
-              material={materials.M_drum}
-            />
-          </group>
-          <mesh
-            name="visual_faquir_bars_bottom"
-            geometry={nodes.visual_faquir_bars_bottom.geometry}
-            material={materials["M_metal.002"]}
-            position={[6.6, -2.881, -2.456]}
-          />
+          {/* <group name="visual_drum" position={[6.458, -2.032, -8.978]}> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder004" */}
+          {/*     geometry={nodes.Cylinder004.geometry} */}
+          {/*     material={materials.M_wood_light} */}
+          {/*   /> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder004_1" */}
+          {/*     geometry={nodes.Cylinder004_1.geometry} */}
+          {/*     material={materials.M_wood_medium} */}
+          {/*   /> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder004_2" */}
+          {/*     geometry={nodes.Cylinder004_2.geometry} */}
+          {/*     material={materials.M_wood_dark} */}
+          {/*   /> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder004_3" */}
+          {/*     geometry={nodes.Cylinder004_3.geometry} */}
+          {/*     material={materials.M_drum} */}
+          {/*   /> */}
+          {/* </group> */}
+          {/* <group name="visual_drum001" position={[6.348, -2.032, -10.662]}> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder007" */}
+          {/*     geometry={nodes.Cylinder007.geometry} */}
+          {/*     material={materials.M_wood_light} */}
+          {/*   /> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder007_1" */}
+          {/*     geometry={nodes.Cylinder007_1.geometry} */}
+          {/*     material={materials.M_wood_medium} */}
+          {/*   /> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder007_2" */}
+          {/*     geometry={nodes.Cylinder007_2.geometry} */}
+          {/*     material={materials.M_wood_dark} */}
+          {/*   /> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder007_3" */}
+          {/*     geometry={nodes.Cylinder007_3.geometry} */}
+          {/*     material={materials.M_drum} */}
+          {/*   /> */}
+          {/* </group> */}
+          {/* <group name="visual_drum002" position={[6.089, -2.032, -12.319]}> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder008" */}
+          {/*     geometry={nodes.Cylinder008.geometry} */}
+          {/*     material={materials.M_wood_light} */}
+          {/*   /> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder008_1" */}
+          {/*     geometry={nodes.Cylinder008_1.geometry} */}
+          {/*     material={materials.M_wood_medium} */}
+          {/*   /> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder008_2" */}
+          {/*     geometry={nodes.Cylinder008_2.geometry} */}
+          {/*     material={materials.M_wood_dark} */}
+          {/*   /> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder008_3" */}
+          {/*     geometry={nodes.Cylinder008_3.geometry} */}
+          {/*     material={materials.M_drum} */}
+          {/*   /> */}
+          {/* </group> */}
+          {/* <group name="visual_drum003" position={[6.199, -2.032, -7.173]}> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder009" */}
+          {/*     geometry={nodes.Cylinder009.geometry} */}
+          {/*     material={materials.M_wood_light} */}
+          {/*   /> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder009_1" */}
+          {/*     geometry={nodes.Cylinder009_1.geometry} */}
+          {/*     material={materials.M_wood_medium} */}
+          {/*   /> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder009_2" */}
+          {/*     geometry={nodes.Cylinder009_2.geometry} */}
+          {/*     material={materials.M_wood_dark} */}
+          {/*   /> */}
+          {/*   <mesh */}
+          {/*     name="Cylinder009_3" */}
+          {/*     geometry={nodes.Cylinder009_3.geometry} */}
+          {/*     material={materials.M_drum} */}
+          {/*   /> */}
+          {/* </group> */}
+          {/* <mesh */}
+          {/*   name="visual_faquir_bars_bottom" */}
+          {/*   geometry={nodes.visual_faquir_bars_bottom.geometry} */}
+          {/*   material={materials["M_metal.002"]} */}
+          {/*   position={[6.6, -2.881, -2.456]} */}
+          {/* /> */}
           <group name="visual_tree" position={[14.697, 4.38, 1.526]}>
             <mesh
               name="model_0002"
@@ -1230,18 +1389,18 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             }
             position={[5.517, -1.362, 19.445]}
           />
-          <group name="visual_sword" position={[0, -0.762, 0]}>
-            <mesh
-              name="defaultMaterial"
-              geometry={nodes.defaultMaterial.geometry}
-              material={materials.Blade}
-            />
-            <mesh
-              name="defaultMaterial_1"
-              geometry={nodes.defaultMaterial_1.geometry}
-              material={materials.Hilt}
-            />
-          </group>
+          {/* <group name="visual_sword" position={[0, -0.762, 0]}> */}
+          {/*   <mesh */}
+          {/*     name="defaultMaterial" */}
+          {/*     geometry={nodes.defaultMaterial.geometry} */}
+          {/*     material={materials.Blade} */}
+          {/*   /> */}
+          {/*   <mesh */}
+          {/*     name="defaultMaterial_1" */}
+          {/*     geometry={nodes.defaultMaterial_1.geometry} */}
+          {/*     material={materials.Hilt} */}
+          {/*   /> */}
+          {/* </group> */}
           {/* <mesh */}
           {/*   name="coll_flipper_left_bottom" */}
           {/*   geometry={nodes.coll_flipper_left_bottom.geometry} */}
@@ -1611,20 +1770,20 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
               material={nodes.coll_cannon.material}
               position={[3.1, 0.08, -19.239]}
             />
-            <mesh
-              name="coll_faquir_bars_bottom"
-              visible={false}
-              geometry={nodes.coll_faquir_bars_bottom.geometry}
-              material={nodes.coll_faquir_bars_bottom.material}
-              position={[10.805, -2.882, -13.695]}
-            />
-            <mesh
-              name="coll_hight_playfield_bars_top"
-              visible={false}
-              geometry={nodes.coll_hight_playfield_bars_top.geometry}
-              material={nodes.coll_hight_playfield_bars_top.material}
-              position={[2.084, -2.882, -17.598]}
-            />
+            {/* <mesh */}
+            {/*   name="coll_faquir_bars_bottom" */}
+            {/*   visible={false} */}
+            {/*   geometry={nodes.coll_faquir_bars_bottom.geometry} */}
+            {/*   material={nodes.coll_faquir_bars_bottom.material} */}
+            {/*   position={[10.805, -2.882, -13.695]} */}
+            {/* /> */}
+            {/* <mesh */}
+            {/*   name="coll_hight_playfield_bars_top" */}
+            {/*   visible={false} */}
+            {/*   geometry={nodes.coll_hight_playfield_bars_top.geometry} */}
+            {/*   material={nodes.coll_hight_playfield_bars_top.material} */}
+            {/*   position={[2.084, -2.882, -17.598]} */}
+            {/* /> */}
             <mesh
               name="coll_faquir_glass_panel001"
               visible={false}

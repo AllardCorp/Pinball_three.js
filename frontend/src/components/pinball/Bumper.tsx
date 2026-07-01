@@ -3,18 +3,20 @@ import {
   type RapierRigidBody,
   type CollisionEnterPayload,
 } from "@react-three/rapier";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useGameStore } from "@/store/gameStore/useGameStore";
-import ObjectSound from "./ObjectSound";
+import ObjectSound from "@/components/sounds/ObjectSound";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
+import { type PlayfieldZone } from "@/config/gameBalancingConfig";
+import { SCORE_VALUES } from "@/config/gameBalancingConfig";
 
 type BumperProps = {
   id: 0 | 1 | 2;
   colliderGeometry: THREE.BufferGeometry;
   // Nouveau modèle : le parent peut fournir directement un node prêt à rendre.
-  visualNode?: React.ReactNode;
+  visualNode?: ReactNode;
   // Ancien modèle : certains fichiers MVP passent encore une géométrie et un
   // matériau séparés. Cette compatibilité permet de garder le build stable le
   // temps que les modèles soient harmonisés.
@@ -24,6 +26,7 @@ type BumperProps = {
   rubyMaterial: THREE.Material;
   position: [number, number, number];
   strength?: number;
+  zone?: PlayfieldZone;
 };
 
 const targetScale = new THREE.Vector3(1, 1, 1);
@@ -39,15 +42,15 @@ export default function Bumper({
   rubyMaterial,
   position,
   strength = 15,
+  zone = "Bumpers",
 }: BumperProps) {
   const [hitCount, setHitCount] = useState(0);
 
   const rigidBodyRef = useRef<RapierRigidBody>(null);
-  // Utilisation d'un Group à la place d'un Mesh
   const visualGroupRef = useRef<THREE.Group>(null);
   const lastHitTime = useRef<number>(0);
 
-  const addScore = useGameStore((state) => state.addScore);
+  const addZoneScore = useGameStore((state) => state.addZoneScore);
   const toggleRuby = useGameStore((state) => state.toggleRuby);
   const isRubyActive = useGameStore((state) => state.rubiesActive[id]);
 
@@ -84,7 +87,7 @@ export default function Bumper({
         visualGroupRef.current.scale.set(1.4, 1.4, 1.4);
       }
 
-      addScore(500);
+      addZoneScore(SCORE_VALUES.bumper, zone);
       toggleRuby(id);
       setHitCount((prev) => prev + 1);
     }

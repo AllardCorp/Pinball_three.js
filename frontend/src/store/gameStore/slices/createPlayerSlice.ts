@@ -4,6 +4,7 @@ import {
   type GameState,
   syncState,
 } from "../gameStore.types";
+import { type PlayfieldZone } from "@/config/gameBalancingConfig";
 
 export interface PlayerSlice {
   playerCount: number;
@@ -11,6 +12,7 @@ export interface PlayerSlice {
   scores: number[];
   ballsRemaining: number[];
   addScore: (points: number) => void;
+  addZoneScore: (basePoints: number, zone: PlayfieldZone) => void;
   removeScore: (points: number) => void;
 }
 // Gère la logique comptable (joueurs, scores, balles restantes) du jeu.
@@ -37,11 +39,31 @@ export const createPlayerSlice: StateCreator<GameState, [], [], PlayerSlice> = (
     addScore: (points) => {
       if (get().isPlaying) {
         const newScores = [...get().scores];
-        newScores[get().currentPlayerIndex] += points * get().scoreMultiplier;
+        // Calcule le multiplicateur dynamique à l'instant T
+        const currentMultiplier = get().getCurrentMultiplier();
+
+        newScores[get().currentPlayerIndex] += points * currentMultiplier;
         setAndSync({ scores: newScores });
       }
     },
+    addZoneScore: (basePoints, zone) => {
+      if (!get().isPlaying) return;
 
+      // Récupère le bonus de la classe active (ex: x3 pour Nécro dans Fakir)
+      const classBonus = get().getClassZoneMultiplier(zone);
+
+      // Récupère le multiplicateur global (ex: x10 si sortie Fakir Hard activée)
+      const globalMultiplier = get().getCurrentMultiplier();
+
+      // Calcule le total
+      // Ex : 100 (base) * 3 (Nécro) * 10 (Global) = 3000 points !
+      const finalPoints = basePoints * classBonus * globalMultiplier;
+
+      const newScores = [...get().scores];
+      newScores[get().currentPlayerIndex] += finalPoints;
+
+      setAndSync({ scores: newScores });
+    },
     removeScore: (points) => {
       if (get().isPlaying) {
         const newScores = [...get().scores];
