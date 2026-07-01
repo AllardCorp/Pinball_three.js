@@ -34,6 +34,12 @@ services:
       - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
       - FRONTEND_ORIGINS=${FRONTEND_ORIGINS:-http://localhost:5173}
+      # Score claim peut fonctionner en local ou relayer vers le VPS.
+      # Ces variables doivent être injectées dans le backend Docker ; sinon
+      # le backend ignore le .env racine et repasse en mode local par défaut.
+      - SCORE_CLAIM_MODE=${SCORE_CLAIM_MODE:-local}
+      - GLOBAL_API_URL=${GLOBAL_API_URL:-}
+      - BORNE_TOKEN=${BORNE_TOKEN:-}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
