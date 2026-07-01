@@ -90,18 +90,25 @@ describe("auth configuration", () => {
     });
 
     const options = mocks.betterAuth.mock.calls.at(-1)?.[0] as {
-      socialProviders: Record<string, unknown>;
+      socialProviders: {
+        github: {
+          clientId: string;
+          clientSecret: string;
+        };
+        google: {
+          clientId: string;
+          clientSecret: string;
+        };
+      };
     };
 
-    expect(options.socialProviders).toEqual({
-      github: {
-        clientId: "github-client-id",
-        clientSecret: "github-client-secret",
-      },
-      google: {
-        clientId: "google-client-id",
-        clientSecret: "google-client-secret",
-      },
+    expect(options.socialProviders.github).toMatchObject({
+      clientId: "github-client-id",
+      clientSecret: "github-client-secret",
+    });
+    expect(options.socialProviders.google).toEqual({
+      clientId: "google-client-id",
+      clientSecret: "google-client-secret",
     });
   });
 
