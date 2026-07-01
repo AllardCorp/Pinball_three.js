@@ -160,7 +160,8 @@ const DustEffect = forwardRef<DustEffectRef, { plankColor: string }>(
 // COMPOSANT PRINCIPAL : GOLD MINE
 export default function GoldMine({ nodes, materials }: GoldMineProps) {
   const displayMessage = useGameStore((state) => state.displayMessage);
-  const mineHits = useGameStore((state) => state.mineHits);
+  // const mineHits = useGameStore((state) => state.mineHits);
+  const mineHits = 3;
   const incrementMine = useGameStore((state) => state.incrementMine);
   const addScore = useGameStore((state) => state.addScore);
   const addZoneScore = useGameStore((state) => state.addZoneScore);
@@ -273,17 +274,21 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
 
             addZoneScore(SCORE_VALUES.mineEntrance, "Mine");
 
-            e.other.rigidBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
-            e.other.rigidBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
+            const ballRigidBody = e.other.rigidBody;
 
-            e.other.rigidBody.setTranslation(
-              { x: 12.8, y: -1.3, z: -21 },
-              true,
-            );
-            // Impulsion de sortie
-            e.other.rigidBody.applyImpulse({ x: 0, y: 58, z: 0 }, true);
+            ballRigidBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
+            ballRigidBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
+            setTimeout(() => {
+              ballRigidBody.setTranslation(
+                { x: 12.8, y: -1.3, z: -21 },
+                true,
+              );
+              // Impulsion de sortie
+              ballRigidBody.applyImpulse({ x: 0, y: 58, z: 0 }, true);
+            }, 50);
           }
-        }}
+        }
+        }
       >
         <CuboidCollider args={[0.9, 0.9, 0.9]} />
         <ObjectSound {...SOUNDS_CONFIG.goldmine.enter} playTrigger={mineHits} />
