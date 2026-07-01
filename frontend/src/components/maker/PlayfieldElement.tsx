@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { PivotControls } from "@react-three/drei";
 import * as THREE from "three";
-import { MakerElement, useMakerStore } from "@/store/useMakerStore";
+import { type MakerElement, useMakerStore } from "@/store/useMakerStore";
 
 /**
  * Fonction raycast no-op : retourne toujours null (aucune intersection).
@@ -84,7 +84,7 @@ export function PlayfieldElement({ element }: PlayfieldElementProps) {
           <mesh castShadow receiveShadow raycast={raycast}>
             <cylinderGeometry args={[1.5, 1.5, 1, 32]} />
             <meshStandardMaterial
-              color={isSelected ? "#ea580c" : (element.color || "#3b82f6")}
+              color={element.color || "#3b82f6"}
               roughness={element.roughness !== undefined ? element.roughness : 0.2}
               metalness={element.metalness !== undefined ? element.metalness : 0.8}
             />

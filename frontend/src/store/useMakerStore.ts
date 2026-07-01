@@ -53,15 +53,9 @@ export const useMakerStore = create<MakerState>((set) => ({
   levelId: null,
   addElement: (type) =>
     set((state) => {
-      const counts = state.elements.reduce((acc, el) => {
-        acc[el.type] = (acc[el.type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const index = (counts[type] || 0) + 1;
       const typeLabel =
         type === "cylinder" ? "Cylindre" : type === "box" ? "Cube" : "Sphère";
-      const name = `${typeLabel} ${index}`;
+      const name = typeLabel;
       const id = crypto.randomUUID();
 
       const newElement: MakerElement = {

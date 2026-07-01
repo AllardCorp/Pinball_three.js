@@ -2,37 +2,65 @@ import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Environment } from "@react-three/drei";
+import * as THREE from "three";
 import { PinballMVPMaker } from "@/components/models/PinballMVP_Maker";
 import { useMakerStore, type LevelListItem } from "@/store/useMakerStore";
 import { PlayfieldElement } from "@/components/maker/PlayfieldElement";
 import { apiEndpoint } from "@/lib/api";
 
+(window as any).__maker = useMakerStore;
+
 // Helper functions for degrees conversion
 const radToDeg = (rad: number) => Math.round((rad * 180) / Math.PI);
 const degToRad = (deg: number) => (deg * Math.PI) / 180;
 
-// ─── Capture screenshot avec vue fixe overhead ────────────────────────────────
+// ─── Capture screenshot à résolution fixe (indépendant de l'écran) ───────────
+
+const SCREENSHOT_W = 300;
+const SCREENSHOT_H = 480;
 
 function ScreenshotCapture({ onReady }: { onReady: (fn: () => string) => void }) {
-  const { gl, scene, camera } = useThree();
+  const { gl, scene } = useThree();
 
   useEffect(() => {
     onReady(() => {
-      const savedPosition = camera.position.clone();
-      const savedQuaternion = camera.quaternion.clone();
+      // Caméra dédiée calibrée pour cadrer le plateau, ratio portrait
+      const cam = new THREE.PerspectiveCamera(45, SCREENSHOT_W / SCREENSHOT_H, 0.1, 1000);
+      cam.position.set(0.2, 70, 15);
+      cam.lookAt(0.5, -5.0, 10);
 
-      // Vue overhead fixe pour un rendu cohérent entre tous les niveaux
-      camera.position.set(0.2, 70, 15);
-      camera.lookAt(0.5, -5.0, 10);
-      gl.render(scene, camera);
-      const dataUrl = gl.domElement.toDataURL("image/jpeg", 0.8);
+      // Rendu dans une texture à résolution fixe, pas liée à l'écran
+      const target = new THREE.WebGLRenderTarget(SCREENSHOT_W, SCREENSHOT_H);
+      gl.setRenderTarget(target);
+      gl.render(scene, cam);
+      gl.setRenderTarget(null);
 
-      camera.position.copy(savedPosition);
-      camera.quaternion.copy(savedQuaternion);
+      // Lecture des pixels — WebGL est Y-inversé, on flip verticalement
+      const pixels = new Uint8Array(SCREENSHOT_W * SCREENSHOT_H * 4);
+      gl.readRenderTargetPixels(target, 0, 0, SCREENSHOT_W, SCREENSHOT_H, pixels);
+      target.dispose();
 
-      return dataUrl;
+      const canvas = document.createElement("canvas");
+      canvas.width = SCREENSHOT_W;
+      canvas.height = SCREENSHOT_H;
+      const ctx = canvas.getContext("2d")!;
+      const imageData = ctx.createImageData(SCREENSHOT_W, SCREENSHOT_H);
+
+      for (let y = 0; y < SCREENSHOT_H; y++) {
+        for (let x = 0; x < SCREENSHOT_W; x++) {
+          const src = ((SCREENSHOT_H - 1 - y) * SCREENSHOT_W + x) * 4;
+          const dst = (y * SCREENSHOT_W + x) * 4;
+          imageData.data[dst]     = pixels[src];
+          imageData.data[dst + 1] = pixels[src + 1];
+          imageData.data[dst + 2] = pixels[src + 2];
+          imageData.data[dst + 3] = pixels[src + 3];
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      return canvas.toDataURL("image/jpeg", 0.85);
     });
-  }, [gl, scene, camera, onReady]);
+  }, [gl, scene, onReady]);
 
   return null;
 }
@@ -310,7 +338,6 @@ function Editor({ onBack }: { onBack: () => void }) {
       <div className="flex-1 relative">
         <Canvas
           camera={{ position: [0.2, 56.7, 29.5], fov: 45 }}
-          gl={{ preserveDrawingBuffer: true }}
           onPointerMissed={() => setSelectedElementId(null)}
           shadows
         >
