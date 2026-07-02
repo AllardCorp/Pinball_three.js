@@ -4,29 +4,29 @@ import { useAppMode } from "../hooks/useAppMode";
 import { useLeaderboard } from "../hooks/useLeaderboard";
 import { useScoreClaimSession } from "../hooks/useScoreClaimSession";
 import { getScoreClaimPhaseLabel } from "../lib/score-claim-copy";
-import MultiplierDisplay from "@/components/display/MultiplierDisplay";
-import ClassPowerDisplay from "@/components/display/ClassPowerDisplay";
+// import MultiplierDisplay from "@/components/display/MultiplierDisplay";
+// import ClassPowerDisplay from "@/components/display/ClassPowerDisplay";
 
 export default function Backglass() {
   const { mode } = useAppMode();
   const { snapshot } = useScoreClaimSession({ enabled: false, mode });
   const leaderboard = useLeaderboard();
 
-  const isPlaying = useGameStore((state) => state.isPlaying);
+  // const isPlaying = useGameStore((state) => state.isPlaying);
   const playerCount = useGameStore((state) => state.playerCount);
-  const currentPlayerIndex = useGameStore((state) => state.currentPlayerIndex);
+  // const currentPlayerIndex = useGameStore((state) => state.currentPlayerIndex);
   const startGame = useGameStore((state) => state.startGame);
 
   const scores = useGameStore((state) => state.scores);
-  const ballsRemaining = useGameStore((state) => state.ballsRemaining);
+  // const ballsRemaining = useGameStore((state) => state.ballsRemaining);
 
-  const mineHits = useGameStore((state) => state.mineHits);
-  const rubiesActive = useGameStore((state) => state.rubiesActive);
-  const screenMessage = useGameStore((state) => state.screenMessage);
-  const isUndeathActive = useGameStore((state) => state.isUndeathActive);
+  // const mineHits = useGameStore((state) => state.mineHits);
+  // const rubiesActive = useGameStore((state) => state.rubiesActive);
+  // const screenMessage = useGameStore((state) => state.screenMessage);
+  // const isUndeathActive = useGameStore((state) => state.isUndeathActive);
 
-  const currentScore = scores[currentPlayerIndex] || 0;
-  const currentBalls = ballsRemaining[currentPlayerIndex] || 0;
+  // const currentScore = scores[currentPlayerIndex] || 0;
+  // const currentBalls = ballsRemaining[currentPlayerIndex] || 0;
   const hasPlayed = scores.some((s) => s > 0);
 
   return (
