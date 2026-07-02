@@ -69,6 +69,10 @@ export function useScoreClaimSession({
   }, []);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     if (snapshot.phase !== "claim_pending" || !snapshot.claim?.claimCode) {
       return;
     }
@@ -141,7 +145,7 @@ export function useScoreClaimSession({
           window.clearInterval(intervalId);
         }
       }
-    }, 2000);
+    }, 3000);
 
     return () => {
       isCancelled = true;

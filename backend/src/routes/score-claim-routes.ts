@@ -338,7 +338,7 @@ export function registerScoreClaimRoutes({
     // On limite aussi par code pour éviter qu'un même QR soit martelé depuis
     // plusieurs clients ou onglets.
     keyPrefix: "score-claim-status-code",
-    maxRequests: 30,
+    maxRequests: 120,
     windowMs: 60 * 1000,
     errorCode: "too_many_score_claim_status_requests",
     message: "Too many score claim status requests for this claim code.",

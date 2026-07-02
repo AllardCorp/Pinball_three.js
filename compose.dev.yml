@@ -92,7 +92,7 @@ services:
              echo 'MQTT user created' &&
              exec mosquitto -c /mosquitto/config/mosquitto.conf"
     ports:
-      - "1883:1883"
+      - "1880:1883"
       - "9001:9001"
     volumes:
       - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
