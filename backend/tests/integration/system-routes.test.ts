@@ -152,4 +152,35 @@ describe("system route behavior", () => {
       error: "cors_origin_not_allowed",
     });
   });
+
+  it("returns leaderboard entries correctly mapped and formatted", async () => {
+    const mockGames = [
+      { finalScore: 10000, username: "player1", displayUsername: "Player One" },
+      { finalScore: 5000, username: "player2", displayUsername: null },
+      { finalScore: 2000, username: null, displayUsername: null },
+    ];
+
+    const limitMock = vi.fn().mockResolvedValue(mockGames);
+    const orderByMock = vi.fn().mockReturnValue({ limit: limitMock });
+    const leftJoinMock = vi.fn().mockReturnValue({ orderBy: orderByMock });
+    const fromMock = vi.fn().mockReturnValue({ leftJoin: leftJoinMock });
+    const selectMock = vi.fn().mockReturnValue({ from: fromMock });
+
+    const app = createInjectedApp({
+      db: {
+        select: selectMock,
+      } as any,
+    });
+
+    const response = await request(app).get("/api/leaderboard");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      entries: [
+        { rank: 1, score: 10000, name: "Player One" },
+        { rank: 2, score: 5000, name: "player2" },
+        { rank: 3, score: 2000, name: "Anonyme" },
+      ],
+    });
+  });
 });

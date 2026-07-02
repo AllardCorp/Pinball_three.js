@@ -89,7 +89,7 @@ export const createClassSlice: StateCreator<GameState, [], [], ClassSlice> = (
         get().spawnSword();
       }, delay);
 
-      setAndSync({ swordSpawnTimeoutId: timeoutId });
+      set({ swordSpawnTimeoutId: timeoutId });
     },
     collectSword: () => {
       if (!get().isPlaying || !get().swordActive) return;

@@ -1,2 +1,8 @@
 # Force LF line endings for shell scripts (required for Linux containers)
 *.sh text eol=lf
+
+# Force LF line endings for source files to prevent Vitest/V8 coverage errors
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.json text eol=lf

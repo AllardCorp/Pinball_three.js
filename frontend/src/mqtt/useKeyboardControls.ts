@@ -1,25 +1,14 @@
 import { useEffect, useRef } from "react";
-import { useMqtt } from "./mqttContext";
 import { useInputStore } from "@/store/inputStore/useInputStore";
+import type { InputState } from "@/store/inputStore/useInputStore";
+import { BUTTON_BINDINGS, PLUNGER_CHARGE_DURATION_MS } from "./inputBindings";
+import { usePlungerCharge } from "./usePlungerCharge";
 
-const TOPIC = "pinball/input/state";
-
-/**
- * Maps keyboard keys to pinball actions and publishes MQTT messages.
- *
- * Key mapping (matches the mock-esp32 script):
- *   Q     → left flipper
- *   D     → right flipper
- *   Space → plunger (hold to charge)
- *   S     → start
- *   C     → coin insert
- */
 export function useKeyboardControls() {
-  const client = useMqtt();
-
-  // Mutable state kept in refs so event listeners always see the latest values
-  const state = useRef({
+  const state = useRef<InputState>({
     buttons: {
+      start: false,
+      launch_ball: false,
       black_left: false,
       white_left: false,
       front_left_green: false,
@@ -35,106 +24,51 @@ export function useKeyboardControls() {
     },
   });
 
-  const plungerStartTime = useRef(0);
-  const plungerCharging = useRef(false);
-  const chargeInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const PLUNGER_CHARGE_DURATION_MS = 2000;
-
-  // ── Helpers ──────────────────────────────────────
   function publish() {
-    const payload = {
-      timestamp: Date.now(),
+    useInputStore.getState().updateInputs({
       buttons: { ...state.current.buttons },
       analog: {
         plunger: parseFloat(state.current.analog.plunger.toFixed(3)),
         nudge: { ...state.current.analog.nudge },
       },
-    };
-    // Met à jour localement pour une réactivité instantanée à 0ms
-    useInputStore.getState().updateInputs({
-      buttons: payload.buttons,
-      analog: payload.analog,
     });
-
-    if (client) {
-      client.publish(TOPIC, JSON.stringify(payload));
-    }
   }
 
-  function releasePlunger() {
-    plungerCharging.current = false;
-    if (chargeInterval.current) {
-      clearInterval(chargeInterval.current);
-      chargeInterval.current = null;
-    }
-    const force = state.current.analog.plunger;
-    console.log(`🚀 Plunger released with force: ${force.toFixed(2)}`);
-
-    state.current.buttons.front_white = true;
-    publish();
-
-    setTimeout(() => {
-      state.current.buttons.front_white = false;
-      state.current.analog.plunger = 0.0;
+  const plunger = usePlungerCharge(
+    (value) => {
+      state.current.analog.plunger = value;
       publish();
-    }, 50);
-  }
+    },
+    (force) => {
+      state.current.analog.plunger = force;
+      state.current.buttons.front_white = true;
+      publish();
+      setTimeout(() => {
+        state.current.buttons.front_white = false;
+        state.current.analog.plunger = 0;
+        publish();
+      }, 50);
+    },
+    PLUNGER_CHARGE_DURATION_MS,
+  );
 
   useEffect(() => {
-    if (!client) return;
-
     const activeKeys = new Set<string>();
 
     function handleKeyDown(e: KeyboardEvent) {
       const key = e.key.toLowerCase();
-
-      // Prevent repeated keydown events while key is held
       if (activeKeys.has(key)) return;
       activeKeys.add(key);
 
-      switch (key) {
-        case "q":
-          state.current.buttons.white_left = true;
-          console.log("🏓 Left flipper ON");
-          publish();
-          break;
-
-        case "d":
-          state.current.buttons.white_right = true;
-          console.log("🏓 Right flipper ON");
-          publish();
-          break;
-
-        case " ":
-          e.preventDefault(); // prevent page scroll
-          if (!plungerCharging.current) {
-            plungerCharging.current = true;
-            plungerStartTime.current = Date.now();
-            console.log("⏳ Plunger charging...");
-            // Update charge value periodically
-            chargeInterval.current = setInterval(() => {
-              const elapsed = Date.now() - plungerStartTime.current;
-              state.current.analog.plunger = Math.min(
-                1.0,
-                elapsed / PLUNGER_CHARGE_DURATION_MS,
-              );
-              publish();
-            }, 50);
-          }
-          break;
-
-        case "s":
-          state.current.buttons.black_left = true;
-          console.log("▶️  Start pressed");
-          publish();
-          break;
-
-        case "c":
-          state.current.buttons.front_left_yellow = true;
-          console.log("🪙 Coin inserted");
-          publish();
-          break;
+      const binding = BUTTON_BINDINGS[key];
+      if (binding) {
+        state.current.buttons[binding.field] = true;
+        publish();
+        return;
+      }
+      if (key === " ") {
+        e.preventDefault();
+        plunger.start();
       }
     }
 
@@ -142,35 +76,13 @@ export function useKeyboardControls() {
       const key = e.key.toLowerCase();
       activeKeys.delete(key);
 
-      switch (key) {
-        case "q":
-          state.current.buttons.white_left = false;
-          console.log("🏓 Left flipper OFF");
-          publish();
-          break;
-
-        case "d":
-          state.current.buttons.white_right = false;
-          console.log("🏓 Right flipper OFF");
-          publish();
-          break;
-
-        case " ":
-          if (plungerCharging.current) {
-            releasePlunger();
-          }
-          break;
-
-        case "s":
-          state.current.buttons.black_left = false;
-          publish();
-          break;
-
-        case "c":
-          state.current.buttons.front_left_yellow = false;
-          publish();
-          break;
+      const binding = BUTTON_BINDINGS[key];
+      if (binding) {
+        state.current.buttons[binding.field] = false;
+        publish();
+        return;
       }
+      if (key === " ") plunger.release();
     }
 
     window.addEventListener("keydown", handleKeyDown);
@@ -179,8 +91,8 @@ export function useKeyboardControls() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
-      if (chargeInterval.current) clearInterval(chargeInterval.current);
+      plunger.cleanup();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client]);
+  }, []);
 }
