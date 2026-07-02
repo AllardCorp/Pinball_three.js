@@ -24,19 +24,19 @@ export function getScoreClaimPhaseLabel(phase: ScoreClaimSessionPhase) {
 export function getScoreClaimDmdMessage(snapshot: ScoreClaimSessionSnapshot) {
   switch (snapshot.phase) {
     case "idle":
-      return "GAME OVER";
+      return "FIN DE PARTIE";
     case "submitting":
-      return "SAVING SCORE";
+      return "SAUVEGARDE SCORE";
     case "discarded":
-      return "SCORE NOT SAVED";
+      return "SCORE NON ENREGISTRE";
     case "saved":
-      return "SCORE SAVED";
+      return "SCORE SAUVEGARDE";
     case "claim_pending":
-      return "SCAN TO CLAIM";
+      return "SCANNEZ LE QR";
     case "claim_approved":
-      return "SCORE LINKED";
+      return "SCORE ENREGISTRE";
     case "claim_expired":
-      return "CLAIM EXPIRED";
+      return "QR EXPIRE";
     case "error":
       return "";
   }
