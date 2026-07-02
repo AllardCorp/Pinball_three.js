@@ -3,6 +3,7 @@ import {
   doublePrecision,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   serial,
@@ -141,6 +142,23 @@ export const scores = pgTable("scores", {
   collisionEvent: text("collision_event").notNull(),
   gameTimestamp: doublePrecision("game_timestamp").notNull(),
 });
+
+export const levels = pgTable(
+  "levels",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+    elements: jsonb("elements").notNull().default([]),
+    screenshotUrl: text("screenshot_url"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdIndex: index("levels_user_id_idx").on(table.userId),
+    createdAtIndex: index("levels_created_at_idx").on(table.createdAt),
+  }),
+);
 
 export const scoreClaimRequests = pgTable(
   "score_claim_requests",

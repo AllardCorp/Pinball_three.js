@@ -46,18 +46,22 @@ export default function ParticleExplosion({
 
   useFrame((_, delta) => {
     if (!isExploding || !pointsRef.current || !materialRef.current) return;
+    if (velocitiesRef.current.length < count) return;
 
     const posArray = pointsRef.current.geometry.attributes.position
       .array as Float32Array;
 
     for (let i = 0; i < count; i++) {
-      posArray[i * 3] += velocitiesRef.current[i].x * delta;
-      posArray[i * 3 + 1] += velocitiesRef.current[i].y * delta;
-      posArray[i * 3 + 2] += velocitiesRef.current[i].z * delta;
+      const vel = velocitiesRef.current[i];
+      if (!vel) continue;
 
-      velocitiesRef.current[i].x *= 0.9;
-      velocitiesRef.current[i].y *= 0.9;
-      velocitiesRef.current[i].z *= 0.9;
+      posArray[i * 3] += vel.x * delta;
+      posArray[i * 3 + 1] += vel.y * delta;
+      posArray[i * 3 + 2] += vel.z * delta;
+
+      vel.x *= 0.9;
+      vel.y *= 0.9;
+      vel.z *= 0.9;
     }
 
     pointsRef.current.geometry.attributes.position.needsUpdate = true;
