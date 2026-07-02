@@ -8,8 +8,8 @@ import * as THREE from 'three'
 import { useGLTF } from '@react-three/drei'
 import { GLTF } from 'three-stdlib'
 import { RigidBody, CuboidCollider } from '@react-three/rapier'
-import Flipper from '@/components/Flipper'
-import { useGameStore } from '@/store/useGameStore'
+import Flipper from '@/components/pinball/Flipper'
+import { useGameStore } from '@/store/gameStore/useGameStore'
 
 type GLTFResult = GLTF & {
   nodes: {

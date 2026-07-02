@@ -96,21 +96,37 @@ Variables à renseigner dans `.env` :
 - `BETTER_AUTH_SECRET`
 - `BETTER_AUTH_URL`
 - `FRONTEND_URL`
+- `FRONTEND_ORIGINS`
 - `GITHUB_CLIENT_ID`
 - `GITHUB_CLIENT_SECRET`
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
+- `SCORE_CLAIM_MODE`
+- `GLOBAL_API_URL`
+- `BORNE_TOKEN`
+
+Le flux QR code avec VPS est détaillé dans [docs/score-claim-vps.md](docs/score-claim-vps.md).
 
 ### Production
 
 En production, les migrations sont exécutées par le service `migrate` avant le démarrage du backend.
 Il n'y a pas d'interface d'administration de la base exposée.
 
-Commande de déploiement :
+Commande de déploiement VPS :
 
 ```bash
-docker compose -f compose.prod.yml up -d --build
+docker compose -p flipper-project -f deploy/docker-compose.vps.yml up -d --build
 ```
+
+Commande Pour voir si un score à été bien rattaché à un utilisateur :
+
+```bash
+sudo docker exec pinball-postgres sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT scr.claim_code, scr.status, scr.user_id, u.email, scr.approved_at FROM score_claim_requests scr LEFT JOIN users u ON u.id = scr.user_id ORDER BY scr.created_at DESC LIMIT 10;"'
+```
+
+Le fichier `deploy/docker-compose.yml` reste réservé au déploiement du flipper
+physique via `fliphetic.toml`. Il build le frontend complet avec
+`VITE_APP_TARGET=flipper` par défaut.
 
 ---
 

@@ -103,6 +103,74 @@ describe("score-claims integration - start and status", () => {
     expect(response.body.claim.verificationUrl).toContain("mode=arcade");
   });
 
+  it("rejects borne score starts without the configured bearer token", async () => {
+    const publicApp = createTestApp(db, {
+      envOverrides: {
+        borneToken: "cabinet-secret",
+        frontendUrl: "https://scores.example.test/",
+      },
+    });
+
+    const response = await request(publicApp)
+      .post("/api/borne/score-claims/start")
+      .send({
+        finalScore: 123456,
+        mode: "arcade",
+        playedDurationSeconds: 95,
+        requestClaim: true,
+      });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({
+      error: "invalid_borne_token",
+    });
+  });
+
+  it("creates a public claim from an authorized borne without a user session", async () => {
+    const publicApp = createTestApp(db, {
+      envOverrides: {
+        borneToken: "cabinet-secret",
+        frontendUrl: "https://scores.example.test/",
+      },
+    });
+
+    const response = await request(publicApp)
+      .post("/api/borne/score-claims/start")
+      .set("authorization", "Bearer cabinet-secret")
+      .send({
+        finalScore: 234567,
+        mode: "arcade",
+        playedDurationSeconds: 95,
+        requestClaim: true,
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body).toMatchObject({
+      decision: "save_and_claimable",
+      reason: "guest_claim_requested",
+      game: {
+        finalScore: 234567,
+        playedDurationSeconds: 95,
+      },
+      claim: {
+        status: "pending",
+      },
+    });
+    expect(response.body.claim.verificationUrl).toContain(
+      "https://scores.example.test/score-claim?code=",
+    );
+
+    const [persistedGame] = await db
+      .select({
+        userId: games.userId,
+      })
+      .from(games)
+      .where(eq(games.id, response.body.game.id))
+      .limit(1);
+
+    expect(persistedGame?.userId).toBeNull();
+  });
+
   it.each([
     ["float number", { finalScore: 12.5, mode: "arcade", playedDurationSeconds: 95, requestClaim: true }, "finalScore_invalid"],
     ["partial string", { finalScore: "123abc", mode: "arcade", playedDurationSeconds: 95, requestClaim: true }, "finalScore_invalid"],

@@ -6,11 +6,11 @@ import { Environment } from "@react-three/drei";
 
 import { PinballMVPMaker } from "@/components/models/PinballMVP_Maker";
 import { PhysicsPlayfieldElement } from "@/components/maker/PhysicsPlayfieldElement";
-import Ball from "@/components/Ball";
+import Ball from "@/components/pinball/Ball";
 import { apiEndpoint } from "@/lib/api";
 import type { MakerElement } from "@/store/useMakerStore";
-import { useGameStore } from "@/store/useGameStore";
-import { useInputStore } from "@/store/useInputStore";
+import { useGameStore } from "@/store/gameStore/useGameStore";
+import { useInputStore } from "@/store/inputStore/useInputStore";
 import { useKeyboardControls } from "@/mqtt/useKeyboardControls";
 
 function FixedCamera() {

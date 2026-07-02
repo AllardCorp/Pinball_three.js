@@ -1,8 +1,7 @@
 import "dotenv/config";
 
 type TrustProxySetting = boolean | number;
-
-const integerPattern = /^\d+$/;
+type ScoreClaimMode = "local" | "remote";
 
 function requireEnv(name: string): string {
   const value = process.env[name]?.trim();
@@ -24,8 +23,18 @@ function optionalEnv(name: string): string | undefined {
   return value;
 }
 
+function isUnsignedIntegerText(value: string): boolean {
+  if (!value) {
+    return false;
+  }
+
+  // Validation volontairement explicite plutôt qu'une regex : c'est plus
+  // simple à justifier en soutenance et cela évite les cas ambigus.
+  return [...value].every((character) => character >= "0" && character <= "9");
+}
+
 function parsePort(value: string): number {
-  if (!integerPattern.test(value.trim())) {
+  if (!isUnsignedIntegerText(value.trim())) {
     throw new Error("PORT must be an integer between 1 and 65535.");
   }
 
@@ -53,7 +62,7 @@ function parseTrustProxy(value: string | undefined): TrustProxySetting {
     return false;
   }
 
-  if (!integerPattern.test(normalizedValue)) {
+  if (!isUnsignedIntegerText(normalizedValue)) {
     throw new Error("TRUST_PROXY must be `true`, `false` or a non-negative integer.");
   }
 
@@ -92,6 +101,16 @@ function readUrlEnv(name: string, defaultValue?: string): string {
   throw new Error(`${name} is required.`);
 }
 
+function readOptionalUrlEnv(name: string): string | undefined {
+  const value = optionalEnv(name);
+
+  if (!value) {
+    return undefined;
+  }
+
+  return parseUrl(name, value);
+}
+
 function listEnv(name: string): string[] {
   return (
     process.env[name]
@@ -99,6 +118,20 @@ function listEnv(name: string): string[] {
       .map((value) => value.trim())
       .filter(Boolean) ?? []
   );
+}
+
+function parseScoreClaimMode(value: string | undefined): ScoreClaimMode {
+  if (!value) {
+    return "local";
+  }
+
+  const normalizedValue = value.toLowerCase();
+
+  if (normalizedValue === "local" || normalizedValue === "remote") {
+    return normalizedValue;
+  }
+
+  throw new Error("SCORE_CLAIM_MODE must be `local` or `remote`.");
 }
 
 const nodeEnv = optionalEnv("NODE_ENV") ?? "development";
@@ -122,6 +155,20 @@ const frontendOrigins = Array.from(
     ),
   ]),
 );
+const scoreClaimMode = parseScoreClaimMode(optionalEnv("SCORE_CLAIM_MODE"));
+const globalApiUrl = readOptionalUrlEnv("GLOBAL_API_URL");
+const borneToken = optionalEnv("BORNE_TOKEN");
+
+// En mode remote, le backend local de la borne ne doit jamais accepter de
+// démarrer avec une configuration incomplète : sinon le QR code serait absent
+// ou pointerait vers une cible inutilisable après une vraie partie.
+if (scoreClaimMode === "remote" && !globalApiUrl) {
+  throw new Error("GLOBAL_API_URL is required when SCORE_CLAIM_MODE=remote.");
+}
+
+if (scoreClaimMode === "remote" && !borneToken) {
+  throw new Error("BORNE_TOKEN is required when SCORE_CLAIM_MODE=remote.");
+}
 
 export const env = {
   nodeEnv,
@@ -134,6 +181,9 @@ export const env = {
   betterAuthOrigin: new URL(betterAuthUrl).origin,
   frontendUrl,
   frontendOrigins,
+  scoreClaimMode,
+  globalApiUrl,
+  borneToken,
   githubClientId: optionalEnv("GITHUB_CLIENT_ID"),
   githubClientSecret: optionalEnv("GITHUB_CLIENT_SECRET"),
   googleClientId: optionalEnv("GOOGLE_CLIENT_ID"),

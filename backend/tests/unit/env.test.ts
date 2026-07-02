@@ -8,10 +8,13 @@ const envKeys = [
   "FRONTEND_URL",
   "GITHUB_CLIENT_ID",
   "GITHUB_CLIENT_SECRET",
+  "GLOBAL_API_URL",
   "GOOGLE_CLIENT_ID",
   "GOOGLE_CLIENT_SECRET",
+  "BORNE_TOKEN",
   "NODE_ENV",
   "PORT",
+  "SCORE_CLAIM_MODE",
   "TRUST_PROXY",
 ] as const;
 
@@ -122,6 +125,57 @@ describe("env", () => {
     const { env } = await importEnv(validEnv());
 
     expect(env.trustProxy).toBe(false);
+  });
+
+  it("defaults score claim mode to local", async () => {
+    const { env } = await importEnv(validEnv());
+
+    expect(env.scoreClaimMode).toBe("local");
+    expect(env.globalApiUrl).toBeUndefined();
+    expect(env.borneToken).toBeUndefined();
+  });
+
+  it("requires remote score claim settings when remote mode is enabled", async () => {
+    await expect(
+      importEnv(
+        validEnv({
+          SCORE_CLAIM_MODE: "remote",
+        }),
+      ),
+    ).rejects.toThrow("GLOBAL_API_URL is required when SCORE_CLAIM_MODE=remote.");
+
+    await expect(
+      importEnv(
+        validEnv({
+          GLOBAL_API_URL: "https://scores.example.test",
+          SCORE_CLAIM_MODE: "remote",
+        }),
+      ),
+    ).rejects.toThrow("BORNE_TOKEN is required when SCORE_CLAIM_MODE=remote.");
+  });
+
+  it("parses remote score claim settings", async () => {
+    const { env } = await importEnv(
+      validEnv({
+        BORNE_TOKEN: "cabinet-secret",
+        GLOBAL_API_URL: "https://scores.example.test/api-root",
+        SCORE_CLAIM_MODE: "remote",
+      }),
+    );
+
+    expect(env.scoreClaimMode).toBe("remote");
+    expect(env.globalApiUrl).toBe("https://scores.example.test/api-root");
+    expect(env.borneToken).toBe("cabinet-secret");
+  });
+
+  it("rejects invalid score claim mode", async () => {
+    await expect(
+      importEnv(
+        validEnv({
+          SCORE_CLAIM_MODE: "public",
+        }),
+      ),
+    ).rejects.toThrow("SCORE_CLAIM_MODE must be `local` or `remote`.");
   });
 
   it.each(["abc", "1.5", "1proxy", "-1"])(

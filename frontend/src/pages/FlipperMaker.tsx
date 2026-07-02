@@ -26,8 +26,9 @@ function ScreenshotCapture({ onReady }: { onReady: (fn: () => string) => void })
     onReady(() => {
       // Caméra dédiée calibrée pour cadrer le plateau, ratio portrait
       const cam = new THREE.PerspectiveCamera(45, SCREENSHOT_W / SCREENSHOT_H, 0.1, 1000);
-      cam.position.set(0.2, 70, 15);
-      cam.lookAt(0.5, -5.0, 10);
+      cam.up.set(0, 0, -1); // Force le haut de la caméra vers le haut du plateau (-Z)
+      cam.position.set(-0.6, 70, 4.5);
+      cam.lookAt(-0.6, -3, 4.5);
 
       // Rendu dans une texture à résolution fixe, pas liée à l'écran
       const target = new THREE.WebGLRenderTarget(SCREENSHOT_W, SCREENSHOT_H);
@@ -50,7 +51,7 @@ function ScreenshotCapture({ onReady }: { onReady: (fn: () => string) => void })
         for (let x = 0; x < SCREENSHOT_W; x++) {
           const src = ((SCREENSHOT_H - 1 - y) * SCREENSHOT_W + x) * 4;
           const dst = (y * SCREENSHOT_W + x) * 4;
-          imageData.data[dst]     = pixels[src];
+          imageData.data[dst] = pixels[src];
           imageData.data[dst + 1] = pixels[src + 1];
           imageData.data[dst + 2] = pixels[src + 2];
           imageData.data[dst + 3] = pixels[src + 3];
@@ -136,14 +137,14 @@ function LevelList({ onCreate }: { onCreate: () => void }) {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="flex flex-wrap gap-6 justify-center sm:justify-start">
             {levels.map((level) => (
               <div
                 key={level.id}
-                className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-orange-500 transition-colors"
+                className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-orange-500 transition-colors w-full max-w-[280px] mx-auto sm:mx-0"
               >
                 {/* Miniature screenshot */}
-                <div className="w-full aspect-video bg-gray-800 flex items-center justify-center overflow-hidden">
+                <div className="w-full aspect-[2/3] bg-gray-950 flex items-center justify-center overflow-hidden">
                   {level.screenshotUrl ? (
                     <img
                       src={apiEndpoint(level.screenshotUrl!)}
