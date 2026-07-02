@@ -23,6 +23,9 @@ function createSocialProviders(authEnv: AuthEnv) {
     socialProviders.github = {
       clientId: authEnv.githubClientId,
       clientSecret: authEnv.githubClientSecret,
+      // Better Auth demande déjà `read:user` et `user:email`, puis lit
+      // `/user/emails`. On ne crée pas d'email de secours : si GitHub ne
+      // fournit pas d'email, cela révèle un problème de permission OAuth.
     };
   }
 

@@ -1,6 +1,7 @@
 name: Déploiement VPS Production
 
-# Se lance quand le workflow "Tests & Coverage" se termine avec succès sur main
+# Se lance uniquement quand le workflow "Tests & Coverage" s'est terminé avec
+# succès. Cela évite de déployer un commit qui n'a pas passé les tests.
 on:
   workflow_run:
     workflows: ["Tests & Coverage"]
@@ -20,6 +21,10 @@ jobs:
     steps:
       - name: Récupération du code source
         uses: actions/checkout@v4
+        with:
+          # Sur un événement workflow_run, checkout utiliserait sinon la branche
+          # par défaut. On force donc le SHA exact qui vient de passer les tests.
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Synchronisation des fichiers vers le VPS (rsync)
         uses: burnett01/rsync-deployments@7.0.1 # ne modif que les fichiers modifier dans le dépot, évite un "downtime"
@@ -39,13 +44,17 @@ jobs:
           script: |
             # Création du dossier s'il n'existe pas (sécurité au premier déploiement)
             cd ~/flipper-project
-          
-            # Injection des secrets
-            echo "MQTT_USERNAME=${{ secrets.MQTT_USERNAME }}" > .env
-            echo "MQTT_PASSWORD=${{ secrets.MQTT_PASSWORD }}" >> .env
-            
+
+            # Le .env du VPS est maintenu directement sur le serveur.
+            # La CI l'utilise mais ne l'écrase pas, afin d'éviter de perdre les
+            # secrets configurés manuellement pendant les tests de déploiement.
+            test -f .env || {
+              echo "Erreur: .env est manquant dans ~/flipper-project"
+              exit 1
+            }
+
             # Déploiement
-            sudo docker compose -f deploy/docker-compose.yml up -d --build
+            sudo docker compose --env-file .env -p flipper-project -f deploy/docker-compose.vps.yml up -d --build
             
             # Nettoyage des anciennes images inutilisées (libère de la place)
             sudo docker image prune -f
@@ -53,4 +62,4 @@ jobs:
             # Vérification de santé
             echo "Vérification du statut..."
             sleep 10
-            sudo docker compose -f deploy/docker-compose.yml ps
+            sudo docker compose --env-file .env -p flipper-project -f deploy/docker-compose.vps.yml ps

@@ -24,14 +24,20 @@ export default function ScoreClaim() {
   const { approveScoreClaim, claim, feedback, isApproving, status } = useScoreClaim({
     claimCode,
   });
+  const approvedAccountLabel =
+    claim?.user?.username ??
+    session?.user.username ??
+    session?.user.email ??
+    "votre compte";
 
   if (!claimCode) {
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center px-6">
         <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h1 className="text-2xl font-semibold">Code QR invalide</h1>
+          <h1 className="text-2xl font-semibold">Aucun score à rattacher</h1>
           <p className="mt-3 text-sm text-slate-500">
-            La demande de rattachement ne contient pas de code de claim.
+            Cette page fonctionne uniquement après le scan d'un QR code généré
+            par le flipper en fin de partie.
           </p>
           <Link className="mt-6 inline-block text-blue-600" to={withMode("/")}>
             Retour à l'accueil
@@ -110,15 +116,18 @@ export default function ScoreClaim() {
                   onClick={approveScoreClaim}
                   type="button"
                 >
-                  {isApproving ? "Association..." : "Associer ce score à mon compte"}
+                  {isApproving ? "Enregistrement..." : "Enregistrer mon score"}
                 </button>
               </div>
             )}
 
             {status === "approved" && (
-              <p className="rounded bg-slate-100 px-3 py-2 text-sm text-slate-700">
-                Ce score est déjà rattaché à un compte.
-              </p>
+              <div className="rounded border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-900">
+                <p className="font-semibold">Score enregistré.</p>
+                <p className="mt-1">
+                  Ce score est rattaché à {approvedAccountLabel}.
+                </p>
+              </div>
             )}
           </div>
         )}

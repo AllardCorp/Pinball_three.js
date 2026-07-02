@@ -1,0 +1,115 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pinball-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:?POSTGRES_DB is required}
+      - POSTGRES_USER=${POSTGRES_USER:?POSTGRES_USER is required}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  migrate:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    command: [ "pnpm", "run", "db:migrate" ]
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:?BETTER_AUTH_URL is required}
+      - FRONTEND_URL=${FRONTEND_URL:?FRONTEND_URL is required}
+      - FRONTEND_ORIGINS=${FRONTEND_ORIGINS:?FRONTEND_ORIGINS is required}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - SCORE_CLAIM_MODE=${SCORE_CLAIM_MODE:?SCORE_CLAIM_MODE is required}
+      - GLOBAL_API_URL=${GLOBAL_API_URL:-}
+      - BORNE_TOKEN=${BORNE_TOKEN:?BORNE_TOKEN is required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    # Le backend n'est pas exposé publiquement : Nginx le contacte en local.
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:?POSTGRES_USER is required}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:?BETTER_AUTH_URL is required}
+      - FRONTEND_URL=${FRONTEND_URL:?FRONTEND_URL is required}
+      - FRONTEND_ORIGINS=${FRONTEND_ORIGINS:?FRONTEND_ORIGINS is required}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - SCORE_CLAIM_MODE=${SCORE_CLAIM_MODE:?SCORE_CLAIM_MODE is required}
+      - GLOBAL_API_URL=${GLOBAL_API_URL:-}
+      - BORNE_TOKEN=${BORNE_TOKEN:?BORNE_TOKEN is required}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: always
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        # Le VPS sert uniquement l'interface publique : pas de jeu 3D ni MQTT.
+        - VITE_APP_TARGET=public
+        - VITE_API_URL=${VITE_API_URL:-}
+    # Nginx expose HTTPS publiquement et proxy vers ce port local.
+    ports:
+      - "127.0.0.1:8080:80"
+    # Le frontend Nginx reference le service `backend` dans sa configuration.
+    # On attend donc que le backend soit lance pour eviter un crash Nginx au
+    # demarrage lorsque le nom DNS Docker `backend` n'existe pas encore.
+    depends_on:
+      backend:
+        condition: service_started
+    restart: always
+
+  mosquitto:
+    profiles:
+      - mqtt
+    image: eclipse-mosquitto:2.0.18
+    container_name: mosquitto
+    environment:
+      - MQTT_USERNAME=${MQTT_USERNAME:?MQTT_USERNAME is required}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:?MQTT_PASSWORD is required}
+    # Service optionnel côté VPS : le flipper physique gère normalement MQTT localement.
+    entrypoint: >
+      sh -c "touch /mosquitto/config/password_file.txt &&
+             mosquitto_passwd -b /mosquitto/config/password_file.txt $$MQTT_USERNAME $$MQTT_PASSWORD &&
+             chown 1883:1883 /mosquitto/config/password_file.txt &&
+             chmod 600 /mosquitto/config/password_file.txt &&
+             echo 'MQTT user created' &&
+             exec mosquitto -c /mosquitto/config/mosquitto.conf"
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ../mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    restart: always
+
+volumes:
+  postgres_data:
+  mosquitto_data:
+  mosquitto_log:

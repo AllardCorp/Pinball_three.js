@@ -12,12 +12,16 @@ import { useGameDebug } from "@/config/useGameDebug";
 import { useControls, folder, button } from "leva";
 
 type BallProps = {
-  id: string;
-  origin: "launcher" | "cannon";
+  id?: string;
+  origin?: "launcher" | "cannon";
   position: [number, number, number];
 };
 
-export default function Ball({ id, origin, position }: BallProps) {
+export default function Ball({
+  id = "legacy_launcher_ball",
+  origin = "launcher",
+  position,
+}: BallProps) {
   const ballRef = useRef<RapierRigidBody>(null);
 
   const [launchCount, setLaunchCount] = useState(0);
