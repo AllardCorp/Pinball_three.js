@@ -5,6 +5,10 @@ import { createApp, resetRateLimitStoreForTests } from "../../src/app.js";
 import type { AuthInstance } from "../../src/auth.js";
 import type { DatabaseClient } from "../../src/db/client.js";
 import { env } from "../../src/env.js";
+import type {
+  RemoteScoreClaimStatusChecker,
+  RemoteScoreClaimStarter,
+} from "../../src/services/remote-score-claim-client.js";
 
 type AppSession = {
   session: {
@@ -23,6 +27,8 @@ function createRouteTestApp(
     db?: Partial<DatabaseClient>;
     envOverrides?: Partial<typeof env>;
     getSession?: (headers: Record<string, unknown>) => Promise<AppSession | null>;
+    remoteScoreClaimStatusChecker?: RemoteScoreClaimStatusChecker;
+    remoteScoreClaimStarter?: RemoteScoreClaimStarter;
   } = {},
 ) {
   return createApp({
@@ -43,6 +49,16 @@ function createRouteTestApp(
     getSession:
       options.getSession ??
       (async () => null),
+    remoteScoreClaimStatusChecker:
+      options.remoteScoreClaimStatusChecker ??
+      (async () => {
+        throw new Error("remote score claim status checker not configured in test");
+      }),
+    remoteScoreClaimStarter:
+      options.remoteScoreClaimStarter ??
+      (async () => {
+        throw new Error("remote score claim starter not configured in test");
+      }),
   });
 }
 
@@ -76,7 +92,7 @@ describe("app injected routes", () => {
   });
 
   it("falls back to a generic 500 error for non-Error exceptions", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => { });
     const app = createRouteTestApp({
       db: {
         transaction: async () => {
@@ -111,7 +127,7 @@ describe("app injected routes", () => {
   });
 
   it("returns 500 with the standard handler when a route throws an Error instance", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => { });
     const app = createRouteTestApp({
       db: {
         select: () => ({
@@ -183,6 +199,132 @@ describe("app injected routes", () => {
     });
   });
 
+  it("relays score claim starts to the remote VPS when remote mode is enabled", async () => {
+    const remoteScoreClaimStarter = vi.fn(async () => ({
+      claim: {
+        claimCode: "ABCDEFGHIJKLMNOPQRSTUVWX12345678",
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+        status: "pending" as const,
+        verificationUrl: "https://scores.example.test/score-claim?code=ABCDEFGHIJKLMNOPQRSTUVWX12345678&mode=arcade",
+      },
+      decision: "save_and_claimable" as const,
+      game: {
+        finalScore: 654321,
+        id: 91,
+        playedAt: new Date().toISOString(),
+        playedDurationSeconds: 95,
+      },
+      reason: "guest_claim_requested" as const,
+    }));
+    const app = createRouteTestApp({
+      envOverrides: {
+        borneToken: "cabinet-secret",
+        globalApiUrl: "https://scores.example.test/",
+        scoreClaimMode: "remote",
+      },
+      remoteScoreClaimStarter,
+    });
+
+    const response = await request(app)
+      .post("/api/score-claims/start")
+      .send({
+        finalScore: 654321,
+        mode: "arcade",
+        playedDurationSeconds: 95,
+        requestClaim: true,
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.claim.verificationUrl).toBe(
+      "https://scores.example.test/score-claim?code=ABCDEFGHIJKLMNOPQRSTUVWX12345678&mode=arcade",
+    );
+    expect(remoteScoreClaimStarter).toHaveBeenCalledWith({
+      borneToken: "cabinet-secret",
+      globalApiUrl: "https://scores.example.test/",
+      payload: {
+        finalScore: 654321,
+        mode: "arcade",
+        playedDurationSeconds: 95,
+        requestClaim: true,
+      },
+    });
+  });
+
+  it("returns 503 instead of creating a broken QR when remote settings are incomplete", async () => {
+    const app = createRouteTestApp({
+      envOverrides: {
+        borneToken: undefined,
+        globalApiUrl: "https://scores.example.test/",
+        scoreClaimMode: "remote",
+      },
+    });
+
+    const response = await request(app)
+      .post("/api/score-claims/start")
+      .send({
+        finalScore: 654321,
+        mode: "arcade",
+        playedDurationSeconds: 95,
+        requestClaim: true,
+      });
+
+    expect(response.status).toBe(503);
+    expect(response.body).toEqual({
+      error: "remote_score_claim_not_configured",
+    });
+  });
+
+  it("relays score claim status lookups to the remote VPS when remote mode is enabled", async () => {
+    const claimCode = "ABCDEFGHIJKLMNOPQRSTUVWX12345678";
+    const playedAt = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 60_000).toISOString();
+    const remoteScoreClaimStatusChecker = vi.fn(async () => ({
+      body: {
+        approvedAt: null,
+        expiresAt,
+        game: {
+          finalScore: 654321,
+          id: 91,
+          playedAt,
+          playedDurationSeconds: 95,
+        },
+        status: "pending" as const,
+        user: null,
+      },
+      statusCode: 200 as const,
+    }));
+    const app = createRouteTestApp({
+      envOverrides: {
+        borneToken: "cabinet-secret",
+        globalApiUrl: "https://scores.example.test/",
+        scoreClaimMode: "remote",
+      },
+      remoteScoreClaimStatusChecker,
+    });
+
+    const response = await request(app).get(
+      `/api/score-claims/status/${claimCode}`,
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      approvedAt: null,
+      expiresAt,
+      game: {
+        finalScore: 654321,
+        id: 91,
+        playedAt,
+        playedDurationSeconds: 95,
+      },
+      status: "pending",
+      user: null,
+    });
+    expect(remoteScoreClaimStatusChecker).toHaveBeenCalledWith({
+      claimCode,
+      globalApiUrl: "https://scores.example.test/",
+    });
+  });
+
   it("blocks repeated status lookups for the same claim code after the route limit", async () => {
     const claimCode = "STATUSLOOKUPCODE1234567890ABCDEF";
     const app = createRouteTestApp({
@@ -194,7 +336,7 @@ describe("app injected routes", () => {
       },
     });
 
-    for (let attempt = 0; attempt < 30; attempt += 1) {
+    for (let attempt = 0; attempt < 120; attempt += 1) {
       const response = await request(app)
         .get(`/api/score-claims/status/${claimCode}`)
         .set("X-Forwarded-For", "203.0.113.20");

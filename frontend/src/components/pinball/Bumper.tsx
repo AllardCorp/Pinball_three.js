@@ -3,7 +3,7 @@ import {
   type RapierRigidBody,
   type CollisionEnterPayload,
 } from "@react-three/rapier";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useGameStore } from "@/store/gameStore/useGameStore";
@@ -15,7 +15,13 @@ import { SCORE_VALUES } from "@/config/gameBalancingConfig";
 type BumperProps = {
   id: 0 | 1 | 2;
   colliderGeometry: THREE.BufferGeometry;
-  visualNode: React.ReactNode;
+  // Nouveau modèle : le parent peut fournir directement un node prêt à rendre.
+  visualNode?: ReactNode;
+  // Ancien modèle : certains fichiers MVP passent encore une géométrie et un
+  // matériau séparés. Cette compatibilité permet de garder le build stable le
+  // temps que les modèles soient harmonisés.
+  visualGeometry?: THREE.BufferGeometry;
+  visualMaterial?: THREE.Material;
   rubyGeometry: THREE.BufferGeometry;
   rubyMaterial: THREE.Material;
   position: [number, number, number];
@@ -30,6 +36,8 @@ export default function Bumper({
   id,
   colliderGeometry,
   visualNode,
+  visualGeometry,
+  visualMaterial,
   rubyGeometry,
   rubyMaterial,
   position,
@@ -98,8 +106,13 @@ export default function Bumper({
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Enveloppe le visuel fourni dans un groupe pour l'animer */}
-      <group ref={visualGroupRef}>{visualNode}</group>
+      {/* Enveloppe le visuel fourni dans un groupe pour l'animer. */}
+      <group ref={visualGroupRef}>
+        {visualNode ??
+          (visualGeometry && visualMaterial ? (
+            <mesh geometry={visualGeometry} material={visualMaterial} />
+          ) : null)}
+      </group>
 
       <mesh
         scale={isRubyActive ? 1 : 0}

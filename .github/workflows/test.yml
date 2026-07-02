@@ -9,8 +9,8 @@ on:
       - "**"
 
 jobs:
-  test:
-    name: Tests unitaires & couverture
+  frontend:
+    name: Frontend - tests, build & couverture
     runs-on: ubuntu-latest
 
     defaults:
@@ -39,5 +39,65 @@ jobs:
       - name: Lancement des tests
         run: pnpm test
 
+      - name: Vérification du build
+        run: pnpm build
+
       - name: Vérification de la couverture (seuil 80%)
+        run: pnpm coverage
+
+  backend:
+    name: Backend - tests, build & couverture
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: pinball_user
+          POSTGRES_PASSWORD: pinball_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pinball_user -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      DATABASE_URL_TEST: postgresql://pinball_user:pinball_test_password@localhost:5432/postgres
+      DATABASE_URL: postgresql://pinball_user:pinball_test_password@localhost:5432/pinball_test_sandbox
+      BETTER_AUTH_SECRET: ci_backend_test_secret_do_not_use_in_production
+      BETTER_AUTH_URL: http://localhost:3000
+      FRONTEND_URL: http://localhost:5173
+      FRONTEND_ORIGINS: http://localhost:5173
+      SCORE_CLAIM_MODE: local
+
+    steps:
+      - name: Récupération du code source
+        uses: actions/checkout@v4
+
+      - name: Installation de pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Installation de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: backend/pnpm-lock.yaml
+
+      - name: Installation des dépendances
+        run: pnpm install --frozen-lockfile
+
+      - name: Vérification du build
+        run: pnpm build
+
+      - name: Vérification de la couverture backend (seuil 80%)
         run: pnpm coverage
