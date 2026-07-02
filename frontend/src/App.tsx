@@ -1,21 +1,25 @@
-import { Route, Routes } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import AuthGuard from "./components/auth/AuthGuard";
-import Backglass from "./pages/Backglass";
 import Dashboard from "./pages/Dashboard";
-import DMD from "./pages/DMD";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import Playfield from "./pages/Playfield";
 import ScoreClaim from "./pages/ScoreClaim";
 
-function App() {
+// Cette constante utilise directement `import.meta.env` pour que Vite/Rollup
+// puisse supprimer le chunk `FlipperApp` du build public VPS.
+const shouldLoadFlipperApp = import.meta.env.VITE_APP_TARGET !== "public";
+const FlipperApp = shouldLoadFlipperApp
+  ? lazy(() => import("./FlipperApp"))
+  : null;
+
+function PublicApp() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/score-claim" element={<ScoreClaim />} />
-      <Route path="/playfield" element={<Playfield />} />
       <Route
         path="/dashboard"
         element={
@@ -24,9 +28,24 @@ function App() {
           </AuthGuard>
         }
       />
-      <Route path="/backglass" element={<Backglass />} />
-      <Route path="/dmd" element={<DMD />} />
+      <Route path="*" element={<Navigate replace to="/" />} />
     </Routes>
+  );
+}
+
+function App() {
+  if (FlipperApp) {
+    return (
+      <Suspense fallback={null}>
+        <FlipperApp />
+      </Suspense>
+    );
+  }
+
+  return (
+    // Le build public VPS expose uniquement les pages utiles après scan QR ou
+    // connexion. Les routes de jeu restent disponibles dans `FlipperApp`.
+    <PublicApp />
   );
 }
 

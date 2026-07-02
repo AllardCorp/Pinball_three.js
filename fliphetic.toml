@@ -9,7 +9,7 @@ strategy = "branch"
 ref      = "main"                   
 
 [screens]
-playfield = { service = "frontend", port = 80, path = "/playfield" }
+playfield = { service = "frontend", port = 80, path = "/playfield?mode=arcade" }
 backglass = { service = "frontend", port = 80, path = "/backglass" }
 dmd       = { service = "frontend", port = 80, path = "/dmd" }
 

@@ -1,64 +1,94 @@
-import { useEffect, Suspense } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Physics } from "@react-three/rapier";
-import { Perf } from "r3f-perf";
 import { Environment } from "@react-three/drei";
-import { Leva } from "leva";
 import {
-  EffectComposer,
   Bloom,
+  EffectComposer,
   ToneMapping,
 } from "@react-three/postprocessing";
+import { Physics } from "@react-three/rapier";
 import { ToneMappingMode } from "postprocessing";
-import ScoreClaimControlPanel from "../components/score-claim/ScoreClaimControlPanel";
-import Experience from "../experience/Experience";
-import Loader from "../components/utils/Loader";
-import { useAppMode } from "../hooks/useAppMode";
-import { useScoreClaimSession } from "../hooks/useScoreClaimSession";
-import { useKeyboardControls } from "../mqtt/useKeyboardControls";
+import { Perf } from "r3f-perf";
+import { Leva } from "leva";
+
+import Loader from "@/components/utils/Loader";
+import { useGameDebug } from "@/config/useGameDebug";
+import Experience from "@/experience/Experience";
+import { useAppMode } from "@/hooks/useAppMode";
+import { useScoreClaimSession } from "@/hooks/useScoreClaimSession";
+import { createGameOverScoreClaimInput } from "@/lib/score-claim-gameover";
+import { useKeyboardControls } from "@/mqtt/useKeyboardControls";
 import { useGameStore } from "@/store/gameStore/useGameStore";
 import { useInputStore } from "@/store/inputStore/useInputStore";
-import { useGameDebug } from "@/config/useGameDebug";
 
 export default function Playfield() {
   const { isArcadeMode, mode } = useAppMode();
-  const {
-    authenticatedUser,
-    isSessionPending,
-    resetScoreClaimSession,
-    snapshot,
-    startScoreClaimSession,
-  } = useScoreClaimSession({ enabled: isArcadeMode, mode });
+  const { resetScoreClaimSession, startScoreClaimSession } =
+    useScoreClaimSession({ enabled: isArcadeMode, mode });
+  const { gravity, perfVisible, rapierDebug } = useGameDebug();
 
   useKeyboardControls();
 
   const startPressed = useInputStore((state) => state.buttons.start);
-  const isPlaying = useGameStore((state) => state.isPlaying);
-  const startGame = useGameStore((state) => state.startGame);
   const updateInputs = useInputStore((state) => state.updateInputs);
+  const isPlaying = useGameStore((state) => state.isPlaying);
+  const scores = useGameStore((state) => state.scores);
+  const startGame = useGameStore((state) => state.startGame);
+
+  // Ces refs detectent les transitions de partie sans provoquer de re-render.
+  // Elles evitent surtout de creer plusieurs claims pour le meme game over.
+  const wasPlayingRef = useRef(isPlaying);
+  const gameStartedAtRef = useRef<number | null>(isPlaying ? Date.now() : null);
+  const submittedGameOverKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (startPressed && !isPlaying) {
-      console.log("🎮 Démarrage de la partie depuis MQTT / Bouton Start !");
+      console.log("Demarrage de la partie depuis MQTT / Bouton Start.");
       startGame(1);
       updateInputs({ buttons: { start: false } });
     }
   }, [startPressed, isPlaying, startGame, updateInputs]);
 
-  const { rapierDebug, gravity, perfVisible } = useGameDebug();
+  useEffect(() => {
+    const wasPlaying = wasPlayingRef.current;
+
+    if (isPlaying && !wasPlaying) {
+      gameStartedAtRef.current = Date.now();
+      submittedGameOverKeyRef.current = null;
+      // Une nouvelle partie doit retirer l'ancien QR code du backglass.
+      resetScoreClaimSession();
+    }
+
+    if (isArcadeMode && wasPlaying && !isPlaying) {
+      const endedAtMs = Date.now();
+      // Le score envoye au backend vient du store reel alimente par addScore,
+      // pas d'un champ de test saisi manuellement dans l'interface.
+      const scoreClaimInput = createGameOverScoreClaimInput({
+        endedAtMs,
+        scores,
+        startedAtMs: gameStartedAtRef.current,
+      });
+      const gameOverKey = `${gameStartedAtRef.current ?? "unknown"}:${scores.join(
+        "-",
+      )}`;
+
+      if (submittedGameOverKeyRef.current !== gameOverKey) {
+        submittedGameOverKeyRef.current = gameOverKey;
+        void startScoreClaimSession(scoreClaimInput);
+      }
+    }
+
+    wasPlayingRef.current = isPlaying;
+  }, [
+    isArcadeMode,
+    isPlaying,
+    resetScoreClaimSession,
+    scores,
+    startScoreClaimSession,
+  ]);
 
   return (
     <div className="relative h-screen w-screen">
-      {isArcadeMode && (
-        <ScoreClaimControlPanel
-          authenticatedUser={authenticatedUser}
-          isSessionPending={isSessionPending}
-          onReset={resetScoreClaimSession}
-          onStart={startScoreClaimSession}
-          snapshot={snapshot}
-        />
-      )}
-
       <Leva collapsed />
       <Suspense fallback={<Loader />}>
         <Canvas shadows camera={{ position: [0, 8, 15], fov: 50 }}>
@@ -73,12 +103,11 @@ export default function Playfield() {
           </Physics>
           <EffectComposer>
             <Bloom
-              luminanceThreshold={2} // Seuil minimal pour pour le bloom (isole l'épée du plateau)
-              luminanceSmoothing={0} // Empêche la diffusion du bloom sur les autres objets (plateau, personnages) pour éviter un effet brouillard
-              mipmapBlur // Utilise un flou basé sur les mipmaps pour un bloom plus naturel
               intensity={1.2}
+              luminanceSmoothing={0}
+              luminanceThreshold={2}
+              mipmapBlur
             />
-            {/* Attribution du Tone Maping pour des couleurs intenses */}
             <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
           </EffectComposer>
         </Canvas>
