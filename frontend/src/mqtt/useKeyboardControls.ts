@@ -7,6 +7,8 @@ import { usePlungerCharge } from "./usePlungerCharge";
 export function useKeyboardControls() {
   const state = useRef<InputState>({
     buttons: {
+      start: false,
+      launch_ball: false,
       black_left: false,
       white_left: false,
       front_left_green: false,
