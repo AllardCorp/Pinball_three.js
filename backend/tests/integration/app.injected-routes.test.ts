@@ -92,7 +92,7 @@ describe("app injected routes", () => {
   });
 
   it("falls back to a generic 500 error for non-Error exceptions", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => { });
     const app = createRouteTestApp({
       db: {
         transaction: async () => {
@@ -127,7 +127,7 @@ describe("app injected routes", () => {
   });
 
   it("returns 500 with the standard handler when a route throws an Error instance", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => { });
     const app = createRouteTestApp({
       db: {
         select: () => ({
@@ -336,7 +336,7 @@ describe("app injected routes", () => {
       },
     });
 
-    for (let attempt = 0; attempt < 30; attempt += 1) {
+    for (let attempt = 0; attempt < 120; attempt += 1) {
       const response = await request(app)
         .get(`/api/score-claims/status/${claimCode}`)
         .set("X-Forwarded-For", "203.0.113.20");
