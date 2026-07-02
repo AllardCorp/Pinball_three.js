@@ -6,7 +6,8 @@ Files: public/models/PinballMVP_Maker.glb [66.4KB] > /home/steph/dev/hetic/Pinba
 
 import * as THREE from 'three'
 import { useGLTF } from '@react-three/drei'
-import { GLTF } from 'three-stdlib'
+import type { GLTF } from 'three-stdlib'
+import type { JSX } from 'react'
 import { RigidBody, CuboidCollider } from '@react-three/rapier'
 import Flipper from '@/components/pinball/Flipper'
 import { useGameStore } from '@/store/gameStore/useGameStore'
@@ -41,7 +42,7 @@ type MeshDef = {
 type Props = JSX.IntrinsicElements['group'] & { withPhysics?: boolean }
 
 export function PinballMVPMaker({ withPhysics = false, ...props }: Props) {
-  const { nodes, materials } = useGLTF('/models/PinballMVP_Maker-transformed.glb') as GLTFResult
+  const { nodes, materials } = useGLTF('/models/PinballMVP_Maker-transformed.glb') as unknown as GLTFResult
   const ballInLauncher = useGameStore((state) => state.ballInLauncher)
   const setBallInLauncher = useGameStore((state) => state.setBallInLauncher)
 
