@@ -17,6 +17,7 @@ import { env as defaultEnv } from "./env.js";
 import { createHttpError, requestErrorHandler } from "./http/errors.js";
 import { readSingleRouteParam } from "./http/request-parsing.js";
 import { resetRateLimitStoreForTests } from "./http/rate-limit.js";
+import { registerLeaderboardRoutes } from "./routes/leaderboard-routes.js";
 import { registerScoreClaimRoutes } from "./routes/score-claim-routes.js";
 import {
   getRemoteScoreClaimStatus,
@@ -145,6 +146,8 @@ export function createApp(
       });
     }
   });
+
+  registerLeaderboardRoutes({ app, db });
 
   registerScoreClaimRoutes({
     // Les routes score-claim sont regroupées dans leur propre module parce
