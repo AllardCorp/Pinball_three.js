@@ -9,6 +9,7 @@ on:
       - completed
     branches:
       - main
+      - fix/#123-score-claim-mobile-auth-vps
 
 
 jobs:
