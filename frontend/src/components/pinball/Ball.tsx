@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from "react";
-import { RigidBody, type RapierRigidBody } from "@react-three/rapier";
+import { RigidBody, type RapierRigidBody, useRapier } from "@react-three/rapier";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useGameStore } from "@/store/gameStore/useGameStore";
 import ObjectSound from "@/components/sounds/ObjectSound";
@@ -10,6 +11,7 @@ import ParticleExplosion from "@/components/pinball/ParticleExplosion";
 import { useInputStore } from "@/store/inputStore/useInputStore";
 import { useGameDebug } from "@/config/useGameDebug";
 import { useControls, folder, button } from "leva";
+import { useRampScoring } from "@/hooks/useRampScoring";
 
 type BallProps = {
   id?: string;
@@ -23,6 +25,10 @@ export default function Ball({
   position,
 }: BallProps) {
   const ballRef = useRef<RapierRigidBody>(null);
+  const currentSurfaceRef = useRef<string>("RIEN (Vide/Air)");
+  const lastHitColliderRef = useRef<string | null>(null);
+
+  const { rapier, world, rigidBodyStates, colliderStates } = useRapier();
 
   const [launchCount, setLaunchCount] = useState(0);
   const [launchVolume, setLaunchVolume] = useState(1);
@@ -193,6 +199,64 @@ export default function Ball({
     }
   }, [warriorImpulseTrigger, isPlaying, ballInLauncher, origin]);
 
+  useFrame(() => {
+    if (!isPlaying || !ballRef.current) return;
+
+    const body = ballRef.current;
+    const pos = body.translation();
+
+    // --- RAYCAST DESCENTE ---
+    const rapierRay = new rapier.Ray(
+      { x: pos.x, y: pos.y, z: pos.z },
+      { x: 0, y: -1, z: 0 },
+    );
+    const hit = world.castRay(
+      rapierRay,
+      size + 0.6,
+      true,
+      undefined,
+      undefined,
+      undefined,
+      body,
+    );
+
+    let hitName = "RIEN (Vide/Air)";
+
+    if (hit) {
+      const parentBody = hit.collider.parent();
+      const rbState = (rigidBodyStates as any)?.get(parentBody?.handle);
+      const bodyName = rbState?.object?.name || "";
+      const colState = (colliderStates as any)?.get(hit.collider.handle);
+      const meshName = colState?.object?.name || "";
+
+      hitName = bodyName || meshName || `Collider_${hit.collider.handle}`;
+    }
+
+    currentSurfaceRef.current = hitName;
+
+    if (hitName !== lastHitColliderRef.current) {
+      const isOnPlayfield = hitName === "coll_playfield_collision_left_hole";
+      const isOnRockRamp = hitName === "stone_ramp" || hitName === "coll_faquir";
+      const isOnRamps = hitName === "coll_ramps";
+      
+      const logColor =
+        isOnPlayfield || isOnRockRamp || isOnRamps
+          ? "color: #00ff00; font-weight: bold;"
+          : "color: #ff9900; font-weight: bold;";
+      console.log(
+        `%c[Raycast Ball Hit] ${hitName}`,
+        logColor,
+        hit
+          ? { distance: (hit as any).toi, collider: hit.collider }
+          : "Air/Vide",
+      );
+      lastHitColliderRef.current = hitName;
+    }
+  });
+
+  // Appelle le Hook customisé pour la gestion du score
+  useRampScoring(currentSurfaceRef, isPlaying);
+
   // --- RENDU AVANT LE LANCEMENT DE LA PARTIE ---
   if (!isPlaying) {
     return (
@@ -208,7 +272,7 @@ export default function Ball({
             ballRef={ballRef}
             size={size}
             isPlaying={isPlaying}
-            ballInLauncher={origin === "launcher" ? ballInLauncher : false}
+            currentSurfaceRef={currentSurfaceRef}
           />
         </group>
       </>
@@ -254,7 +318,7 @@ export default function Ball({
         ballRef={ballRef}
         size={size}
         isPlaying={isPlaying}
-        ballInLauncher={origin === "launcher" ? ballInLauncher : false}
+        currentSurfaceRef={currentSurfaceRef}
       />
     </>
   );
