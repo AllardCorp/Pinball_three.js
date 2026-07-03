@@ -44,10 +44,12 @@ export function useScoreClaim({ claimCode }: UseScoreClaimOptions) {
 
   async function loadScoreClaim({
     clearFeedback = true,
+    preserveCurrentStateOnError = false,
     signal,
     showLoading = true,
   }: {
     clearFeedback?: boolean;
+    preserveCurrentStateOnError?: boolean;
     signal?: AbortSignal;
     showLoading?: boolean;
   } = {}) {
@@ -74,17 +76,23 @@ export function useScoreClaim({ claimCode }: UseScoreClaimOptions) {
       );
 
       if (response.status === 404) {
-        setStatus("not_found");
+        if (!preserveCurrentStateOnError) {
+          setStatus("not_found");
+        }
         return;
       }
 
       if (response.status === 410) {
-        setStatus("expired");
+        if (!preserveCurrentStateOnError) {
+          setStatus("expired");
+        }
         return;
       }
 
       if (!response.ok) {
-        setStatus("error");
+        if (!preserveCurrentStateOnError) {
+          setStatus("error");
+        }
         return;
       }
 
@@ -94,7 +102,9 @@ export function useScoreClaim({ claimCode }: UseScoreClaimOptions) {
     } catch (error) {
       if (!signal?.aborted) {
         console.error("Score claim lookup failed:", error);
-        setStatus("error");
+        if (!preserveCurrentStateOnError) {
+          setStatus("error");
+        }
       }
     }
   }
@@ -156,6 +166,7 @@ export function useScoreClaim({ claimCode }: UseScoreClaimOptions) {
         currentClaim
           ? {
               ...currentClaim,
+              approvedAt: currentClaim.approvedAt ?? new Date().toISOString(),
               game: payload.game,
               status: payload.status,
             }
@@ -165,8 +176,13 @@ export function useScoreClaim({ claimCode }: UseScoreClaimOptions) {
       setFeedback("Le score a bien été rattaché à votre compte.");
 
       // On relit immédiatement le statut complet pour afficher le compte
-      // rattaché sans obliger l'utilisateur à rafraîchir la page mobile.
-      await loadScoreClaim({ clearFeedback: false, showLoading: false });
+      // rattaché. Si cette relecture échoue sur mobile, on conserve quand même
+      // l'écran confirmé car l'approbation backend a déjà réussi.
+      await loadScoreClaim({
+        clearFeedback: false,
+        preserveCurrentStateOnError: true,
+        showLoading: false,
+      });
     } finally {
       setIsApproving(false);
     }
