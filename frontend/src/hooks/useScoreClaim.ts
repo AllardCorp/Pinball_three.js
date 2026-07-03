@@ -157,32 +157,14 @@ export function useScoreClaim({ claimCode }: UseScoreClaimOptions) {
         return;
       }
 
-      const payload = (await response.json()) as {
-        game: ScoreClaimGame;
-        status: "approved";
-      };
+      const payload = (await response.json()) as ScoreClaimPayload;
 
-      setClaim((currentClaim) =>
-        currentClaim
-          ? {
-              ...currentClaim,
-              approvedAt: currentClaim.approvedAt ?? new Date().toISOString(),
-              game: payload.game,
-              status: payload.status,
-            }
-          : currentClaim,
-      );
+      // Le backend renvoie le même payload public que `/status/:code`.
+      // La page mobile peut donc remplacer immédiatement le bouton par la
+      // confirmation, sans refresh et sans deuxième requête fragile.
+      setClaim(payload);
       setStatus("approved");
       setFeedback("Le score a bien été rattaché à votre compte.");
-
-      // On relit immédiatement le statut complet pour afficher le compte
-      // rattaché. Si cette relecture échoue sur mobile, on conserve quand même
-      // l'écran confirmé car l'approbation backend a déjà réussi.
-      await loadScoreClaim({
-        clearFeedback: false,
-        preserveCurrentStateOnError: true,
-        showLoading: false,
-      });
     } finally {
       setIsApproving(false);
     }

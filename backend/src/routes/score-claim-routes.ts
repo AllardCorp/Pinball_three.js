@@ -141,6 +141,61 @@ function getScoreClaimStartStatus(response: ScoreClaimStartResponse) {
   return response.decision === "discard" ? 200 : 201;
 }
 
+async function readScoreClaimPublicPayload(
+  db: DatabaseClient,
+  claimCode: string,
+) {
+  const [scoreClaim] = await db
+    // Cette projection représente exactement ce que le mobile a le droit de
+    // connaître : le score à afficher, le statut public et le nom public du
+    // compte rattaché. Elle est partagée par `status` et `approve` pour éviter
+    // que le mobile dépende d'un refresh après la validation.
+    .select({
+      status: scoreClaimRequests.status,
+      expiresAt: scoreClaimRequests.expiresAt,
+      approvedAt: scoreClaimRequests.approvedAt,
+      userId: scoreClaimRequests.userId,
+      username: users.username,
+      gameId: games.id,
+      finalScore: games.finalScore,
+      playedAt: games.playedAt,
+      playedDurationSeconds: games.playedDurationSeconds,
+    })
+    .from(scoreClaimRequests)
+    .innerJoin(games, eq(scoreClaimRequests.gameId, games.id))
+    .leftJoin(users, eq(scoreClaimRequests.userId, users.id))
+    .where(eq(scoreClaimRequests.claimCode, claimCode))
+    .limit(1);
+
+  return scoreClaim ?? null;
+}
+
+type ScoreClaimPublicPayload = NonNullable<
+  Awaited<ReturnType<typeof readScoreClaimPublicPayload>>
+>;
+
+function toScoreClaimPublicResponse(
+  scoreClaim: ScoreClaimPublicPayload,
+  status: typeof scoreClaimStatus.pending | typeof scoreClaimStatus.approved,
+) {
+  return {
+    status,
+    user: scoreClaim.userId
+      ? {
+          username: scoreClaim.username,
+        }
+      : null,
+    game: {
+      id: scoreClaim.gameId,
+      finalScore: scoreClaim.finalScore,
+      playedAt: scoreClaim.playedAt.toISOString(),
+      playedDurationSeconds: scoreClaim.playedDurationSeconds,
+    },
+    approvedAt: scoreClaim.approvedAt?.toISOString() ?? null,
+    expiresAt: scoreClaim.expiresAt.toISOString(),
+  };
+}
+
 export function registerScoreClaimRoutes({
   app,
   db,
@@ -470,26 +525,7 @@ export function registerScoreClaimRoutes({
         return;
       }
 
-      const [scoreClaim] = await db
-        // On joint `games` pour renvoyer au mobile le score exact à afficher
-        // pendant la validation, et `users` pour indiquer si le claim est déjà
-        // attaché à un compte.
-        .select({
-          status: scoreClaimRequests.status,
-          expiresAt: scoreClaimRequests.expiresAt,
-          approvedAt: scoreClaimRequests.approvedAt,
-          userId: scoreClaimRequests.userId,
-          username: users.username,
-          gameId: games.id,
-          finalScore: games.finalScore,
-          playedAt: games.playedAt,
-          playedDurationSeconds: games.playedDurationSeconds,
-        })
-        .from(scoreClaimRequests)
-        .innerJoin(games, eq(scoreClaimRequests.gameId, games.id))
-        .leftJoin(users, eq(scoreClaimRequests.userId, users.id))
-        .where(eq(scoreClaimRequests.claimCode, claimCode))
-        .limit(1);
+      const scoreClaim = await readScoreClaimPublicPayload(db, claimCode);
 
       if (!scoreClaim) {
         response.status(404).json({ status: "not_found" });
@@ -507,22 +543,14 @@ export function registerScoreClaimRoutes({
         return;
       }
 
-      response.json({
-        status: effectiveStatus,
-        user: scoreClaim.userId
-          ? {
-              username: scoreClaim.username,
-            }
-          : null,
-        game: {
-          id: scoreClaim.gameId,
-          finalScore: scoreClaim.finalScore,
-          playedAt: scoreClaim.playedAt.toISOString(),
-          playedDurationSeconds: scoreClaim.playedDurationSeconds,
-        },
-        approvedAt: scoreClaim.approvedAt?.toISOString() ?? null,
-        expiresAt: scoreClaim.expiresAt.toISOString(),
-      });
+      response.json(
+        toScoreClaimPublicResponse(
+          scoreClaim,
+          effectiveStatus === scoreClaimStatus.approved
+            ? scoreClaimStatus.approved
+            : scoreClaimStatus.pending,
+        ),
+      );
     },
   );
 
@@ -656,10 +684,19 @@ export function registerScoreClaimRoutes({
         approvalResult.kind === "approved" ||
         approvalResult.kind === "already-approved"
       ) {
-        response.json({
-          status: scoreClaimStatus.approved,
-          game: approvalResult.game,
-        });
+        const scoreClaim = await readScoreClaimPublicPayload(db, claimCode);
+
+        if (!scoreClaim) {
+          throw createHttpError(
+            500,
+            "score_claim_approved_payload_missing",
+            "The approved score claim could not be read back.",
+          );
+        }
+
+        response.json(
+          toScoreClaimPublicResponse(scoreClaim, scoreClaimStatus.approved),
+        );
         return;
       }
 

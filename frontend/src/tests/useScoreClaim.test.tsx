@@ -62,19 +62,23 @@ describe("useScoreClaim", () => {
     },
   );
 
-  it("conserve la confirmation mobile si la relecture du claim échoue après approbation", async () => {
+  it("affiche directement la confirmation mobile avec la réponse d'approbation", async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse(pendingClaimPayload))
       .mockResolvedValueOnce(
         jsonResponse({
+          approvedAt: "2026-07-03T12:01:00.000Z",
+          expiresAt: pendingClaimPayload.expiresAt,
           game: {
             ...pendingClaimPayload.game,
             finalScore: 130_000,
           },
           status: "approved",
+          user: {
+            username: "player_mobile",
+          },
         }),
-      )
-      .mockRejectedValueOnce(new Error("temporary network failure"));
+      );
 
     const { result } = renderHook(() =>
       useScoreClaim({ claimCode: "CLAIM-CODE" }),
@@ -92,10 +96,14 @@ describe("useScoreClaim", () => {
         finalScore: 130_000,
       },
       status: "approved",
+      user: {
+        username: "player_mobile",
+      },
     });
     expect(result.current.feedback).toBe(
       "Le score a bien été rattaché à votre compte.",
     );
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it.each([
