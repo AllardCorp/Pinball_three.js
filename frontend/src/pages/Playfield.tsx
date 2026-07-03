@@ -18,8 +18,8 @@ import { useAppMode } from "@/hooks/useAppMode";
 import { useScoreClaimSession } from "@/hooks/useScoreClaimSession";
 import { createGameOverScoreClaimInput } from "@/lib/score-claim-gameover";
 import { useKeyboardControls } from "@/mqtt/useKeyboardControls";
+import { usePlayerSelection } from "@/mqtt/usePlayerSelection";
 import { useGameStore } from "@/store/gameStore/useGameStore";
-import { useInputStore } from "@/store/inputStore/useInputStore";
 
 export default function Playfield() {
 
@@ -29,26 +29,16 @@ export default function Playfield() {
   const { gravity, perfVisible, rapierDebug } = useGameDebug();
 
   useKeyboardControls();
+  usePlayerSelection();
 
-  const startPressed = useInputStore((state) => state.buttons.start);
-  const updateInputs = useInputStore((state) => state.updateInputs);
   const isPlaying = useGameStore((state) => state.isPlaying);
   const scores = useGameStore((state) => state.scores);
-  const startGame = useGameStore((state) => state.startGame);
 
   // Ces refs detectent les transitions de partie sans provoquer de re-render.
   // Elles evitent surtout de creer plusieurs claims pour le meme game over.
   const wasPlayingRef = useRef(isPlaying);
   const gameStartedAtRef = useRef<number | null>(isPlaying ? Date.now() : null);
   const submittedGameOverKeyRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (startPressed && !isPlaying) {
-      console.log("Demarrage de la partie depuis MQTT / Bouton Start.");
-      startGame(1);
-      updateInputs({ buttons: { start: false } });
-    }
-  }, [startPressed, isPlaying, startGame, updateInputs]);
 
   useEffect(() => {
     const wasPlaying = wasPlayingRef.current;

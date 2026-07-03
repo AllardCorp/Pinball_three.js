@@ -10,6 +10,7 @@ export interface PlayerSlice {
   addScore: (points: number) => void;
   addZoneScore: (basePoints: number, zone: PlayfieldZone) => void;
   removeScore: (points: number) => void;
+  setPlayerCount: (playerCount: number) => void;
 }
 // Gère la logique comptable (joueurs, scores, balles restantes) du jeu.
 // Cette slice est responsable de la gestion des joueurs et de leurs scores dans le jeu.
@@ -67,6 +68,9 @@ export const createPlayerSlice: StateCreator<GameState, [], [], PlayerSlice> = (
         );
         setAndSync({ scores: newScores });
       }
+    },
+    setPlayerCount: (count) => {
+      setAndSync({ playerCount: count });
     },
   };
 };

@@ -12,22 +12,15 @@ export default function Backglass() {
   const { snapshot } = useScoreClaimSession({ enabled: false, mode });
   const leaderboard = useLeaderboard();
 
-  // const isPlaying = useGameStore((state) => state.isPlaying);
   const playerCount = useGameStore((state) => state.playerCount);
-  // const currentPlayerIndex = useGameStore((state) => state.currentPlayerIndex);
   const startGame = useGameStore((state) => state.startGame);
 
   const scores = useGameStore((state) => state.scores);
-  // const ballsRemaining = useGameStore((state) => state.ballsRemaining);
-
-  // const mineHits = useGameStore((state) => state.mineHits);
-  // const rubiesActive = useGameStore((state) => state.rubiesActive);
-  // const screenMessage = useGameStore((state) => state.screenMessage);
-  // const isUndeathActive = useGameStore((state) => state.isUndeathActive);
 
   // const currentScore = scores[currentPlayerIndex] || 0;
   // const currentBalls = ballsRemaining[currentPlayerIndex] || 0;
   const hasPlayed = scores.some((s) => s > 0);
+
 
   return (
     <div className="relative min-h-screen overflow-hidden text-xl text-white">
@@ -114,12 +107,21 @@ export default function Backglass() {
             </div>
           )} */}
 
+          {/* Sélecteur : white_left ← → white_right */}
+          <div className="flex items-center gap-6 mb-4">
+            <span className="text-gray-400 text-sm">← white_left</span>
+            <span className="text-4xl font-bold text-white">
+              {playerCount} Joueur{playerCount > 1 ? "s" : ""}
+            </span>
+            <span className="text-gray-400 text-sm">white_right →</span>
+          </div>
+
+          {/* Validation : front_left_green ou clic souris */}
           <button
             onClick={() => startGame(playerCount)}
             className="cursor-pointer rounded-lg bg-emerald-600 px-8 py-4 text-2xl font-bold shadow-lg transition-colors hover:bg-emerald-500"
           >
-            {hasPlayed ? "Rejouer" : "Démarrer"} ({playerCount} Joueur
-            {playerCount > 1 ? "s" : ""})
+            {hasPlayed ? "Rejouer" : "Démarrer"}
           </button>
         </div>
 
