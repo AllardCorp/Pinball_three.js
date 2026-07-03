@@ -60,14 +60,7 @@ export const useInputStore = create<InputStore>((set) => ({
       const buttons = { ...state.buttons, ...incomingButtons };
 
       // Mapping actuel validé avec le firmware/mock MQTT :
-      // black_left démarre la partie, front_white déclenche le lanceur.
-      if (
-        incomingButtons.black_left !== undefined &&
-        incomingButtons.start === undefined
-      ) {
-        buttons.start = incomingButtons.black_left;
-      }
-
+      // front_white déclenche le lanceur.
       if (
         incomingButtons.front_white !== undefined &&
         incomingButtons.launch_ball === undefined

@@ -45,6 +45,14 @@ bool currentButtonStates[NUM_BUTTONS] = {false, false, false, false, false, fals
 unsigned long lastDebounceTime[NUM_BUTTONS] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 const unsigned long debounceDelay = 50; 
 
+// --- VARIABLES POUR LA SIMULATION ANALOGIQUE ---
+unsigned long frontWhitePressTime = 0;
+bool isFrontWhitePressed = false;
+bool triggerLaunch = false; // Sera mis à true 1 seule fois au relâchement
+float simulatedPlunger = 0.0;
+unsigned long lastPublishTime = 0;
+const unsigned long PUBLISH_INTERVAL = 50; // Envoyer une maj toutes les 50ms quand maintenu
+
 // --- INSTANCES ---
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -123,11 +131,12 @@ void publishCurrentState() {
   buttons["front_left_red"] = currentButtonStates[4];
   buttons["black_right"] = currentButtonStates[5];
   buttons["white_right"] = currentButtonStates[6];
-  buttons["front_white"] = currentButtonStates[7];
+  // front_white ne sera true qu'à l'instant précis du relâchement pour déclencher Ball.tsx
+  buttons["front_white"] = triggerLaunch; 
   buttons["plunger"] = currentButtonStates[8];
 
   JsonObject analog = doc.createNestedObject("analog");
-  analog["plunger"] = currentButtonStates[8] ? 1.0 : 0.0;
+  analog["plunger"] = simulatedPlunger; // Valeur calculée dans le loop (de 0.0 à 1.0)
 
   JsonObject analog_nudge = analog.createNestedObject("nudge");
   analog_nudge["x"] = 0.0;
@@ -165,6 +174,8 @@ void loop() {
 
   unsigned long now = millis();
 
+  bool stateChanged = false;
+
   for (int i = 0; i < NUM_BUTTONS; i++) {
     bool pinReading = (digitalRead(buttonPins[i]) == LOW);
 
@@ -173,13 +184,56 @@ void loop() {
         
         currentButtonStates[i] = pinReading;
         lastDebounceTime[i] = now;
+        stateChanged = true;
 
         Serial.print("[STATUT] ");
         Serial.print(buttonNames[i]);
         Serial.println(currentButtonStates[i] ? " : APPUYÉ" : " : RELÂCHÉ");
-
-        publishCurrentState();
       }
+    }
+  }
+
+  // --- LOGIQUE DE SIMULATION DU TIRE-BILLE SUR LE BOUTON FRONT WHITE (INDEX 7) ---
+  if (currentButtonStates[7]) { 
+    // Le bouton est actuellement enfoncé
+    if (!isFrontWhitePressed) {
+      // Vient d'être enfoncé
+      isFrontWhitePressed = true;
+      frontWhitePressTime = now;
+    }
+    
+    // Calcul de la puissance : monte de 0.0 à 1.0 en 2000 ms (2 secondes)
+    float elapsedTime = (float)(now - frontWhitePressTime);
+    simulatedPlunger = elapsedTime / 2000.0;
+    if (simulatedPlunger > 1.0) simulatedPlunger = 1.0;
+
+    // Pendant qu'on maintient le bouton, on spamme le MQTT toutes les 50ms 
+    // pour que l'interface puisse animer le tire-bille
+    if (now - lastPublishTime > PUBLISH_INTERVAL) {
+      publishCurrentState();
+      lastPublishTime = now;
+    }
+  } 
+  else {
+    // Le bouton n'est pas enfoncé
+    if (isFrontWhitePressed) {
+      // Vient juste d'être relâché ! C'est le moment de tirer.
+      isFrontWhitePressed = false;
+      
+      // 1. On envoie l'impulsion de tir (true) avec la jauge chargée
+      triggerLaunch = true;
+      publishCurrentState();
+      
+      // 2. On remet tout à zéro immédiatement après pour le prochain tir
+      triggerLaunch = false;
+      simulatedPlunger = 0.0;
+      publishCurrentState();
+      
+      lastPublishTime = now;
+    } 
+    else if (stateChanged) {
+      // Si un AUTRE bouton a changé, on publie l'état normalement
+      publishCurrentState();
     }
   }
 }

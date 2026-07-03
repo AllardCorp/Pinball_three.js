@@ -2,7 +2,6 @@ import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { PositionalAudio } from "@react-three/drei";
-import { useRapier } from "@react-three/rapier";
 import type { RapierRigidBody } from "@react-three/rapier";
 import { AudioErrorBoundary } from "@/components/sounds/AudioErrorBoundary";
 import { SOUNDS_CONFIG } from "@/config/soundsConfig";
@@ -11,23 +10,21 @@ type BallAudioProps = {
   ballRef: React.RefObject<RapierRigidBody | null>;
   size: number;
   isPlaying: boolean;
-  ballInLauncher: boolean;
+  currentSurfaceRef: React.MutableRefObject<string>;
 };
 
 export default function BallAudio({
   ballRef,
   size,
   isPlaying,
-  ballInLauncher,
+  currentSurfaceRef,
 }: BallAudioProps) {
   const groupRef = useRef<THREE.Group>(null);
   const playfieldSoundRef = useRef<THREE.PositionalAudio | null>(null);
   const stoneRampSoundRef = useRef<THREE.PositionalAudio | null>(null);
   const rampsSoundRef = useRef<THREE.PositionalAudio | null>(null);
 
-  const { rapier, world, rigidBodyStates, colliderStates } = useRapier();
   const debugLineRef = useRef<THREE.Line>(null);
-  const lastHitColliderRef = useRef<string | null>(null);
 
   const fadeOutSound = (audio: THREE.PositionalAudio, delta: number) => {
     if (!audio.isPlaying) return;
@@ -49,7 +46,7 @@ export default function BallAudio({
     const rampsAudio = rampsSoundRef.current;
 
     const canUsePhysics =
-      isPlaying && !ballInLauncher && ballRef.current !== null;
+      isPlaying && ballRef.current !== null;
 
     if (!canUsePhysics) {
       if (playfieldAudio) fadeOutSound(playfieldAudio, delta);
@@ -68,55 +65,10 @@ export default function BallAudio({
       groupRef.current.position.set(pos.x, pos.y, pos.z);
     }
 
-    // --- RAYCAST DESCENTE ---
-    const rapierRay = new rapier.Ray(
-      { x: pos.x, y: pos.y, z: pos.z },
-      { x: 0, y: -1, z: 0 },
-    );
-    const hit = world.castRay(
-      rapierRay,
-      size + 0.6,
-      true,
-      undefined,
-      undefined,
-      undefined,
-      body,
-    );
-
-    let hitName = "RIEN (Vide/Air)";
-    let isOnPlayfield = false;
-    let isOnRockRamp = false;
-    let isOnRamps = false;
-
-    if (hit) {
-      const parentBody = hit.collider.parent();
-      const rbState = (rigidBodyStates as any)?.get(parentBody?.handle);
-      const bodyName = rbState?.object?.name || "";
-      const colState = (colliderStates as any)?.get(hit.collider.handle);
-      const meshName = colState?.object?.name || "";
-
-      hitName = bodyName || meshName || `Collider_${hit.collider.handle}`;
-
-      isOnPlayfield = bodyName === "coll_playfield_collision_left_hole";
-      isOnRockRamp = bodyName === "stone_ramp" || bodyName === "coll_faquir";
-      isOnRamps = bodyName === "coll_ramps";
-    }
-
-    if (hitName !== lastHitColliderRef.current) {
-      const logColor =
-        isOnPlayfield || isOnRockRamp || isOnRamps
-          ? "color: #00ff00; font-weight: bold;"
-          : "color: #ff9900; font-weight: bold;";
-      console.log(
-        `%c[Raycast Ball Hit] ${hitName}`,
-        logColor,
-        // Ajout de (hit as any) pour forcer la lecture de "toi"
-        hit
-          ? { distance: (hit as any).toi, collider: hit.collider }
-          : "Air/Vide",
-      );
-      lastHitColliderRef.current = hitName;
-    }
+    const surface = currentSurfaceRef.current;
+    const isOnPlayfield = surface === "coll_playfield_collision_left_hole";
+    const isOnRockRamp = surface === "stone_ramp" || surface === "coll_faquir";
+    const isOnRamps = surface === "coll_ramps";
 
     // Mise à jour visuelle permanente du rayon de débug (en coordonnées locales du groupe)
     if (debugLineRef.current) {
