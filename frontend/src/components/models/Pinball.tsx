@@ -23,6 +23,7 @@ import UndeathSaver from "@/components/pinball/UndeathSaver";
 import DrumBumper from "@/components/pinball/DrumBumper";
 import SewerSystem from "@/components/pinball/SewerSystem";
 import GameStatusLight from "@/components/pinball/GameStatusLights";
+import ClassPerkCoin from "@/components/pinball/ClassPerkCoin";
 import { useGameStore } from "@/store/gameStore/useGameStore";
 
 type GLTFResult = GLTF & {
@@ -678,6 +679,8 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
 
       {/* Game Satus Light */}
       <GameStatusLight nodes={nodes} materials={materials} />
+      {/* Class Perk Coin */}
+      <ClassPerkCoin nodes={nodes} materials={materials} />
 
       <group {...props} dispose={null}>
         <group name="Scene">
@@ -1276,12 +1279,12 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           {/*   material={materials["M_metal.003"]} */}
           {/*   position={[2.423, -2.881, -18.566]} */}
           {/* /> */}
-          <mesh
-            name="visual_super_rubber_class_coin"
-            geometry={nodes.visual_super_rubber_class_coin.geometry}
-            material={materials.M_coin_comp_default}
-            position={[5.517, -1.362, 19.445]}
-          />
+          {/* <mesh */}
+          {/*   name="visual_super_rubber_class_coin" */}
+          {/*   geometry={nodes.visual_super_rubber_class_coin.geometry} */}
+          {/*   material={materials.M_coin_comp_default} */}
+          {/*   position={[5.517, -1.362, 19.445]} */}
+          {/* /> */}
           {/* <group name="visual_drum" position={[6.458, -2.032, -8.978]}> */}
           {/*   <mesh */}
           {/*     name="Cylinder004" */}

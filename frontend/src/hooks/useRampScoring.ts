@@ -4,7 +4,7 @@ import { useGameStore } from "@/store/gameStore/useGameStore";
 import { SCORE_VALUES } from "@/config/gameBalancingConfig";
 
 export function useRampScoring(
-  currentSurfaceRef: React.MutableRefObject<string>,
+  currentSurfaceRef: React.RefObject<string>,
   isPlaying: boolean,
 ) {
   const scoreTimerRef = useRef(0);
