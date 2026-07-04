@@ -92,7 +92,7 @@ export default function ScoreClaim() {
               </p>
               {claim.user?.username && (
                 <p className="text-slate-500">
-                  Déjà rattaché à : {claim.user.username}
+                  Déjà rattaché à {claim.user.username}
                 </p>
               )}
             </div>

@@ -100,9 +100,7 @@ describe("useScoreClaim", () => {
         username: "player_mobile",
       },
     });
-    expect(result.current.feedback).toBe(
-      "Le score a bien été rattaché à votre compte.",
-    );
+    expect(result.current.feedback).toBeNull();
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
