@@ -1,4 +1,5 @@
 import { useGameStore } from "@/store/gameStore/useGameStore";
+import Leaderboard from "../components/Leaderboard";
 import ScoreClaimQrCode from "../components/score-claim/ScoreClaimQrCode";
 import { useAppMode } from "../hooks/useAppMode";
 import { useLeaderboard } from "../hooks/useLeaderboard";
@@ -36,57 +37,16 @@ export default function Backglass() {
       <div className="relative z-10 p-6">
         {/* {!isPlaying ? ( */}
         <div className="flex flex-col items-center pt-10">
-          <h2 className="mb-8 text-5xl font-bold text-orange-600">
+          {/* <h2 className="mb-8 text-5xl font-bold text-orange-600">
             {hasPlayed ? "GAME OVER" : "INSERT COIN"}
-          </h2>
+          </h2> */}
 
           {/* LEADERBOARD */}
-          <div className="mb-8 w-full max-w-md rounded-xl border border-yellow-500/40 bg-black/60 backdrop-blur">
-            <div className="border-b border-yellow-500/30 px-6 py-3 text-center">
-              <h3 className="text-lg font-bold uppercase tracking-widest text-yellow-400">
-                Meilleurs Scores
-              </h3>
-            </div>
-
-            {leaderboard.isLoading ? (
-              <p className="py-6 text-center text-sm text-gray-400">
-                Chargement...
-              </p>
-            ) : leaderboard.error || leaderboard.entries.length === 0 ? (
-              <p className="py-6 text-center text-sm text-gray-500">
-                Aucun score enregistré
-              </p>
-            ) : (
-              <table className="w-full">
-                <thead>
-                  <tr className="text-xs uppercase tracking-wider text-gray-500">
-                    <th className="py-2 pl-6 text-left">Rang</th>
-                    <th className="py-2 text-right">Score</th>
-                    <th className="py-2 pr-6 text-right">Nom</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaderboard.entries.map((entry) => (
-                    <tr
-                      key={entry.rank}
-                      className={`border-t border-white/5 ${entry.rank === 1 ? "text-yellow-300" : "text-gray-200"
-                        }`}
-                    >
-                      <td className="py-2 pl-6 font-mono text-sm font-bold">
-                        #{entry.rank}
-                      </td>
-                      <td className="py-2 text-right font-mono font-bold">
-                        {entry.score.toLocaleString()}
-                      </td>
-                      <td className="py-2 pr-6 text-right text-sm text-gray-300">
-                        {entry.name}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+          <Leaderboard
+            entries={leaderboard.entries}
+            isLoading={leaderboard.isLoading}
+            error={leaderboard.error}
+          />
 
           {/* SCORES FINAUX (game over uniquement) */}
           {/* {hasPlayed && (
@@ -109,11 +69,11 @@ export default function Backglass() {
 
           {/* Sélecteur : white_left ← → white_right */}
           <div className="flex items-center gap-6 mb-4">
-            <span className="text-gray-400 text-sm">← white_left</span>
+            <span className="text-white font-bold text-g">Bouton gauche ←</span>
             <span className="text-4xl font-bold text-white">
               {playerCount} Joueur{playerCount > 1 ? "s" : ""}
             </span>
-            <span className="text-gray-400 text-sm">white_right →</span>
+            <span className="text-white font-bold text-g">Bouton droit →</span>
           </div>
 
           {/* Validation : front_left_green ou clic souris */}

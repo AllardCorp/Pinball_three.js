@@ -147,7 +147,7 @@ export function createApp(
     }
   });
 
-  registerLeaderboardRoutes({ app, db });
+  registerLeaderboardRoutes({ app, db, env });
 
   registerScoreClaimRoutes({
     // Les routes score-claim sont regroupées dans leur propre module parce

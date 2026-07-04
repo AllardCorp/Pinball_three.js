@@ -19,6 +19,7 @@ import { useScoreClaimSession } from "@/hooks/useScoreClaimSession";
 import { createGameOverScoreClaimInput } from "@/lib/score-claim-gameover";
 import { useKeyboardControls } from "@/mqtt/useKeyboardControls";
 import { usePlayerSelection } from "@/mqtt/usePlayerSelection";
+import { useSkillActivation } from "@/mqtt/useSkillActivation";
 import { useGameStore } from "@/store/gameStore/useGameStore";
 
 export default function Playfield() {
@@ -30,6 +31,7 @@ export default function Playfield() {
 
   useKeyboardControls();
   usePlayerSelection();
+  useSkillActivation();
 
   const isPlaying = useGameStore((state) => state.isPlaying);
   const scores = useGameStore((state) => state.scores);
