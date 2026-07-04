@@ -110,6 +110,7 @@ export const SCORE_VALUES: Record<string, number> = {
   mineEntrance: 1000,
   drumBumper: 1000,
   sewerBonus: 3000,
+  rampHabit: 100,
 };
 
 // LOGIQUE DU MULTIPLICATEUR
