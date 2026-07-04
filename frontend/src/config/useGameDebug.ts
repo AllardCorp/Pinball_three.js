@@ -14,7 +14,7 @@ export function useGameDebug() {
     // Interfaces
     Interface: folder({
       rapierDebug: false,
-      perfVisible: true,
+      perfVisible: false,
     }),
     GameLifecycle: folder({
       "Start Solo (1P)": button(() => startGame(1)),
