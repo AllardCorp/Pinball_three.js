@@ -2,7 +2,6 @@ import { useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { useGameStore } from "@/store/gameStore/useGameStore";
-import { useControls, button } from "leva";
 
 type GameStatusLightsProps = {
   nodes: any;
@@ -15,33 +14,6 @@ export default function GameStatusLights({
 }: GameStatusLightsProps) {
   // 1. Récupération réactive de la classe
   const activeClass = useGameStore((state) => state.activeClass);
-
-  // OUTIL DE DEBUG (Leva)
-  // Pas dans la config leva global car utile pour le debug et pas pour le gameplay
-  useControls("Status Lights Debug", {
-    "Test Multi Fakir (x4)": button(() => {
-      const store = useGameStore.getState();
-      // On contourne la sécurité "isPlaying" juste pour le test visuel
-      const wasPlaying = store.isPlaying;
-      if (!wasPlaying) useGameStore.setState({ isPlaying: true });
-
-      store.activateMultiplier("fakir", 4, 10000);
-      console.log("🔥 Multi x4 forcé !");
-
-      if (!wasPlaying) useGameStore.setState({ isPlaying: false });
-    }),
-    "Test Multi Gems (x12)": button(() => {
-      const store = useGameStore.getState();
-      const wasPlaying = store.isPlaying;
-      if (!wasPlaying) useGameStore.setState({ isPlaying: true });
-
-      store.activateMultiplier("gems", 12, 10000);
-      console.log("🔥 Multi x12 forcé !");
-
-      if (!wasPlaying) useGameStore.setState({ isPlaying: false });
-    }),
-  });
-  // =========================================================================
 
   // 2. Références pour manipuler la visibilité
   const multi2Ref = useRef<THREE.Mesh>(null);

@@ -24,6 +24,7 @@ import DrumBumper from "@/components/pinball/DrumBumper";
 import SewerSystem from "@/components/pinball/SewerSystem";
 import GameStatusLight from "@/components/pinball/GameStatusLights";
 import ClassPerkCoin from "@/components/pinball/ClassPerkCoin";
+import OOBKillZone from "@/components/pinball/OOBKillZone";
 import { useGameStore } from "@/store/gameStore/useGameStore";
 
 type GLTFResult = GLTF & {
@@ -682,6 +683,8 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
       {/* Class Perk Coin */}
       <ClassPerkCoin nodes={nodes} materials={materials} />
 
+      {/* OOB Kill Zone*/}
+      <OOBKillZone />
       <group {...props} dispose={null}>
         <group name="Scene">
           <group name="visual_screws_13" position={[-0.609, -2.903, 5.131]}>
