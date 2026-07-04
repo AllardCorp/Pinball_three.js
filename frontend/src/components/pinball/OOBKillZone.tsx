@@ -91,7 +91,7 @@ export default function KillZone() {
         {
           debugZone: { value: false, label: "Afficher la Zone" },
           cx: { value: 0, step: 0.5, label: "Centre X" },
-          cy: { value: 2, step: 0.5, label: "Centre Y" },
+          cy: { value: -2, step: 0.5, label: "Centre Y" },
           cz: { value: 0, step: 0.5, label: "Centre Z" },
           w: {
             value: 36,
