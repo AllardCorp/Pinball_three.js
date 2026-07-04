@@ -23,7 +23,6 @@ import { useSkillActivation } from "@/mqtt/useSkillActivation";
 import { useGameStore } from "@/store/gameStore/useGameStore";
 
 export default function Playfield() {
-
   const { isArcadeMode, mode } = useAppMode();
   const { resetScoreClaimSession, startScoreClaimSession } =
     useScoreClaimSession({ enabled: isArcadeMode, mode });
@@ -84,7 +83,7 @@ export default function Playfield() {
     <div className="relative h-screen w-screen">
       <Leva collapsed />
       <Suspense fallback={<Loader />}>
-        <Canvas dpr={1} shadows camera={{ position: [0, 8, 15], fov: 50 }}>
+        <Canvas shadows camera={{ position: [0, 8, 15], fov: 50 }}>
           <color attach="background" args={["skyblue"]} />
           {perfVisible && <Perf position="top-left" showGraph />}
           <Environment preset="forest" />

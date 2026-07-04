@@ -22,11 +22,13 @@ import MultiplierSensor from "@/components/pinball/MultiplierSensor";
 import UndeathSaver from "@/components/pinball/UndeathSaver";
 import DrumBumper from "@/components/pinball/DrumBumper";
 import SewerSystem from "@/components/pinball/SewerSystem";
+import GameStatusLight from "@/components/pinball/GameStatusLights";
+import ClassPerkCoin from "@/components/pinball/ClassPerkCoin";
+import OOBKillZone from "@/components/pinball/OOBKillZone";
 import { useGameStore } from "@/store/gameStore/useGameStore";
 
 type GLTFResult = GLTF & {
   nodes: {
-    visual_Tower_Glass_MT_0: THREE.Mesh;
     screws_LOD0: THREE.Mesh;
     screws_LOD0_1: THREE.Mesh;
     visual_obj_flipper_left_bottom: THREE.Mesh;
@@ -57,8 +59,7 @@ type GLTFResult = GLTF & {
     visual_standard_collision_sidewalls_back001: THREE.Mesh;
     habit_right_LOD0002: THREE.Mesh;
     habit_right_LOD0002_1: THREE.Mesh;
-    habit_right_LOD0009: THREE.Mesh;
-    habit_right_LOD0009_1: THREE.Mesh;
+    visual_habit_right_left_9_top002: THREE.Mesh;
     lp005_barrel_0001: THREE.Mesh;
     lp005_barrel_0001_1: THREE.Mesh;
     lp005_barrel_0001_2: THREE.Mesh;
@@ -148,9 +149,36 @@ type GLTFResult = GLTF & {
     visual_faquir_bars_bottom: THREE.Mesh;
     model_0002: THREE.Mesh;
     model_0002_1: THREE.Mesh;
+    visual_super_rubber_class_coin_plane_top: THREE.Mesh;
     visual_super_rubber_class_coin_plane_bottom: THREE.Mesh;
     defaultMaterial: THREE.Mesh;
     defaultMaterial_1: THREE.Mesh;
+    visual_elf_on: THREE.Mesh;
+    vsiual_necro_on: THREE.Mesh;
+    visual_dwarf_on: THREE.Mesh;
+    visual_warrior_on: THREE.Mesh;
+    visual_rune1_on: THREE.Mesh;
+    visual_rune2_on: THREE.Mesh;
+    visual_rune3_on: THREE.Mesh;
+    visual_rune4_on: THREE.Mesh;
+    visual_rune5_on: THREE.Mesh;
+    visual_rune6_on: THREE.Mesh;
+    visual_rune7_on: THREE.Mesh;
+    visual_rune8_on: THREE.Mesh;
+    visual_rune9_on: THREE.Mesh;
+    visual_rune10_on: THREE.Mesh;
+    visual_multi2_off: THREE.Mesh;
+    visual_multi2_on: THREE.Mesh;
+    visual_multi4_off: THREE.Mesh;
+    visual_multi4_on: THREE.Mesh;
+    visual_multi6_off: THREE.Mesh;
+    visual_multi6_on: THREE.Mesh;
+    visual_multi8_off: THREE.Mesh;
+    visual_multi8_on: THREE.Mesh;
+    visual_multi12_off: THREE.Mesh;
+    visual_multi12_on: THREE.Mesh;
+    visual_multi50_off: THREE.Mesh;
+    visual_multi50_on: THREE.Mesh;
     coll_flipper_left_bottom: THREE.Mesh;
     coll_flipper_right_bottom: THREE.Mesh;
     coll_gate: THREE.Mesh;
@@ -192,26 +220,32 @@ type GLTFResult = GLTF & {
     coll_cannon: THREE.Mesh;
     coll_faquir_bars_bottom: THREE.Mesh;
     coll_hight_playfield_bars_top: THREE.Mesh;
-    visual_lg_10x: THREE.Mesh;
     coll_faquir_glass_panel001: THREE.Mesh;
     coll_glass_panel001: THREE.Mesh;
   };
   materials: {
-    Glass_MT: THREE.MeshPhysicalMaterial;
     M_metal: THREE.MeshStandardMaterial;
     M_roof: THREE.MeshStandardMaterial;
     M_flipper_arm_left: THREE.MeshStandardMaterial;
     M_flipper_arm_right: THREE.MeshStandardMaterial;
     Gold: THREE.MeshStandardMaterial;
+    ["M_stone_medium.012"]: THREE.MeshStandardMaterial;
+    M_in_coll: THREE.MeshStandardMaterial;
     ["M_playfield_cutout.001"]: THREE.MeshStandardMaterial;
+    M_black: THREE.MeshStandardMaterial;
     chrome: THREE.MeshStandardMaterial;
     ["rubber.001"]: THREE.MeshStandardMaterial;
     RedChrome: THREE.MeshStandardMaterial;
-    collision: THREE.MeshStandardMaterial;
+    ["M_metal.004"]: THREE.MeshStandardMaterial;
     playfield: THREE.MeshStandardMaterial;
+    M_guidance: THREE.MeshStandardMaterial;
+    ["M_stone_medium.011"]: THREE.MeshStandardMaterial;
+    ["M_stone_medium.010"]: THREE.MeshStandardMaterial;
     M_top_playfield: THREE.MeshStandardMaterial;
     M_grass: THREE.MeshStandardMaterial;
     M_stone_light: THREE.MeshStandardMaterial;
+    M_wood_medium: THREE.MeshStandardMaterial;
+    M_wood_light: THREE.MeshStandardMaterial;
     M_wood_dark: THREE.MeshStandardMaterial;
     M_stone_medium: THREE.MeshStandardMaterial;
     M_pipe: THREE.MeshStandardMaterial;
@@ -224,8 +258,6 @@ type GLTFResult = GLTF & {
     ["M_stone_medium.005"]: THREE.MeshStandardMaterial;
     ["M_stone_medium.004"]: THREE.MeshStandardMaterial;
     M_rock: THREE.MeshStandardMaterial;
-    M_wood_light: THREE.MeshStandardMaterial;
-    M_wood_medium: THREE.MeshStandardMaterial;
     ["M_wood_dark.002"]: THREE.MeshStandardMaterial;
     M_wool: THREE.MeshStandardMaterial;
     ["Material.001"]: THREE.MeshStandardMaterial;
@@ -234,12 +266,13 @@ type GLTFResult = GLTF & {
     M_blue_ruby: THREE.MeshStandardMaterial;
     ["M_stone_light.001"]: THREE.MeshStandardMaterial;
     ["M_stone_medium.001"]: THREE.MeshStandardMaterial;
+    M_yellow: THREE.MeshStandardMaterial;
     ["M_wood_medium.001"]: THREE.MeshStandardMaterial;
     ["M_wood_dark.001"]: THREE.MeshStandardMaterial;
     ["M_roof.001"]: THREE.MeshStandardMaterial;
     ["M_stone_light.003"]: THREE.MeshStandardMaterial;
-    M_yellow: THREE.MeshStandardMaterial;
-    M_black: THREE.MeshStandardMaterial;
+    ["M_yellow.001"]: THREE.MeshStandardMaterial;
+    ["M_black.001"]: THREE.MeshStandardMaterial;
     ["M_stone_light.005"]: THREE.MeshStandardMaterial;
     ["M_stone_medium.003"]: THREE.MeshStandardMaterial;
     ["M_stone_light.002"]: THREE.MeshStandardMaterial;
@@ -252,20 +285,46 @@ type GLTFResult = GLTF & {
     ["M_metal.001"]: THREE.MeshStandardMaterial;
     ["M_stone_medium.002"]: THREE.MeshStandardMaterial;
     ["M_metal.003"]: THREE.MeshStandardMaterial;
-    M_in_coll: THREE.MeshStandardMaterial;
+    M_coin_comp_default: THREE.MeshStandardMaterial;
     M_drum: THREE.MeshStandardMaterial;
     ["M_metal.002"]: THREE.MeshStandardMaterial;
     M_tree: THREE.MeshStandardMaterial;
     Blade: THREE.MeshBasicMaterial;
     Hilt: THREE.MeshBasicMaterial;
-    lamp_playfield: THREE.MeshStandardMaterial;
+    M_elf_on: THREE.MeshStandardMaterial;
+    M_necro_on: THREE.MeshStandardMaterial;
+    M_dwarf_on: THREE.MeshStandardMaterial;
+    M_warrior_on: THREE.MeshStandardMaterial;
+    M_rune1_on: THREE.MeshStandardMaterial;
+    M_rune2_on: THREE.MeshStandardMaterial;
+    M_rune3_on: THREE.MeshStandardMaterial;
+    M_rune4_on: THREE.MeshStandardMaterial;
+    M_rune5_on: THREE.MeshStandardMaterial;
+    M_rune6_on: THREE.MeshStandardMaterial;
+    M_rune7_on: THREE.MeshStandardMaterial;
+    M_rune8_on: THREE.MeshStandardMaterial;
+    M_rune9_on: THREE.MeshStandardMaterial;
+    M_rune10_on: THREE.MeshStandardMaterial;
+    M_multi2_off: THREE.MeshStandardMaterial;
+    M_mutli2_on: THREE.MeshStandardMaterial;
+    M_multi4_off: THREE.MeshStandardMaterial;
+    M_multi4_on: THREE.MeshStandardMaterial;
+    M_multi6_off: THREE.MeshStandardMaterial;
+    M_multi6_on: THREE.MeshStandardMaterial;
+    M_multi8_off: THREE.MeshStandardMaterial;
+    M_multi8_on: THREE.MeshStandardMaterial;
+    M_multi12_off: THREE.MeshStandardMaterial;
+    M_multi12_on: THREE.MeshStandardMaterial;
+    M_multi50_off: THREE.MeshStandardMaterial;
+    M_multi50_on: THREE.MeshStandardMaterial;
+    collision: THREE.MeshStandardMaterial;
   };
   animations: THREE.AnimationClip[];
 };
 // ⚠️LES MESHS COMMENTÉS SONT IMPORTANT POUR AIDER À L'IMPLÉMENTATION
 export default function Model(props: JSX.IntrinsicElements["group"]) {
   const { nodes, materials } = useGLTF(
-    "/models/Pinball_BaseFinal.glb",
+    "/models/Pinball.glb",
   ) as unknown as GLTFResult;
 
   const { startingPosition } = useGameDebug();
@@ -289,6 +348,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         />
       ))}
       <DeathZone />
+
       {/* Sensor pour le trou */}
       <HoleSensor
         id="MainHole"
@@ -314,36 +374,6 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         defaultRotation={[0, 0.37, 0]}
         defaultSize={[0.1, 0.4, 3.3]}
       />
-      {/* <Bumper */}
-      {/*   id={0} */}
-      {/*   colliderGeometry={nodes.coll_bumpers001.geometry} */}
-      {/*   visualGeometry={nodes.lp005_barrel_0001.geometry} */}
-      {/*   visualMaterial={materials.PaletteMaterial001} */}
-      {/*   rubyGeometry={nodes.visual_ruby001.geometry} // Rubis correspondant */}
-      {/*   rubyMaterial={materials.PaletteMaterial003} */}
-      {/*   position={[1.112, -1.6, -11.134]} */}
-      {/*   strength={20} */}
-      {/* /> */}
-      {/* <Bumper */}
-      {/*   id={1} */}
-      {/*   colliderGeometry={nodes.coll_bumpers002.geometry} */}
-      {/*   visualGeometry={nodes.lp005_barrel_0001_1.geometry} */}
-      {/*   visualMaterial={materials.PaletteMaterial001} */}
-      {/*   rubyGeometry={nodes.visual_ruby002.geometry} // Rubis correspondant */}
-      {/*   rubyMaterial={materials.PaletteMaterial003} */}
-      {/*   position={[-4.744, -1.6, -6.463]} */}
-      {/*   strength={20} */}
-      {/* /> */}
-      {/* <Bumper */}
-      {/*   id={2} */}
-      {/*   colliderGeometry={nodes.coll_bumpers003.geometry} */}
-      {/*   visualGeometry={nodes.lp005_barrel_0001_2.geometry} */}
-      {/*   visualMaterial={materials.PaletteMaterial001} */}
-      {/*   rubyGeometry={nodes.visual_ruby003.geometry} // Rubis correspondant */}
-      {/*   rubyMaterial={materials.PaletteMaterial003} */}
-      {/*   position={[-6.635, -1.6, -12.845]} */}
-      {/*   strength={20} */}
-      {/* /> */}
       {/* Bumper 0 */}
       <Bumper
         id={0}
@@ -515,13 +545,16 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
         points={SCORE_VALUES.fakirTarget}
         zone={"Fakir"}
       />
-      <LightningRoad />
+      {/* LigntingRoad */}
+      <LightningRoad nodes={nodes} materials={materials} />
+
       {/* Épée de sélection de classes */}
       <ClassTriggerSword />
+
       {/* Undeath Saver */}
       <UndeathSaver />
-      {/* Drum Bumpers */}
 
+      {/* Drum Bumpers */}
       <DrumBumper
         id="drumTop"
         position={[6.089, -2.032, -12.319]}
@@ -644,25 +677,16 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
       </DrumBumper>
       {/* Système d'égout */}
       <SewerSystem nodes={nodes} materials={materials} />
+
+      {/* Game Satus Light */}
+      <GameStatusLight nodes={nodes} materials={materials} />
+      {/* Class Perk Coin */}
+      <ClassPerkCoin nodes={nodes} materials={materials} />
+
+      {/* OOB Kill Zone*/}
+      <OOBKillZone />
       <group {...props} dispose={null}>
         <group name="Scene">
-          <group name="visual_TowerModel" position={[-13.618, -1.583, 2.318]}>
-            <group name="visual_2c284678f7ae41a7bc9e7a9136bf479ffbx">
-              <group name="visual_RootNode">
-                <group name="visual_Tower" position={[0, 5.03, 0]}>
-                  <mesh
-                    name="visual_Tower_Glass_MT_0"
-                    geometry={nodes.visual_Tower_Glass_MT_0.geometry}
-                    material={materials.Glass_MT}
-                  />
-                </group>
-              </group>
-            </group>
-          </group>
-          <group
-            name="visual_super_rubber001"
-            position={[-0.768, -1.898, 19.715]}
-          />
           <group name="visual_screws_13" position={[-0.609, -2.903, 5.131]}>
             <mesh
               name="screws_LOD0"
@@ -681,7 +705,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           {/*   material={materials.M_flipper_arm_left} */}
           {/*   position={[-5.001, -2.901, 26.34]} */}
           {/* /> */}
-
+          {/* <mesh */}
           {/*   name="visual_obj_flipper_right_bottom" */}
           {/*   geometry={nodes.visual_obj_flipper_right_bottom.geometry} */}
           {/*   material={materials.M_flipper_arm_right} */}
@@ -696,7 +720,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           <mesh
             name="visual_sidewalls"
             geometry={nodes.visual_sidewalls.geometry}
-            material={materials.M_in_coll}
+            material={materials["M_stone_medium.012"]}
             position={[-0.609, -2.903, 5.131]}
           />
           {/* <mesh */}
@@ -705,7 +729,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           {/*   material={materials.M_in_coll} */}
           {/*   position={[8.532, -1.97, 25.481]} */}
           {/* /> */}
-          <group name="visual_holes_nocoll" position={[-0.984, -6.695, 10.256]}>
+          <group name="visual_holes_nocoll" position={[-1.047, -6.695, 10.256]}>
             <mesh
               name="holes_nocoll_LOD0"
               geometry={nodes.holes_nocoll_LOD0.geometry}
@@ -721,37 +745,37 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             name="visual_ball_rollover"
             geometry={nodes.visual_ball_rollover.geometry}
             material={materials.chrome}
-            position={[12.739, -2.83, 28.136]}
+            position={[12.682, -2.83, 28.136]}
           />
           <mesh
             name="visual_bonus_04"
             geometry={nodes.visual_bonus_04.geometry}
             material={materials.M_metal}
-            position={[7.358, -2.826, 16.868]}
+            position={[7.296, -2.826, 16.868]}
           />
           <mesh
             name="visual_bonus_05"
             geometry={nodes.visual_bonus_05.geometry}
             material={materials.M_metal}
-            position={[9.354, -2.826, 16.868]}
+            position={[9.291, -2.826, 16.868]}
           />
           <mesh
             name="visual_bonus_01"
             geometry={nodes.visual_bonus_01.geometry}
             material={materials.M_metal}
-            position={[-13.585, -2.826, 16.868]}
+            position={[-13.647, -2.826, 16.868]}
           />
           <mesh
             name="visual_bonus_02"
             geometry={nodes.visual_bonus_02.geometry}
             material={materials.M_metal}
-            position={[-11.59, -2.826, 16.868]}
+            position={[-11.652, -2.826, 16.868]}
           />
           <mesh
             name="visual_bonus_03"
             geometry={nodes.visual_bonus_03.geometry}
             material={materials.M_metal}
-            position={[-9.594, -2.826, 16.868]}
+            position={[-9.657, -2.826, 16.868]}
           />
           <group
             name="visual_posts_outlane"
@@ -771,8 +795,8 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           <mesh
             name="visual_plunger"
             geometry={nodes.visual_plunger.geometry}
-            material={materials.collision}
-            position={[12.739, -2.257, 34.931]}
+            material={materials["M_metal.004"]}
+            position={[12.677, -2.257, 34.931]}
           />
           <mesh
             name="visual_left_hole_ramp"
@@ -801,19 +825,19 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           <mesh
             name="visual_screws_13002"
             geometry={nodes.visual_screws_13002.geometry}
-            material={materials.M_roof}
+            material={materials.M_guidance}
             position={[-0.609, 0.4, 5.131]}
           />
           <mesh
             name="visual_sidewalls001"
             geometry={nodes.visual_sidewalls001.geometry}
-            material={materials.M_in_coll}
+            material={materials["M_stone_medium.011"]}
             position={[-0.609, -2.903, 5.131]}
           />
           <mesh
             name="visual_overlap_bottom_3002"
             geometry={nodes.visual_overlap_bottom_3002.geometry}
-            material={materials.M_in_coll}
+            material={materials["M_stone_medium.010"]}
             position={[-0.609, -2.377, 5.131]}
           />
           <group name="visual_standard" position={[-0.633, -1.56, 7.78]}>
@@ -851,21 +875,12 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
               material={materials.M_stone_light}
             />
           </group>
-          <group
+          <mesh
             name="visual_habit_right_left_9_top002"
+            geometry={nodes.visual_habit_right_left_9_top002.geometry}
+            material={materials.M_metal}
             position={[0.143, -4.465, -2.19]}
-          >
-            <mesh
-              name="habit_right_LOD0009"
-              geometry={nodes.habit_right_LOD0009.geometry}
-              material={materials.M_metal}
-            />
-            <mesh
-              name="habit_right_LOD0009_1"
-              geometry={nodes.habit_right_LOD0009_1.geometry}
-              material={materials.M_stone_light}
-            />
-          </group>
+          />
           {/* <group */}
           {/*   name="visual_barrel_bumpers003" */}
           {/*   position={[-6.632, -1.561, -12.833]} */}
@@ -992,7 +1007,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           {/*   name="visual_faquir_plank002" */}
           {/*   geometry={nodes.visual_faquir_plank002.geometry} */}
           {/*   material={materials["M_stone_medium.008"]} */}
-          {/*   position={[6.394, -0.452, -12.896]} */}
+          {/*   position={[7.177, -0.452, -12.896]} */}
           {/* /> */}
           <mesh
             name="visual_faquir_plank003"
@@ -1141,7 +1156,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             <mesh
               name="Circle"
               geometry={nodes.Circle.geometry}
-              material={materials.M_roof}
+              material={materials.M_guidance}
             />
             <mesh
               name="Circle_1"
@@ -1196,12 +1211,12 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             <mesh
               name="Cube002"
               geometry={nodes.Cube002.geometry}
-              material={materials.M_yellow}
+              material={materials["M_yellow.001"]}
             />
             <mesh
               name="Cube002_1"
               geometry={nodes.Cube002_1.geometry}
-              material={materials.M_black}
+              material={materials["M_black.001"]}
             />
             <mesh
               name="Cube002_2"
@@ -1267,12 +1282,12 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           {/*   material={materials["M_metal.003"]} */}
           {/*   position={[2.423, -2.881, -18.566]} */}
           {/* /> */}
-          <mesh
-            name="visual_super_rubber_class_coin"
-            geometry={nodes.visual_super_rubber_class_coin.geometry}
-            material={materials.M_in_coll}
-            position={[5.517, -1.362, 19.445]}
-          />
+          {/* <mesh */}
+          {/*   name="visual_super_rubber_class_coin" */}
+          {/*   geometry={nodes.visual_super_rubber_class_coin.geometry} */}
+          {/*   material={materials.M_coin_comp_default} */}
+          {/*   position={[5.517, -1.362, 19.445]} */}
+          {/* /> */}
           {/* <group name="visual_drum" position={[6.458, -2.032, -8.978]}> */}
           {/*   <mesh */}
           {/*     name="Cylinder004" */}
@@ -1379,16 +1394,22 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
               material={materials.M_tree}
             />
           </group>
-          <mesh
-            name="visual_super_rubber_class_coin_plane_bottom"
-            geometry={
-              nodes.visual_super_rubber_class_coin_plane_bottom.geometry
-            }
-            material={
-              nodes.visual_super_rubber_class_coin_plane_bottom.material
-            }
-            position={[5.517, -1.362, 19.445]}
-          />
+          {/* <mesh */}
+          {/*   name="visual_super_rubber_class_coin_plane_top" */}
+          {/*   geometry={nodes.visual_super_rubber_class_coin_plane_top.geometry} */}
+          {/*   material={nodes.visual_super_rubber_class_coin_plane_top.material} */}
+          {/*   position={[5.517, -1.362, 19.445]} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_super_rubber_class_coin_plane_bottom" */}
+          {/*   geometry={ */}
+          {/*     nodes.visual_super_rubber_class_coin_plane_bottom.geometry */}
+          {/*   } */}
+          {/*   material={ */}
+          {/*     nodes.visual_super_rubber_class_coin_plane_bottom.material */}
+          {/*   } */}
+          {/*   position={[5.517, -1.362, 19.445]} */}
+          {/* /> */}
           {/* <group name="visual_sword" position={[0, -0.762, 0]}> */}
           {/*   <mesh */}
           {/*     name="defaultMaterial" */}
@@ -1402,6 +1423,175 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           {/*   /> */}
           {/* </group> */}
           {/* <mesh */}
+          {/*   name="visual_elf_on" */}
+          {/*   geometry={nodes.visual_elf_on.geometry} */}
+          {/*   material={materials.M_elf_on} */}
+          {/*   position={[-4.524, -2.849, 15.309]} */}
+          {/*   scale={5.467} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="vsiual_necro_on" */}
+          {/*   geometry={nodes.vsiual_necro_on.geometry} */}
+          {/*   material={materials.M_necro_on} */}
+          {/*   position={[3.485, -2.849, 14.396]} */}
+          {/*   scale={3.012} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_dwarf_on" */}
+          {/*   geometry={nodes.visual_dwarf_on.geometry} */}
+          {/*   material={materials.M_dwarf_on} */}
+          {/*   position={[4.453, -2.849, 10.669]} */}
+          {/*   scale={3.662} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_warrior_on" */}
+          {/*   geometry={nodes.visual_warrior_on.geometry} */}
+          {/*   material={materials.M_warrior_on} */}
+          {/*   position={[-5.37, -2.849, 11.063]} */}
+          {/*   scale={4.289} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_rune1_on" */}
+          {/*   geometry={nodes.visual_rune1_on.geometry} */}
+          {/*   material={materials.M_rune1_on} */}
+          {/*   position={[-8.349, -2.849, 0.5]} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_rune2_on" */}
+          {/*   geometry={nodes.visual_rune2_on.geometry} */}
+          {/*   material={materials.M_rune2_on} */}
+          {/*   position={[-9.29, -2.849, -2.186]} */}
+          {/*   scale={[0.798, 1, 0.881]} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_rune3_on" */}
+          {/*   geometry={nodes.visual_rune3_on.geometry} */}
+          {/*   material={materials.M_rune3_on} */}
+          {/*   position={[-10.015, -2.849, -5.019]} */}
+          {/*   scale={[0.798, 1, 0.881]} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_rune4_on" */}
+          {/*   geometry={nodes.visual_rune4_on.geometry} */}
+          {/*   material={materials.M_rune4_on} */}
+          {/*   position={[-10.63, -2.849, -7.835]} */}
+          {/*   scale={[0.798, 1, 0.881]} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_rune5_on" */}
+          {/*   geometry={nodes.visual_rune5_on.geometry} */}
+          {/*   material={materials.M_rune5_on} */}
+          {/*   position={[-11.023, -2.849, -10.723]} */}
+          {/*   scale={[0.798, 1, 0.881]} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_rune6_on" */}
+          {/*   geometry={nodes.visual_rune6_on.geometry} */}
+          {/*   material={materials.M_rune6_on} */}
+          {/*   position={[-10.911, -2.849, -13.803]} */}
+          {/*   scale={[0.798, 1, 0.881]} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_rune7_on" */}
+          {/*   geometry={nodes.visual_rune7_on.geometry} */}
+          {/*   material={materials.M_rune7_on} */}
+          {/*   position={[-9.194, -2.849, -16.598]} */}
+          {/*   scale={[0.798, 1, 0.881]} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_rune8_on" */}
+          {/*   geometry={nodes.visual_rune8_on.geometry} */}
+          {/*   material={materials.M_rune8_on} */}
+          {/*   position={[-6.505, -2.849, -18.052]} */}
+          {/*   scale={[0.806, 1, 0.891]} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_rune9_on" */}
+          {/*   geometry={nodes.visual_rune9_on.geometry} */}
+          {/*   material={materials.M_rune9_on} */}
+          {/*   position={[-3.198, -2.849, -18.749]} */}
+          {/*   scale={[0.806, 1, 0.891]} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_rune10_on" */}
+          {/*   geometry={nodes.visual_rune10_on.geometry} */}
+          {/*   material={materials.M_rune10_on} */}
+          {/*   position={[0.093, -2.849, -18.684]} */}
+          {/*   scale={[0.798, 1, 0.881]} */}
+          {/* /> */}
+          <mesh
+            name="visual_multi2_off"
+            geometry={nodes.visual_multi2_off.geometry}
+            material={materials.M_multi2_off}
+            position={[-3.027, -2.826, 14.049]}
+          />
+          {/* <mesh */}
+          {/*   name="visual_multi2_on" */}
+          {/*   geometry={nodes.visual_multi2_on.geometry} */}
+          {/*   material={materials.M_mutli2_on} */}
+          {/*   position={[-3.027, -2.826, 14.049]} */}
+          {/* /> */}
+          <mesh
+            name="visual_multi4_off"
+            geometry={nodes.visual_multi4_off.geometry}
+            material={materials.M_multi4_off}
+            position={[1.715, -2.826, 14.049]}
+          />
+          {/* <mesh */}
+          {/*   name="visual_multi4_on" */}
+          {/*   geometry={nodes.visual_multi4_on.geometry} */}
+          {/*   material={materials.M_multi4_on} */}
+          {/*   position={[1.715, -2.826, 14.049]} */}
+          {/* /> */}
+          <mesh
+            name="visual_multi6_off"
+            geometry={nodes.visual_multi6_off.geometry}
+            material={materials.M_multi6_off}
+            position={[-3.027, -2.826, 18.307]}
+          />
+          {/* <mesh */}
+          {/*   name="visual_multi6_on" */}
+          {/*   geometry={nodes.visual_multi6_on.geometry} */}
+          {/*   material={materials.M_multi6_on} */}
+          {/*   position={[-3.027, -2.826, 18.307]} */}
+          {/* /> */}
+          <mesh
+            name="visual_multi8_off"
+            geometry={nodes.visual_multi8_off.geometry}
+            material={materials.M_multi8_off}
+            position={[1.715, -2.826, 18.307]}
+          />
+          {/* <mesh */}
+          {/*   name="visual_multi8_on" */}
+          {/*   geometry={nodes.visual_multi8_on.geometry} */}
+          {/*   material={materials.M_multi8_on} */}
+          {/*   position={[1.715, -2.826, 18.307]} */}
+          {/* /> */}
+          <mesh
+            name="visual_multi12_off"
+            geometry={nodes.visual_multi12_off.geometry}
+            material={materials.M_multi12_off}
+            position={[-0.565, -2.826, 20.281]}
+          />
+          {/* <mesh */}
+          {/*   name="visual_multi12_on" */}
+          {/*   geometry={nodes.visual_multi12_on.geometry} */}
+          {/*   material={materials.M_multi12_on} */}
+          {/*   position={[-0.565, -2.826, 20.281]} */}
+          {/* /> */}
+          <mesh
+            name="visual_multi50_off"
+            geometry={nodes.visual_multi50_off.geometry}
+            material={materials.M_multi50_off}
+            position={[-0.565, -2.826, 16.358]}
+          />
+          {/* <mesh */}
+          {/*   name="visual_multi50_on" */}
+          {/*   geometry={nodes.visual_multi50_on.geometry} */}
+          {/*   material={materials.M_multi50_on} */}
+          {/*   position={[-0.565, -2.826, 16.358]} */}
+          {/* /> */}
+          {/* <mesh */}
           {/*   name="coll_flipper_left_bottom" */}
           {/*   geometry={nodes.coll_flipper_left_bottom.geometry} */}
           {/*   material={nodes.coll_flipper_left_bottom.material} */}
@@ -1413,13 +1603,14 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           {/*   material={nodes.coll_flipper_right_bottom.material} */}
           {/*   position={[2.787, -2.901, 26.34]} */}
           {/* /> */}
+
+          {/* Le Collgate Collider 🦷🪥 */}
           {/* <mesh */}
           {/*   name="coll_gate" */}
           {/*   geometry={nodes.coll_gate.geometry} */}
           {/*   material={nodes.coll_gate.material} */}
           {/*   position={[8.733, -1.272, 5.992]} */}
           {/* /> */}
-
           <RigidBody
             type="fixed"
             colliders="trimesh"
@@ -1501,6 +1692,20 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           <RigidBody
             type="fixed"
             colliders="trimesh"
+            name="coll_faquir"
+            includeInvisible
+          >
+            <mesh
+              visible={false}
+              geometry={nodes.coll_faquir.geometry}
+              material={nodes.coll_faquir.material}
+              position={[10.805, -2.882, -13.695]}
+            />
+          </RigidBody>
+
+          <RigidBody
+            type="fixed"
+            colliders="trimesh"
             name="coll_ramps"
             includeInvisible
             restitution={0}
@@ -1565,6 +1770,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             />
             {/* <mesh */}
             {/*   name="coll_left_kickback_door" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_left_kickback_door.geometry} */}
             {/*   material={nodes.coll_left_kickback_door.material} */}
             {/*   position={[-13.574, -2.233, 23.626]} */}
@@ -1585,12 +1791,14 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             />
             {/* <mesh */}
             {/*   name="coll_left_sling_collision" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_left_sling_collision.geometry} */}
             {/*   material={nodes.coll_left_sling_collision.material} */}
             {/*   position={[-7.708, -2.233, 16.596]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_right_sling_collision" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_right_sling_collision.geometry} */}
             {/*   material={nodes.coll_right_sling_collision.material} */}
             {/*   position={[5.493, -2.185, 16.596]} */}
@@ -1604,6 +1812,7 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             />
             {/* <mesh */}
             {/*   name="coll_standard_collision" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_standard_collision.geometry} */}
             {/*   material={nodes.coll_standard_collision.material} */}
             {/*   position={[-0.633, -1.467, 7.78]} */}
@@ -1624,36 +1833,42 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             />
             {/* <mesh */}
             {/*   name="coll_playfield_collision_left_hole" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_playfield_collision_left_hole.geometry} */}
             {/*   material={nodes.coll_playfield_collision_left_hole.material} */}
             {/*   position={[-0.609, -2.903, 7.762]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_ramp_back_test" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_ramp_back_test.geometry} */}
             {/*   material={materials.collision} */}
             {/*   position={[-0.609, -2.903, 5.131]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_scoop_hole_left" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_scoop_hole_left.geometry} */}
             {/*   material={nodes.coll_scoop_hole_left.material} */}
             {/*   position={[-5.444, -4.23, -2.829]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_visual_habit_right_9_top" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_visual_habit_right_9_top.geometry} */}
             {/*   material={nodes.coll_visual_habit_right_9_top.material} */}
             {/*   position={[0.143, -4.465, -2.19]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_visual_habit_right_left_9_top002" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_visual_habit_right_left_9_top002.geometry} */}
             {/*   material={nodes.coll_visual_habit_right_left_9_top002.material} */}
             {/*   position={[0.143, -4.465, -2.19]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_right_kickback_door001" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_right_kickback_door001.geometry} */}
             {/*   material={materials.collision} */}
             {/*   position={[8.465, -1.97, 25.481]} */}
@@ -1667,24 +1882,28 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             />
             {/* <mesh */}
             {/*   name="coll_bumpers001" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_bumpers001.geometry} */}
             {/*   material={nodes.coll_bumpers001.material} */}
             {/*   position={[1.112, -1.6, -11.134]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_bumpers002" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_bumpers002.geometry} */}
             {/*   material={nodes.coll_bumpers002.material} */}
             {/*   position={[-4.744, -1.6, -6.463]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_bumpers003" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_bumpers003.geometry} */}
             {/*   material={nodes.coll_bumpers003.material} */}
             {/*   position={[-6.635, -1.6, -12.845]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_habit_vuk" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_habit_vuk.geometry} */}
             {/*   material={nodes.coll_habit_vuk.material} */}
             {/*   position={[6.947, 6.049, -21.278]} */}
@@ -1698,60 +1917,70 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             />
             {/* <mesh */}
             {/*   name="coll_faquir" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_faquir.geometry} */}
             {/*   material={nodes.coll_faquir.material} */}
             {/*   position={[10.805, -2.882, -13.695]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_hight_playfield" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_hight_playfield.geometry} */}
             {/*   material={nodes.coll_hight_playfield.material} */}
             {/*   position={[2.084, -2.882, -17.598]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_faquir_plank001" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_faquir_plank001.geometry} */}
             {/*   material={nodes.coll_faquir_plank001.material} */}
             {/*   position={[9.866, -2.882, -14.48]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_faquir_plank003" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_faquir_plank003.geometry} */}
             {/*   material={nodes.coll_faquir_plank003.material} */}
             {/*   position={[9.134, -0.452, -12.781]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_faquir_plank002" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_faquir_plank002.geometry} */}
             {/*   material={nodes.coll_faquir_plank002.material} */}
-            {/*   position={[6.394, -0.452, -12.896]} */}
+            {/*   position={[7.177, -0.452, -12.896]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_faquir_plank004" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_faquir_plank004.geometry} */}
             {/*   material={nodes.coll_faquir_plank004.material} */}
             {/*   position={[7.995, -0.452, -10.223]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_faquir_plank005" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_faquir_plank005.geometry} */}
             {/*   material={nodes.coll_faquir_plank005.material} */}
             {/*   position={[7.527, -0.452, -6]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_faquir_plank006" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_faquir_plank006.geometry} */}
             {/*   material={nodes.coll_faquir_plank006.material} */}
             {/*   position={[8.799, -0.452, -8.033]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_faquir_plank007" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_faquir_plank007.geometry} */}
             {/*   material={nodes.coll_faquir_plank007.material} */}
             {/*   position={[7.12, -0.452, -3.509]} */}
             {/* /> */}
             {/* <mesh */}
             {/*   name="coll_mine_gate" */}
+            {/*   visible={false} */}
             {/*   geometry={nodes.coll_mine_gate.geometry} */}
             {/*   material={nodes.coll_mine_gate.material} */}
             {/*   position={[-11.672, -1.9, 6.777]} */}
@@ -1799,16 +2028,10 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
               position={[3.1, 0.08, -19.239]}
             />
           </RigidBody>
-          {/* <mesh */}
-          {/*   name="visual_lg_10x" */}
-          {/*   geometry={nodes.visual_lg_10x.geometry} */}
-          {/*   material={materials.lamp_playfield} */}
-          {/*   position={[9.292, -1.591, 25.651]} */}
-          {/* /> */}
         </group>
       </group>
     </>
   );
 }
 
-useGLTF.preload("/models/Pinball_BaseFinal.glb");
+useGLTF.preload("/models/Pinball.glb");

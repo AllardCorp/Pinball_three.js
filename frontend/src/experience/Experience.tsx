@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGameDebug } from "@/config/useGameDebug";
 import * as THREE from "three";
-import PinballBase from "@/components/models/PinballFinal";
+import PinballBase from "@/components/models/Pinball";
 
 export default function Experience() {
   // LEVA

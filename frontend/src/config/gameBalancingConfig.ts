@@ -110,7 +110,11 @@ export const SCORE_VALUES: Record<string, number> = {
   mineEntrance: 1000,
   drumBumper: 1000,
   sewerBonus: 3000,
+  rampHabit: 100,
 };
+
+// Limites de temps du combo de la lightningRoad
+export const LIGHTROAD_COMBO_TIME_LIMIT = 1800;
 
 // LOGIQUE DU MULTIPLICATEUR
 // Les sources de multiplicateurs
