@@ -22,6 +22,7 @@ import MultiplierSensor from "@/components/pinball/MultiplierSensor";
 import UndeathSaver from "@/components/pinball/UndeathSaver";
 import DrumBumper from "@/components/pinball/DrumBumper";
 import SewerSystem from "@/components/pinball/SewerSystem";
+import GameStatusLight from "@/components/pinball/GameStatusLights";
 import { useGameStore } from "@/store/gameStore/useGameStore";
 
 type GLTFResult = GLTF & {
@@ -674,6 +675,9 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
       </DrumBumper>
       {/* Système d'égout */}
       <SewerSystem nodes={nodes} materials={materials} />
+
+      {/* Game Satus Light */}
+      <GameStatusLight nodes={nodes} materials={materials} />
 
       <group {...props} dispose={null}>
         <group name="Scene">
@@ -1412,34 +1416,34 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
           {/*     material={materials.Hilt} */}
           {/*   /> */}
           {/* </group> */}
-          <mesh
-            name="visual_elf_on"
-            geometry={nodes.visual_elf_on.geometry}
-            material={materials.M_elf_on}
-            position={[-4.524, -2.849, 15.309]}
-            scale={5.467}
-          />
-          <mesh
-            name="vsiual_necro_on"
-            geometry={nodes.vsiual_necro_on.geometry}
-            material={materials.M_necro_on}
-            position={[3.485, -2.849, 14.396]}
-            scale={3.012}
-          />
-          <mesh
-            name="visual_dwarf_on"
-            geometry={nodes.visual_dwarf_on.geometry}
-            material={materials.M_dwarf_on}
-            position={[4.453, -2.849, 10.669]}
-            scale={3.662}
-          />
-          <mesh
-            name="visual_warrior_on"
-            geometry={nodes.visual_warrior_on.geometry}
-            material={materials.M_warrior_on}
-            position={[-5.37, -2.849, 11.063]}
-            scale={4.289}
-          />
+          {/* <mesh */}
+          {/*   name="visual_elf_on" */}
+          {/*   geometry={nodes.visual_elf_on.geometry} */}
+          {/*   material={materials.M_elf_on} */}
+          {/*   position={[-4.524, -2.849, 15.309]} */}
+          {/*   scale={5.467} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="vsiual_necro_on" */}
+          {/*   geometry={nodes.vsiual_necro_on.geometry} */}
+          {/*   material={materials.M_necro_on} */}
+          {/*   position={[3.485, -2.849, 14.396]} */}
+          {/*   scale={3.012} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_dwarf_on" */}
+          {/*   geometry={nodes.visual_dwarf_on.geometry} */}
+          {/*   material={materials.M_dwarf_on} */}
+          {/*   position={[4.453, -2.849, 10.669]} */}
+          {/*   scale={3.662} */}
+          {/* /> */}
+          {/* <mesh */}
+          {/*   name="visual_warrior_on" */}
+          {/*   geometry={nodes.visual_warrior_on.geometry} */}
+          {/*   material={materials.M_warrior_on} */}
+          {/*   position={[-5.37, -2.849, 11.063]} */}
+          {/*   scale={4.289} */}
+          {/* /> */}
           {/* <mesh */}
           {/*   name="visual_rune1_on" */}
           {/*   geometry={nodes.visual_rune1_on.geometry} */}
@@ -1515,72 +1519,72 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             material={materials.M_multi2_off}
             position={[-3.027, -2.826, 14.049]}
           />
-          <mesh
-            name="visual_multi2_on"
-            geometry={nodes.visual_multi2_on.geometry}
-            material={materials.M_mutli2_on}
-            position={[-3.027, -2.826, 14.049]}
-          />
+          {/* <mesh */}
+          {/*   name="visual_multi2_on" */}
+          {/*   geometry={nodes.visual_multi2_on.geometry} */}
+          {/*   material={materials.M_mutli2_on} */}
+          {/*   position={[-3.027, -2.826, 14.049]} */}
+          {/* /> */}
           <mesh
             name="visual_multi4_off"
             geometry={nodes.visual_multi4_off.geometry}
             material={materials.M_multi4_off}
             position={[1.715, -2.826, 14.049]}
           />
-          <mesh
-            name="visual_multi4_on"
-            geometry={nodes.visual_multi4_on.geometry}
-            material={materials.M_multi4_on}
-            position={[1.715, -2.826, 14.049]}
-          />
+          {/* <mesh */}
+          {/*   name="visual_multi4_on" */}
+          {/*   geometry={nodes.visual_multi4_on.geometry} */}
+          {/*   material={materials.M_multi4_on} */}
+          {/*   position={[1.715, -2.826, 14.049]} */}
+          {/* /> */}
           <mesh
             name="visual_multi6_off"
             geometry={nodes.visual_multi6_off.geometry}
             material={materials.M_multi6_off}
             position={[-3.027, -2.826, 18.307]}
           />
-          <mesh
-            name="visual_multi6_on"
-            geometry={nodes.visual_multi6_on.geometry}
-            material={materials.M_multi6_on}
-            position={[-3.027, -2.826, 18.307]}
-          />
+          {/* <mesh */}
+          {/*   name="visual_multi6_on" */}
+          {/*   geometry={nodes.visual_multi6_on.geometry} */}
+          {/*   material={materials.M_multi6_on} */}
+          {/*   position={[-3.027, -2.826, 18.307]} */}
+          {/* /> */}
           <mesh
             name="visual_multi8_off"
             geometry={nodes.visual_multi8_off.geometry}
             material={materials.M_multi8_off}
             position={[1.715, -2.826, 18.307]}
           />
-          <mesh
-            name="visual_multi8_on"
-            geometry={nodes.visual_multi8_on.geometry}
-            material={materials.M_multi8_on}
-            position={[1.715, -2.826, 18.307]}
-          />
+          {/* <mesh */}
+          {/*   name="visual_multi8_on" */}
+          {/*   geometry={nodes.visual_multi8_on.geometry} */}
+          {/*   material={materials.M_multi8_on} */}
+          {/*   position={[1.715, -2.826, 18.307]} */}
+          {/* /> */}
           <mesh
             name="visual_multi12_off"
             geometry={nodes.visual_multi12_off.geometry}
             material={materials.M_multi12_off}
             position={[-0.565, -2.826, 20.281]}
           />
-          <mesh
-            name="visual_multi12_on"
-            geometry={nodes.visual_multi12_on.geometry}
-            material={materials.M_multi12_on}
-            position={[-0.565, -2.826, 20.281]}
-          />
+          {/* <mesh */}
+          {/*   name="visual_multi12_on" */}
+          {/*   geometry={nodes.visual_multi12_on.geometry} */}
+          {/*   material={materials.M_multi12_on} */}
+          {/*   position={[-0.565, -2.826, 20.281]} */}
+          {/* /> */}
           <mesh
             name="visual_multi50_off"
             geometry={nodes.visual_multi50_off.geometry}
             material={materials.M_multi50_off}
             position={[-0.565, -2.826, 16.358]}
           />
-          <mesh
-            name="visual_multi50_on"
-            geometry={nodes.visual_multi50_on.geometry}
-            material={materials.M_multi50_on}
-            position={[-0.565, -2.826, 16.358]}
-          />
+          {/* <mesh */}
+          {/*   name="visual_multi50_on" */}
+          {/*   geometry={nodes.visual_multi50_on.geometry} */}
+          {/*   material={materials.M_multi50_on} */}
+          {/*   position={[-0.565, -2.826, 16.358]} */}
+          {/* /> */}
           {/* <mesh */}
           {/*   name="coll_flipper_left_bottom" */}
           {/*   geometry={nodes.coll_flipper_left_bottom.geometry} */}
