@@ -3,19 +3,20 @@
 ## Table des matières
 
 1. [Vue d'ensemble](#1-vue-densemble)
-2. [Routage](#2-routage)
+2. [Routage et authentification](#2-routage-et-authentification)
 3. [Flux de données global](#3-flux-de-données-global)
 4. [Store — `useMakerStore`](#4-store--usemakerstore)
-5. [Page éditeur — `FlipperMaker.tsx`](#5-page-éditeur--flippermakertsx)
-6. [Page gameplay — `PlayfieldMaker.tsx`](#6-page-gameplay--playfieldmakertsx)
-7. [Composant modèle 3D — `PinballMVP_Maker.tsx`](#7-composant-modèle-3d--pinballmvp_makertsx)
-8. [Composant éditeur — `PlayfieldElement.tsx`](#8-composant-éditeur--playfieldelementtsx)
-9. [Composant gameplay — `PhysicsPlayfieldElement.tsx`](#9-composant-gameplay--physicsplayfieldelementtsx)
-10. [Backend — Schema BDD](#10-backend--schema-bdd)
-11. [Backend — Routes API](#11-backend--routes-api)
-12. [Utilitaire — `lib/api.ts`](#12-utilitaire--libapiys)
-13. [Relations entre fichiers](#13-relations-entre-fichiers)
-14. [Cycle complet : Créer → Sauvegarder → Charger → Jouer](#14-cycle-complet--créer--sauvegarder--charger--jouer)
+5. [Config centrale — `config/makerElementConfig.ts`](#5-config-centrale--configmakerelementconfigts)
+6. [Pages éditeur — `FlipperMaker.tsx` et sous-pages](#6-pages-éditeur--flippermakertsx-et-sous-pages)
+7. [Page gameplay — `PlayfieldMaker.tsx`](#7-page-gameplay--playfieldmakertsx)
+8. [Composant modèle 3D — `PinballMVP_Maker.tsx`](#8-composant-modèle-3d--pinballmvp_makertsx)
+9. [Composant éditeur — `PlayfieldElement.tsx`](#9-composant-éditeur--playfieldelementtsx)
+10. [Composant gameplay — `PhysicsPlayfieldElement.tsx`](#10-composant-gameplay--physicsplayfieldelementtsx)
+11. [Backend — Schema BDD](#11-backend--schema-bdd)
+12. [Backend — Routes API](#12-backend--routes-api)
+13. [Utilitaire — `lib/api.ts`](#13-utilitaire--libapiys)
+14. [Relations entre fichiers](#14-relations-entre-fichiers)
+15. [Cycle complet : Créer → Sauvegarder → Modifier → Jouer → Supprimer](#15-cycle-complet--créer--sauvegarder--modifier--jouer--supprimer)
 
 ---
 
@@ -24,33 +25,42 @@
 Le système Maker permet de :
 - **Créer** un niveau personnalisé en plaçant des obstacles 3D sur le plateau
 - **Sauvegarder** ce niveau en base de données (avec screenshot)
-- **Lister** les niveaux existants
-- **Jouer** un niveau avec toute la physique active (balle, flippers, bumpers)
+- **Lister** tous les niveaux existants (public, sans connexion)
+- **Modifier** et **supprimer** ses propres niveaux (connexion requise, propriétaire uniquement)
+- **Jouer** n'importe quel niveau avec toute la physique active (balle, flippers, bumpers) — sans connexion
 
 Il existe en **deux modes** distincts qui partagent les mêmes données :
 
-| Mode | Route | Composant plateau | Physique |
-|------|-------|-------------------|----------|
-| Éditeur | `/maker` | `PinballMVPMaker` (sans prop) | Aucune — PivotControls |
-| Gameplay | `/playfield/:levelId` | `PinballMVPMaker withPhysics` | Rapier complet |
+| Mode | Route | Composant plateau | Physique | Connexion |
+|------|-------|-------------------|----------|-----------|
+| Éditeur (liste + création + édition) | `/maker/*` | `PinballMVPMaker` (sans prop) | Aucune — PivotControls | **Requise** |
+| Gameplay | `/playfield/:levelId` | `PinballMVPMaker withPhysics` | Rapier complet | Publique |
 
 ---
 
-## 2. Routage
+## 2. Routage et authentification
 
-**Fichier :** `frontend/src/App.tsx`
+**Fichier :** `frontend/src/FlipperApp.tsx`
 
 ```
-/              → Home
-/maker         → FlipperMaker     (éditeur + liste des niveaux)
-/playfield     → Playfield        (jeu principal, plateau fixe)
-/playfield/:levelId → PlayfieldMaker  (jeu d'un niveau custom)
+/                    → Home
+/maker/*             → FlipperMaker  (protégé par <AuthGuard>)
+  /maker             →   MakerListPage   (liste, publique une fois connecté)
+  /maker/new         →   MakerEditorPage mode="create"
+  /maker/:id         →   MakerEditorPage mode="edit"
+/playfield           → Playfield        (jeu principal, plateau fixe)
+/playfield/:levelId  → PlayfieldMaker  (jeu d'un niveau custom, PAS protégé)
 ```
+
+`/maker/*` est enveloppé par le composant `AuthGuard` existant (`frontend/src/components/auth/AuthGuard.tsx`, déjà utilisé pour `/dashboard`) : un utilisateur non connecté est redirigé vers `/login?redirect=/maker...`, puis renvoyé automatiquement sur `/maker` après connexion (le paramètre `redirect` est consommé de façon générique par `Login.tsx`, aucun changement n'a été nécessaire côté login).
+
+`/playfield/:levelId` reste volontairement public : n'importe qui peut jouer un niveau, seule sa création/édition/suppression nécessite un compte.
 
 ### Paramètres de route
 
 | Route | Paramètre | Type | Description |
 |-------|-----------|------|-------------|
+| `/maker/:id` | `id` | `string` (UUID) | Niveau à éditer — l'utilisateur doit en être propriétaire |
 | `/playfield/:levelId` | `levelId` | `string` (UUID) | ID du niveau en BDD |
 
 ---
@@ -58,27 +68,37 @@ Il existe en **deux modes** distincts qui partagent les mêmes données :
 ## 3. Flux de données global
 
 ```
-[Utilisateur crée un niveau]
+[Utilisateur crée un niveau] (connecté, /maker/new)
         ↓
-FlipperMaker (éditeur)
-  ├── useMakerStore (état local)
+MakerEditorPage (mode="create")
+  ├── useMakerStore (état local) — resetLevel() au montage
   │     ├── elements[]    ← liste des obstacles
-  │     └── levelName     ← nom du niveau
-  ├── Canvas 3D
+  │     ├── levelName     ← nom du niveau
+  │     └── levelId       ← null tant que non sauvegardé
+  ├── EditorCanvas (Canvas 3D)
   │     ├── PinballMVPMaker (plateau visuel, sans physique)
   │     └── PlayfieldElement[] (obstacles avec PivotControls)
   └── handleSave()
         ├── Capture screenshot (WebGL → base64 JPEG)
-        └── POST /api/levels { name, elements, screenshot }
+        ├── credentials: "include" (cookie de session requis)
+        └── levelId === null ? POST /api/levels : PUT /api/levels/:levelId
                 ↓
         [Base de données PostgreSQL]
               table: levels
               ├── id (UUID)
               ├── name
+              ├── userId  ← session.user.id à la création, jamais modifiable ensuite
               ├── elements (JSONB)
               └── screenshotUrl
 
-[Utilisateur joue un niveau]
+[Utilisateur modifie un niveau existant] (connecté, /maker/:id, propriétaire)
+        ↓
+MakerEditorPage (mode="edit")
+  ├── GET /api/levels/:id (credentials: include) → si isOwner=false, retour à /maker
+  ├── loadLevel(data) → store rempli, levelId = data.id
+  └── handleSave() → PUT /api/levels/:levelId (403 si non propriétaire)
+
+[Utilisateur joue un niveau] (public, pas de connexion requise)
         ↓
 LevelList → clic "Jouer" → navigate(/playfield/:levelId)
         ↓
@@ -107,16 +127,18 @@ Représente un obstacle placé sur le plateau.
 | Champ | Type | Défaut | Description |
 |-------|------|--------|-------------|
 | `id` | `string` | `crypto.randomUUID()` | Identifiant unique |
-| `name` | `string` | `"Cylindre 1"` etc. | Nom affiché dans l'inspecteur |
-| `type` | `"cylinder" \| "box" \| "sphere"` | — | Forme géométrique |
+| `name` | `string` | Label du type (config) | Nom affiché dans l'inspecteur |
+| `type` | `MakerElementType` (`"cylinder" \| "box" \| "sphere"`) | — | Forme géométrique, voir [§5](#5-config-centrale--configmakerelementconfigts) |
 | `position` | `[number, number, number]` | `[0, 0, 0]` | Position XYZ dans la scène |
 | `rotation` | `[number, number, number]` | `[0, 0, 0]` | Rotation en radians (Euler XYZ) |
 | `scale` | `[number, number, number]` | `[1, 1, 1]` | Scale XYZ |
-| `color` | `string?` | bleu/rouge/vert selon type | Couleur hex |
-| `roughness` | `number?` | 0.2–0.4 selon type | 0 = brillant, 1 = mat |
-| `metalness` | `number?` | 0.1–0.9 selon type | 0 = plastique, 1 = métal |
+| `color` | `string?` | selon type (config) | Couleur hex |
+| `roughness` | `number?` | selon type (config) | 0 = brillant, 1 = mat |
+| `metalness` | `number?` | selon type (config) | 0 = plastique, 1 = métal |
 | `isBumper` | `boolean?` | `false` | Active l'effet rebond physique |
 | `bumpStrength` | `number?` | `15` | Force d'impulsion du bumper |
+
+> Un élément dont le `type` n'est reconnu par aucune entrée de `MAKER_ELEMENT_CONFIG` (niveau sauvegardé par une version plus récente du Maker) n'est **jamais filtré** par le store — il reste tel quel dans `elements[]`. Seul le rendu 3D (`PlayfieldElement`/`PhysicsPlayfieldElement`) l'ignore proprement. Voir [§5](#5-config-centrale--configmakerelementconfigts).
 
 #### `LevelListItem`
 Données minimales pour la liste des niveaux.
@@ -128,6 +150,7 @@ Données minimales pour la liste des niveaux.
 | `screenshotUrl` | `string \| null` | URL relative de la miniature |
 | `createdAt` | `string` | ISO 8601 |
 | `updatedAt` | `string` | ISO 8601 |
+| `isOwner` | `boolean` | Calculé côté backend — `true` si l'utilisateur connecté est l'auteur |
 
 #### `LevelDetail`
 Étend `LevelListItem` avec les éléments complets.
@@ -143,655 +166,339 @@ Données minimales pour la liste des niveaux.
 | `elements` | `MakerElement[]` | `[]` | Obstacles du niveau en cours d'édition |
 | `selectedElementId` | `string \| null` | `null` | ID de l'élément sélectionné dans l'éditeur |
 | `levelName` | `string` | `"Mon niveau"` | Nom du niveau en cours d'édition |
-| `levelId` | `string \| null` | `null` | ID BDD si niveau chargé (non utilisé activement) |
+| `levelId` | `string \| null` | `null` | `null` = brouillon jamais sauvegardé (POST) ; sinon = niveau existant en cours d'édition (PUT) |
 
 ### Actions
 
 #### `addElement(type)`
-- **Params :** `type: "cylinder" | "box" | "sphere"`
-- Calcule un nom auto (`Cylindre 1`, `Cube 2`, etc.) en comptant les éléments existants du même type
+- **Params :** `type: MakerElementType`
+- Lit `MAKER_ELEMENT_CONFIG[type]` pour le nom, la couleur, la rugosité, la métalité et la force de bumper par défaut
 - Génère un UUID via `crypto.randomUUID()`
-- Assigne couleur/roughness/metalness par défaut selon le type
 - Ajoute l'élément à `elements[]` et le sélectionne automatiquement
 
 #### `updateElementTransform(id, position, rotation, scale)`
-- **Params :** `id: string`, `position/rotation/scale: [number, number, number]`
 - Met à jour la position, rotation et scale d'un élément par son ID
 - Appelé à chaque frame de drag du gizmo PivotControls
 
 #### `updateElementProperties(id, properties)`
-- **Params :** `id: string`, `properties: Partial<MakerElement>`
 - Merge partiel sur un élément (couleur, roughness, metalness, isBumper, bumpStrength)
 - Appelé par les inputs du panneau Inspecteur
 
 #### `removeElement(id)`
-- Supprime l'élément du tableau
-- Si l'élément supprimé était sélectionné → `selectedElementId = null`
+- Supprime l'élément du tableau ; si sélectionné → `selectedElementId = null`
 
-#### `setSelectedElementId(id)`
-- Sélectionne ou désélectionne un élément (`null` pour désélectionner)
-
-#### `setLevelName(name)`
-- Met à jour le nom du niveau
+#### `setSelectedElementId(id)` / `setLevelName(name)` / `setLevelId(id)`
+- Setters directs. `setLevelId` est utilisé après un `POST` réussi pour que la sauvegarde suivante devienne un `PUT` (voir [§6](#6-pages-éditeur--flippermakertsx-et-sous-pages)).
 
 #### `loadLevel(level)`
 - **Param :** `level: LevelDetail`
-- Remplace tout l'état par le niveau chargé depuis l'API
-- Utilisé pour éditer un niveau existant (non utilisé actuellement depuis le flux principal — le gameplay charge directement via fetch)
+- Remplace tout l'état par le niveau chargé depuis l'API (utilisé par `MakerEditorPage` en mode édition)
+- Ne filtre **jamais** les éléments dont le `type` est inconnu — passe-plat volontaire (voir [§5](#5-config-centrale--configmakerelementconfigts))
 
 #### `resetLevel()`
-- Remet le store à zéro (nouveau niveau vide)
-- Appelé quand l'utilisateur clique "Créer un niveau"
+- Remet le store à zéro (nouveau niveau vide, `levelId: null`)
+- Appelé au montage de `MakerEditorPage` en mode `"create"`
 
 ---
 
-## 5. Page éditeur — `FlipperMaker.tsx`
+## 5. Config centrale — `config/makerElementConfig.ts`
 
-**Fichier :** `frontend/src/pages/FlipperMaker.tsx`
-**Route :** `/maker`
+**Fichier :** `frontend/src/config/makerElementConfig.ts`
 
-Page principale du maker. Gère deux vues avec un simple booléen `isEditing`.
+Source unique de vérité pour les types d'éléments du Maker, consommée par 4 endroits qui dupliquaient auparavant ces valeurs : la palette (`MakerPalette.tsx`), les valeurs par défaut du store (`addElement`), le rendu éditeur (`PlayfieldElement.tsx`) et le rendu physique (`PhysicsPlayfieldElement.tsx`).
 
-```
-FlipperMaker
-├── isEditing = false → <LevelList onCreate={() => setIsEditing(true)} />
-└── isEditing = true  → <Editor onBack={() => setIsEditing(false)} />
-```
+```ts
+export const MAKER_ELEMENT_TYPES = ["cylinder", "box", "sphere"] as const;
+export type MakerElementType = typeof MAKER_ELEMENT_TYPES[number];
 
-### Sous-composant : `LevelList`
+export const MAKER_ELEMENT_CONFIG: Record<MakerElementType, MakerElementTypeConfig> = {
+  cylinder: { label, emoji, paletteColorClass, selectedColor, geometry, defaults },
+  box: { /* ... */ },
+  sphere: { /* ... */ },
+};
 
-**Props :** `{ onCreate: () => void }`
-
-Liste tous les niveaux depuis l'API et permet de jouer ou créer.
-
-| Élément | Comportement |
-|---------|-------------|
-| Bouton "Créer un niveau" | Appelle `resetLevel()` puis `onCreate()` → passe en mode éditeur |
-| Card niveau → bouton "Jouer" | `navigate(/playfield/${level.id})` |
-| Miniature | `<img src={apiEndpoint(level.screenshotUrl)} />` si screenshot, sinon placeholder |
-
-**Fetch au montage :**
-```
-GET /api/levels → LevelListItem[]
+export function isMakerElementType(value: unknown): value is MakerElementType;
+export function getMakerElementConfig(type: string): MakerElementTypeConfig | undefined;
 ```
 
-### Sous-composant : `ScreenshotCapture`
+**Ajouter un type d'élément** = une entrée dans `MAKER_ELEMENT_TYPES` + une entrée dans `MAKER_ELEMENT_CONFIG`. Aucun autre fichier frontend n'a besoin d'être modifié.
 
-**Props :** `{ onReady: (fn: () => string) => void }`
+> ⚠️ Pas de package partagé entre frontend et backend : la même liste de types vit indépendamment dans `backend/src/domain/maker-elements.ts` (whitelist Zod utilisée par `POST`/`PUT /api/levels`). Ajouter un type nécessite donc de mettre à jour **les deux fichiers**. C'est une limitation connue, documentée en commentaire dans les deux fichiers.
 
-Composant interne au `<Canvas>`. Au montage, expose via `onReady` une fonction de capture.
+### Lecture tolérante, écriture stricte
 
-**Fonctionnement de la capture :**
-1. Sauvegarde la position/rotation de la caméra courante
-2. Positionne la caméra en vue overhead fixe : `position(0.2, 70, 15)`, `lookAt(0.5, -5.0, 10)`
-3. Appelle `gl.render(scene, camera)` pour forcer un rendu
-4. Extrait le canvas via `gl.domElement.toDataURL("image/jpeg", 0.8)`
-5. Restaure la position/rotation originale de la caméra
-6. Retourne le Data URL base64
+- **Lecture/rendu :** `getMakerElementConfig(type)` retourne `undefined` pour un type inconnu. `PlayfieldElement`/`PhysicsPlayfieldElement` ignorent alors proprement l'élément (pas de crash du Canvas). Le store (`loadLevel`) ne filtre jamais ces éléments — ils survivent à un aller-retour charger/modifier-autre-chose/sauvegarder.
+- **Écriture (`POST`/`PUT /api/levels`) :** le backend valide strictement `type` contre sa whitelist Zod. Un niveau contenant un élément dont le type n'est pas (encore) reconnu par le backend actuel sera **rejeté (400)** s'il est re-sauvegardé tel quel. C'est une frontière d'intégrité assumée, pas un oubli : voir `backend/src/domain/maker-elements.ts`.
 
-> Nécessite `preserveDrawingBuffer: true` sur le `<Canvas>` pour pouvoir lire les pixels après le rendu.
+`ElementGeometry.tsx` (`frontend/src/components/maker/ElementGeometry.tsx`) traduit `config.geometry` en balise Three.js (`cylinderGeometry`/`boxGeometry`/`sphereGeometry`) — seul endroit qui connaît ce mapping, partagé par les deux modes de rendu.
 
-### Sous-composant : `Editor`
+---
 
-**Props :** `{ onBack: () => void }`
+## 6. Pages éditeur — `FlipperMaker.tsx` et sous-pages
 
-L'interface d'édition 3D complète.
+**Fichier racine :** `frontend/src/pages/FlipperMaker.tsx` — un simple routeur imbriqué monté sous `/maker/*` :
 
-**State local :**
-- `saveStatus: "idle" | "saving" | "saved" | "error"` — état du bouton de sauvegarde
-- `captureRef: MutableRefObject<(() => string) | null>` — référence vers la fonction de capture screenshot
+```tsx
+<Routes>
+  <Route index element={<MakerListPage />} />
+  <Route path="new" element={<MakerEditorPage mode="create" />} />
+  <Route path=":id" element={<MakerEditorPage mode="edit" />} />
+</Routes>
+```
 
-**Store consommé :**
-- `elements`, `addElement`, `removeElement`
-- `selectedElementId`, `setSelectedElementId`
-- `updateElementTransform`, `updateElementProperties`
-- `levelName`, `setLevelName`
+### `pages/maker/MakerListPage.tsx`
 
-**Structure de l'interface :**
+Header (titre + bouton "Créer un niveau" → `navigate("new")`) + `<LevelList />`.
+
+### `components/maker/LevelList.tsx`
+
+Fetch `GET /api/levels` (`credentials: "include"`, pour que `isOwner` reflète la session) et affiche **deux sections séparées** — "Mes niveaux" (`isOwner === true`) puis "Tous les niveaux" (le reste) — plutôt qu'une grille unique mélangée : chaque section a des cartes de forme homogène (avec ou sans boutons "Modifier"/"Supprimer"), ce qui évite un décalage visuel entre cartes de tailles différentes dans une même rangée. Gère aussi la suppression (`window.confirm` puis `DELETE /api/levels/:id`, retire la card localement sur `204`).
+
+### `components/maker/LevelCard.tsx`
+
+Une carte de niveau : miniature, nom, date, bouton "Jouer" (toujours visible), boutons "Modifier"/"Supprimer" (visibles **uniquement si `level.isOwner === true`**, calculé côté backend).
+
+### `pages/maker/MakerEditorPage.tsx`
+
+Remplace l'ancien composant `Editor`. Prend une prop `mode: "create" | "edit"`.
+
+**Montage :**
+- `mode="create"` → `resetLevel()`.
+- `mode="edit"` → `GET /api/levels/:id` (`credentials: "include"`) ; si erreur ou `isOwner === false` → retour à `/maker` (défense en profondeur, le backend refuse de toute façon) ; sinon `loadLevel(data)`.
+
+**`handleSave()` :**
+```
+1. Vérification : levelName.trim() non vide
+2. captureRef.current?.() → screenshot base64
+3. method = levelId ? "PUT" : "POST" ; url = levelId ? `/api/levels/${levelId}` : "/api/levels"
+4. fetch(url, { method, credentials: "include", body: { name, elements, screenshot } })
+5. 401 → redirection vers /login?redirect=...
+6. 403 → saveStatus="forbidden" ("Vous ne pouvez modifier que vos propres niveaux")
+7. Succès sur un POST → setLevelId(body.id) (la sauvegarde suivante devient un PUT)
+8. Succès → saveStatus="saved" (2s) / Erreur générique → saveStatus="error" (3s)
+```
+
+**Composition visuelle** (inchangée) :
 
 ```
 ┌──────────────┬──────────────────────────┬───────────────┐
-│ PANNEAU      │   VUE 3D (Canvas)        │  INSPECTEUR   │
-│ GAUCHE       │                          │  DROIT        │
-│              │  PinballMVPMaker         │               │
-│ ← Retour     │  PlayfieldElement[]      │ Position X Y Z│
-│ Nom niveau   │  OrbitControls           │ Rotation X Y Z│
-│ [Sauvegarder]│  Environment "city"      │ Scale X Y Z   │
-│              │                          │ Couleur       │
-│ + Cylindre   │                          │ Roughness     │
-│ + Cube       │                          │ Metalness     │
-│ + Sphère     │                          │ isBumper      │
-│              │                          │ bumpStrength  │
-│ [Navigation] │                          │ [Supprimer]   │
+│ PANNEAU      │   EditorCanvas           │  Inspector    │
+│ GAUCHE       │                          │  (droit)      │
+│ ← Retour     │  PinballMVPMaker         │ Position X Y Z│
+│ Nom niveau   │  PlayfieldElement[]      │ Rotation X Y Z│
+│ [Sauvegarder]│  OrbitControls           │ Scale X Y Z   │
+│ MakerPalette │  Environment "city"      │ Couleur       │
+│ [Navigation] │                          │ Roughness/Met.│
+│              │                          │ isBumper      │
+│              │                          │ [Supprimer]   │
 └──────────────┴──────────────────────────┴───────────────┘
 ```
 
-**Fonction `handleSave()` :**
-```
-1. Vérification : levelName.trim() non vide
-2. setSaveStatus("saving")
-3. captureRef.current?.() → screenshot base64
-4. POST /api/levels { name: levelName, elements, screenshot }
-5. Succès → setSaveStatus("saved") → reset "idle" après 2s
-6. Erreur  → setSaveStatus("error")  → reset "idle" après 3s
-```
+### `components/maker/MakerPalette.tsx`
 
-**Helpers de transformation (panneau Inspecteur) :**
+Génère les boutons d'ajout en itérant sur `MAKER_ELEMENT_TYPES` (voir [§5](#5-config-centrale--configmakerelementconfigts)) — plus de boutons codés en dur par type.
 
-| Fonction | Params | Description |
-|----------|--------|-------------|
-| `updatePosition(axis, val)` | `axis: 0\|1\|2`, `val: number` | Modifie X, Y ou Z de la position |
-| `updateRotation(axis, valDeg)` | `axis: 0\|1\|2`, `valDeg: number` | Convertit degrés → radians, met à jour la rotation |
-| `updateScale(axis, val)` | `axis: 0\|1\|2`, `val: number` | Modifie X, Y ou Z du scale |
+### `components/maker/Inspector.tsx`
 
-**Helpers de conversion :**
-- `radToDeg(rad)` → `Math.round(rad * 180 / Math.PI)` — pour afficher en degrés dans l'UI
-- `degToRad(deg)` → `deg * Math.PI / 180` — pour stocker en radians dans le store
+Panneau droit (position/rotation/scale/couleur/matériau/bumper/suppression), extrait tel quel. Le label du type utilise `getMakerElementConfig(type)?.label ?? type` pour rester lisible même sur un type inconnu.
 
-**Canvas (éditeur) :**
-```tsx
-<Canvas
-  camera={{ position: [0.2, 56.7, 29.5], fov: 45 }}
-  gl={{ preserveDrawingBuffer: true }}       // requis pour screenshot
-  onPointerMissed={() => setSelectedElementId(null)}  // clic vide = désélection
-  shadows
->
-  <PinballMVPMaker />                  // plateau visuel, sans physique
-  {elements.map(el => <PlayfieldElement key={el.id} element={el} />)}
-  <ScreenshotCapture onReady={handleScreenshotReady} />
-  <OrbitControls target={[0.5, -5.0, 4.7]} makeDefault />
-</Canvas>
-```
+### `components/maker/EditorCanvas.tsx`
+
+Le `<Canvas>` R3F (lumières, plateau, éléments, `ScreenshotCapture`, `OrbitControls`).
+
+### `components/maker/ScreenshotCapture.tsx`
+
+Inchangé — capture hors-écran 300×480 indépendante de la résolution d'écran.
 
 ---
 
-## 6. Page gameplay — `PlayfieldMaker.tsx`
+## 7. Page gameplay — `PlayfieldMaker.tsx`
 
 **Fichier :** `frontend/src/pages/PlayfieldMaker.tsx`
-**Route :** `/playfield/:levelId`
+**Route :** `/playfield/:levelId` — **publique**, aucune connexion requise.
 
-Page de jeu pour un niveau custom. Combine physique Rapier, balle, flippers, et inputs clavier.
+Page de jeu pour un niveau custom. Combine physique Rapier, balle, flippers, et inputs clavier. Charge le niveau via `GET /api/levels/:levelId` (sans `credentials`, cette page ne calcule pas `isOwner` et n'en a pas besoin) puis extrait `data.elements`.
 
-### Sous-composant : `FixedCamera`
-
-Composant R3F sans rendu visuel. Verrouille la caméra en position overhead via `useFrame` à chaque frame.
-
-```ts
-camera.position.set(0.2, 56.7, 29.5)
-camera.lookAt(0.5, -5.0, 4.7)
-```
-
-### Sous-composant : `Scene`
-
-**Props :** `{ elements: MakerElement[] }`
-
-Contient la scène 3D complète enveloppée dans `<Suspense>`.
-
-```tsx
-<Suspense fallback={null}>
-  <PinballMVPMaker withPhysics />          // plateau + physique + gate + flippers
-  {elements.map(el => <PhysicsPlayfieldElement key={el.id} element={el} />)}
-  <Ball position={[12.75, -2.3, 30.46]} />  // balle dans le plunger
-</Suspense>
-```
-
-### Composant principal `PlayfieldMaker`
-
-**State local :**
-- `elements: MakerElement[]` — obstacles chargés depuis l'API
-
-**Stores consommés :**
-- `useInputStore` → `startPressed` (bouton S), `updateInputs`
-- `useGameStore` → `startGame`
-- `useKeyboardControls()` — enregistre les listeners clavier
-
-**Mécanique de démarrage (touche S) :**
-```ts
-useEffect(() => {
-  if (startPressed) {
-    startGame(1)                              // reset complet + isPlaying=true
-    updateInputs({ buttons: { start: false } }) // remet S à false
-  }
-}, [startPressed, startGame, updateInputs])
-```
-> Contrairement à `Playfield.tsx`, le check `!isPlaying` est retiré : S redémarre la partie même en cours de jeu.
-
-**Chargement du niveau :**
-```ts
-useEffect(() => {
-  if (!levelId) { navigate("/maker"); return }
-  fetch(apiEndpoint(`/api/levels/${levelId}`))
-    .then(r => r.json())
-    .then(data => setElements(Array.isArray(data.elements) ? data.elements : []))
-}, [levelId, navigate])
-```
-
-**Canvas (gameplay) :**
-```tsx
-<Canvas dpr={1} shadows camera={{ position: [0.2, 56.7, 29.5], fov: 45 }}>
-  <Physics gravity={[0, -80, 20]}>
-    <FixedCamera />
-    <Scene elements={elements} />
-  </Physics>
-</Canvas>
-```
-> `gravity: [0, -80, 20]` — fort Y négatif + Z positif pour simuler l'inclinaison du plateau vers le bas-avant.
-
-**Mapping des touches :**
-
-| Touche | Store | Effet |
-|--------|-------|-------|
-| S | `buttons.start` | Démarre / redémarre la partie |
-| Q | `buttons.left_flipper` | Flipper gauche |
-| D | `buttons.right_flipper` | Flipper droit |
-| Space (maintenu) | `buttons.launch_ball` | Lance la bille (impulsion) |
+*(Section inchangée par rapport à la version précédente du document — `FixedCamera`, `Scene`, mécanique de démarrage clavier, mapping des touches.)*
 
 ---
 
-## 7. Composant modèle 3D — `PinballMVP_Maker.tsx`
+## 8. Composant modèle 3D — `PinballMVP_Maker.tsx`
 
-**Fichier :** `frontend/src/components/models/PinballMVP_Maker.tsx`
-**GLB :** `/models/PinballMVP_Maker-transformed.glb`
-
-**Source unique de vérité** pour le plateau maker. Fonctionne en deux modes via la prop `withPhysics`.
-
-### Props
-
-| Prop | Type | Défaut | Description |
-|------|------|--------|-------------|
-| `withPhysics` | `boolean?` | `false` | Active le mode physique (gameplay) |
-| `...props` | `JSX.IntrinsicElements['group']` | — | Passés au `<group>` en mode éditeur |
-
-### Nodes GLB disponibles
-
-| Node | Description |
-|------|-------------|
-| `coll_maker_playfield_collision` | Surface principale du plateau |
-| `coll_maker_gate` | Porte du plunger (gérée dynamiquement) |
-| `coll_maker_standard_collision_sidewalls` | Murs latéraux |
-| `coll_maker_flipper_left_bottom` | Géométrie flipper gauche |
-| `coll_maker_flipper_right_bottom` | Géométrie flipper droit |
-| `coll_maker_super_rubber` | Caoutchouc (rebond) |
-| `coll_maker_metal` | Pièces métalliques |
-| `coll_maker_slingshot_left` | Slingshot gauche |
-| `coll_maker_slingshot_right` | Slingshot droit |
-| `coll_maker_guidance_right` | Guide droit |
-| `coll_maker_guidance_left` | Guide gauche |
-| `coll_maker_glass_panel` | Panneau de verre (plafond invisible) |
-
-### `boardMeshes` — tableau central
-
-Défini une seule fois, utilisé pour le rendu visuel ET les colliders physiques :
-
-```ts
-const boardMeshes: MeshDef[] = [
-  // { geometry, material, position }
-  // Tous les meshes sauf coll_maker_gate (géré séparément)
-]
-```
-
-### Mode éditeur (`withPhysics = false`)
-
-```tsx
-<group {...props} dispose={null}>
-  {boardMeshes.map(m => <mesh geometry={m.geometry} material={m.material} position={m.position} />)}
-  <mesh ... />  // flipper gauche statique
-  <mesh ... />  // flipper droit statique
-</group>
-```
-Pas de physique — les flippers sont des meshes statiques, pas de RigidBody.
-
-### Mode gameplay (`withPhysics = true`)
-
-Structure du rendu :
-
-```
-Fragment <>
-├── Visual meshes (boardMeshes)           // visible, pas de physique directe
-├── RigidBody type="fixed" trimesh        // colliders invisibles (boardMeshes + glass panel)
-├── Gate sensor (RigidBody sensor)        // détecteur de passage de bille
-├── Gate collider (conditionnel)          // apparaît quand !ballInLauncher
-├── Flipper left  (composant Flipper)     // kinématique, animé
-└── Flipper right (composant Flipper)     // kinématique, animé
-```
-
-**Mécanique de la gate (porte du plunger) :**
-
-```
-ballInLauncher = true (départ)
-       ↓
-Sensor invisible à [8.4, -1.6, 5.9]
-       ↓ (bille passe → onIntersectionEnter)
-setTimeout 500ms → setBallInLauncher(false)
-       ↓
-Gate apparaît (mesh visible + RigidBody hull)
-→ la bille ne peut plus revenir dans le plunger
-```
-
-- **Sensor :** `RigidBody type="fixed" sensor` + `CuboidCollider args={[1, 1, 0.2]}` à `rotation={[0, Math.PI/2.6, 0]}`
-- **Gate collider conditionnel :** `{!ballInLauncher && <RigidBody type="fixed" colliders="hull">...`}
-- **Gate visible :** le mesh `coll_maker_gate` est rendu visible (avec `PaletteMaterial002`) quand il apparaît
-
-**Flippers :**
-
-| Prop `Flipper` | Gauche | Droit |
-|----------------|--------|-------|
-| `side` | `"left"` | `"right"` |
-| `position` | `[-5.001, -2.901, 26.34]` | `[2.787, -2.901, 26.34]` |
-| `rotation` | `[0, 0, 0]` | `[0, 0, 0]` |
-| `colliderGeometry` | `coll_maker_flipper_left_bottom.geometry` | `coll_maker_flipper_right_bottom.geometry` |
-| `visualGeometry` | idem | idem |
-| `visualMaterial` | `PaletteMaterial002` | `PaletteMaterial002` |
+*(Inchangé — voir le fichier `frontend/src/components/models/PinballMVP_Maker.tsx` pour le détail des nodes GLB, `boardMeshes`, la mécanique de la gate et des flippers.)*
 
 ---
 
-## 8. Composant éditeur — `PlayfieldElement.tsx`
+## 9. Composant éditeur — `PlayfieldElement.tsx`
 
 **Fichier :** `frontend/src/components/maker/PlayfieldElement.tsx`
 
-Rendu d'un obstacle dans l'éditeur. Gère la sélection et le drag via `PivotControls`.
+Rendu d'un obstacle dans l'éditeur. Gère la sélection et le drag via `PivotControls`. Le hack `noopRaycast` (mesh invisible au raycaster quand sélectionné, pour ne pas voler les clics aux flèches du gizmo) est inchangé.
 
-### Props
-
-| Prop | Type | Description |
-|------|------|-------------|
-| `element` | `MakerElement` | L'élément à rendre |
-
-### Fonctionnement du raycast
-
-`noopRaycast` est une fonction qui retourne toujours `null`. Elle est assignée à `mesh.raycast` quand l'élément est sélectionné, pour que le mesh ne "vole" pas les clics destinés aux flèches du gizmo `PivotControls` (qui utilise `depthTest={false}` et peut être "derrière" géométriquement).
-
-### Logique de rendu
-
-```
-isSelected = (selectedElementId === element.id)
-
-Si isSelected:
-  → PivotControls (gizmo actif)
-      matrix = compose(position, rotation, scale)
-      onDrag: décompose la matrice → updateElementTransform()
-      renderGeometry(disableRaycast=true)  ← mesh invisible au raycaster
-
-Si !isSelected:
-  → group à position/rotation/scale
-      onClick: stopPropagation + setSelectedElementId(element.id)
-      renderGeometry(disableRaycast=false)  ← mesh cliquable
-```
-
-### `renderGeometry(disableRaycast)`
-
-Rendu conditionnel selon `element.type` :
-
-| Type | Géométrie | Taille | Couleur sélectionné |
-|------|-----------|--------|---------------------|
-| `cylinder` | `CylinderGeometry` | r=1.5, h=1, seg=32 | `#ea580c` |
-| `box` | `BoxGeometry` | 2×2×2 | `#ea580c` |
-| `sphere` | `SphereGeometry` | r=1.2, seg=32 | `#ea580c` |
-
-### `handleDrag(localMatrix)`
-
-Appelé à chaque frame de drag. Décompose la matrice 4x4 locale :
+`renderGeometry()` est maintenant piloté par la config (voir [§5](#5-config-centrale--configmakerelementconfigts)) :
 ```ts
-localMatrix.decompose(pos, quat, scale)
-rot = Euler.setFromQuaternion(quat)
-updateElementTransform(id, [pos.x,y,z], [rot.x,y,z], [sc.x,y,z])
+const config = getMakerElementConfig(element.type);
+if (!config) return null; // type inconnu → pas de crash
+const color = isSelected ? config.selectedColor : (element.color ?? config.defaults.color);
+// <ElementGeometry type={element.type} /> pour la géométrie
 ```
-
-### `PivotControls` config
-
-| Prop | Valeur | Raison |
-|------|--------|--------|
-| `autoTransform` | `false` | On gère la transformation manuellement via `onDrag` |
-| `anchor` | `[0,0,0]` | Gizmo centré sur l'objet |
-| `depthTest` | `false` | Gizmo visible à travers les autres meshes |
-| `fixed` | `true` | Taille fixe en pixels (ne grossit pas au zoom) |
-| `scale` | `75` | Taille du gizmo en pixels |
-| `disableSliders` | `true` | Pas de sliders de plan |
 
 ---
 
-## 9. Composant gameplay — `PhysicsPlayfieldElement.tsx`
+## 10. Composant gameplay — `PhysicsPlayfieldElement.tsx`
 
 **Fichier :** `frontend/src/components/maker/PhysicsPlayfieldElement.tsx`
 
-Rendu d'un obstacle avec physique Rapier en mode gameplay.
-
-### Props
-
-| Prop | Type | Description |
-|------|------|-------------|
-| `element` | `MakerElement` | L'élément à rendre (même data que l'éditeur) |
-
-### Structure
-
-```tsx
-<RigidBody
-  type="fixed"           // corps statique, ne bouge pas
-  colliders="hull"       // convex hull auto-calculé depuis le mesh enfant
-  position={element.position}
-  rotation={element.rotation}
-  restitution={isBumper ? 1.2 : 0.3}   // rebond fort si bumper
-  onCollisionEnter={handleCollision}
->
-  <group scale={element.scale}>
-    <mesh>
-      {/* geometrie selon element.type */}
-      <meshStandardMaterial color/roughness/metalness />
-    </mesh>
-  </group>
-</RigidBody>
-```
-
-### Logique bumper `handleCollision`
-
-Déclenchée quand `e.other.rigidBodyObject?.name === "ball"` :
-
-```ts
-// Vecteur de répulsion : bumper → bille (normalisé)
-dx = ballPos.x - bumperPos.x
-dy = ballPos.y - bumperPos.y
-dz = ballPos.z - bumperPos.z
-len = Math.sqrt(dx²+dy²+dz²) || 1
-
-// Impulse appliquée à la bille
-e.other.rigidBody.applyImpulse({
-  x: (dx/len) * strength,
-  y: (dy/len) * strength,
-  z: (dz/len) * strength
-}, true)
-```
-
-- `strength` = `element.bumpStrength ?? 15`
-- Condition de guard : `element.isBumper` doit être `true`, `rigidBodyRef.current` non null
+Rendu d'un obstacle avec physique Rapier. Même traitement que l'éditeur : `if (!getMakerElementConfig(element.type)) return null;` avant tout `RigidBody`, et les valeurs par défaut (`color`/`roughness`/`metalness`/`bumpStrength`) viennent désormais de `config.defaults` — ce qui unifie trois jeux de valeurs par défaut auparavant divergents entre le store, l'éditeur et la physique.
 
 ---
 
-## 10. Backend — Schema BDD
+## 11. Backend — Schema BDD
 
 **Fichier :** `backend/src/db/schema.ts` (Drizzle ORM)
 
 ### Table `levels`
 
 | Colonne | Type SQL | Description |
-|---------|----------|-------------|
+|---------|----------|--------------|
 | `id` | `text PRIMARY KEY` | UUID généré côté backend |
 | `name` | `text NOT NULL` | Nom du niveau |
-| `userId` | `text REFERENCES users(id) SET NULL` | Auteur (nullable — niveaux anonymes possibles) |
+| `userId` | `text REFERENCES users(id) SET NULL` | Auteur — renseigné à la création depuis la session, jamais modifiable ensuite |
 | `elements` | `jsonb NOT NULL DEFAULT []` | Tableau `MakerElement[]` sérialisé |
 | `screenshotUrl` | `text` | Chemin relatif `/screenshots/<id>.jpg` |
-| `createdAt` | `timestamp with timezone` | Auto `NOW()` |
-| `updatedAt` | `timestamp with timezone` | Auto `NOW()` |
+| `createdAt` / `updatedAt` | `timestamp with timezone` | Auto `NOW()` |
 
 **Index :** `levels_user_id_idx`, `levels_created_at_idx`
 
 ---
 
-## 11. Backend — Routes API
+## 12. Backend — Routes API
 
-**Fichier :** `backend/src/app.ts`
+**Fichier :** `backend/src/routes/level-routes.ts` (extrait de `app.ts`, suit le même pattern que `leaderboard-routes.ts`/`score-claim-routes.ts` — `registerLevelRoutes({ app, db, getSession, screenshotsDir })`).
+
+Validation des éléments : `backend/src/domain/maker-elements.ts` (schéma Zod, voir [§5](#5-config-centrale--configmakerelementconfigts)).
+
+| Route | Auth | Propriétaire | Rate-limit |
+|-------|------|---------------|------------|
+| `GET /api/levels` | optionnelle (pour `isOwner`) | — | non |
+| `GET /api/levels/:id` | optionnelle | — | non |
+| `POST /api/levels` | **requise** (401 sinon) | — (nouvelle ressource) | 20 / 10 min / IP |
+| `PUT /api/levels/:id` | **requise** (401 sinon) | 403 si non propriétaire, 404 si absent | 30 / 10 min / IP |
+| `DELETE /api/levels/:id` | **requise** (401 sinon) | 403 si non propriétaire | 20 / 10 min / IP |
+
+`isOwner` est **calculé côté serveur** (`session?.user.id === level.userId`) et ajouté à chaque objet retourné par `GET` ; le `userId` brut n'est **jamais** exposé dans les réponses JSON.
 
 ### `GET /api/levels`
 
-Liste tous les niveaux, triés par date de création décroissante.
-
-**Réponse :** `LevelListItem[]` (sans `elements` — optimisation)
-```json
-[
-  {
-    "id": "uuid",
-    "name": "Mon niveau",
-    "screenshotUrl": "/screenshots/uuid.jpg",
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z"
-  }
-]
-```
+Liste tous les niveaux, triés par date de création décroissante. Réponse : `LevelListItem[]` (sans `elements`).
 
 ### `GET /api/levels/:id`
 
-Retourne un niveau complet par son ID.
-
-**Params :** `id` (UUID)
-**Réponse :** `LevelDetail` (avec `elements`)
-**Erreur :** `404 { error: "level_not_found" }` si inexistant
+Réponse : `LevelDetail` (avec `elements`, tel quel — y compris un type d'élément inconnu du schéma actuel, voir [§5](#5-config-centrale--configmakerelementconfigts)). `404 { error: "level_not_found" }` si inexistant.
 
 ### `POST /api/levels`
 
-Crée un nouveau niveau.
+**Auth requise.** Body : `{ name, elements, screenshot? }`. Valide `name`/`elements` via `parseLevelWritePayload` (Zod). Insère `userId: session.user.id`. Traite le screenshot comme avant (`data:image/jpeg;base64,...` → fichier local `screenshotsDir/<id>.jpg`).
 
-**Body :**
-```json
-{
-  "name": "Mon niveau",
-  "elements": [ /* MakerElement[] */ ],
-  "screenshot": "data:image/jpeg;base64,..."
-}
-```
+**Erreurs :** `401 authentication_required`, `400 level_name_required`, `400 level_elements_invalid`.
+**Réponse :** `201 LevelListItem` (avec `isOwner: true`).
 
-**Traitement du screenshot :**
-1. Valide que le Data URL commence par `data:image/jpeg;base64,`
-2. Extrait le base64, crée le buffer
-3. `mkdir -p screenshotsDir`
-4. `writeFile(screenshotsDir/<id>.jpg, buffer)`
-5. Stocke `screenshotUrl = /screenshots/<id>.jpg`
+### `PUT /api/levels/:id` (nouveau)
 
-**Validations :**
-- `name` vide → `400 level_name_required`
-- `elements` non-tableau → `400 level_elements_invalid`
+**Auth requise + propriétaire.** Même validation que `POST`. Remplace `name`/`elements`/`updatedAt` ; remplace le fichier screenshot si un nouveau est fourni (l'ancien est supprimé).
 
-**Réponse :** `201 LevelListItem` (sans `elements`)
+**Erreurs :** `401`, `403 level_forbidden`, `404 level_not_found`, `400 level_elements_invalid`.
+**Réponse :** `200 LevelListItem`.
 
 ### `DELETE /api/levels/:id`
 
-Supprime un niveau et son screenshot associé.
+**Auth requise + propriétaire** (avant ce refactor : aucune vérification). Supprime le niveau et son screenshot associé.
 
-**Params :** `id` (UUID)
-**Comportement :** Supprime le fichier screenshot si `screenshotUrl` non null (erreur silencieuse si fichier absent)
-**Réponse :** `204 No Content`
-**Erreur :** `404` si niveau inexistant
+**Erreurs :** `401`, `403 level_forbidden`, `404 level_not_found`.
+**Réponse :** `204 No Content`.
 
 ### Fichiers statiques screenshots
 
-```
-GET /screenshots/<id>.jpg
-```
-Servi depuis le dossier `screenshotsDir` (configurable via `SCREENSHOTS_DIR` ou `./screenshots`).
+`GET /screenshots/<id>.jpg`, servi depuis `screenshotsDir` (`<cwd>/public/screenshots`), inchangé.
 
 ---
 
-## 12. Utilitaire — `lib/api.ts`
+## 13. Utilitaire — `lib/api.ts`
 
-**Fichier :** `frontend/src/lib/api.ts`
-
-### `resolveApiUrl()`
-
-Résout l'URL de base de l'API par ordre de priorité :
-1. `VITE_API_URL` (variable d'environnement)
-2. `window.location.protocol + hostname + :3000` (même host, port 3000)
-3. `http://localhost:3000` (fallback)
-
-### `apiEndpoint(path)`
-
-Construit une URL absolue complète.
-```ts
-apiEndpoint("/api/levels") // → "http://localhost:3000/api/levels"
-```
+*(Inchangé — voir `frontend/src/lib/api.ts` pour `resolveApiUrl()`/`apiEndpoint()`.)*
 
 ---
 
-## 13. Relations entre fichiers
+## 14. Relations entre fichiers
 
 ```
-App.tsx
-  ├── /maker → FlipperMaker.tsx
-  │     ├── useMakerStore.ts (state)
-  │     ├── lib/api.ts (fetch)
-  │     ├── PinballMVP_Maker.tsx (withPhysics=false)
-  │     └── PlayfieldElement.tsx (PivotControls)
-  │           └── useMakerStore.ts
+FlipperApp.tsx
+  ├── /maker/* → AuthGuard → FlipperMaker.tsx (routeur imbriqué)
+  │     ├── /        → MakerListPage.tsx
+  │     │                ├── LevelList.tsx (fetch + suppression)
+  │     │                └── LevelCard.tsx
+  │     ├── /new     → MakerEditorPage.tsx (mode="create")
+  │     └── /:id     → MakerEditorPage.tsx (mode="edit")
+  │            ├── useMakerStore.ts (state)
+  │            ├── config/makerElementConfig.ts (défauts, types, palette)
+  │            ├── EditorCanvas.tsx
+  │            │     └── PlayfieldElement.tsx (PivotControls)
+  │            │           ├── ElementGeometry.tsx
+  │            │           └── useMakerStore.ts
+  │            ├── MakerPalette.tsx
+  │            └── Inspector.tsx
   │
-  └── /playfield/:id → PlayfieldMaker.tsx
+  └── /playfield/:id → PlayfieldMaker.tsx (public)
         ├── lib/api.ts (fetch level)
         ├── useGameStore.ts (isPlaying, startGame, ballInLauncher)
         ├── useInputStore.ts (buttons.start)
         ├── useKeyboardControls.ts (listeners clavier)
         ├── PinballMVP_Maker.tsx (withPhysics=true)
         │     ├── useGameStore.ts (ballInLauncher, setBallInLauncher)
-        │     └── Flipper.tsx (kinematique)
-        │           └── useInputStore.ts (left_flipper, right_flipper)
+        │     └── Flipper.tsx (kinématique)
         ├── PhysicsPlayfieldElement.tsx (RigidBody obstacles)
+        │     └── ElementGeometry.tsx
         └── Ball.tsx
-              ├── useGameStore.ts (isPlaying, ballInLauncher)
-              └── useInputStore.ts (launch_ball)
+
+backend/src/app.ts
+  └── registerLevelRoutes (routes/level-routes.ts)
+        └── parseLevelWritePayload (domain/maker-elements.ts, Zod)
 ```
 
 ---
 
-## 14. Cycle complet : Créer → Sauvegarder → Charger → Jouer
+## 15. Cycle complet : Créer → Sauvegarder → Modifier → Jouer → Supprimer
 
-### Étape 1 — Création
+### Étape 1 — Connexion et création
 
-1. `GET /maker` → `FlipperMaker` → `LevelList`
-2. Clic "Créer un niveau" → `resetLevel()` → `setIsEditing(true)` → `Editor`
-3. Clic "+ Cylindre/Cube/Sphère" → `addElement(type)` → nouvel `MakerElement` dans le store
-4. Drag du gizmo → `PivotControls.onDrag` → `updateElementTransform()` → store mis à jour
-5. Panneau droit → inputs → `updateElementProperties()` → store mis à jour
+1. `GET /maker` sans session → `AuthGuard` redirige vers `/login?redirect=/maker`
+2. Connexion → retour automatique sur `/maker` → `MakerListPage`
+3. Clic "Créer un niveau" → `navigate("new")` → `MakerEditorPage` (mode `create`) → `resetLevel()`
+4. Clic "+ Cylindre/Cube/Sphère" → `addElement(type)` (défauts lus dans `MAKER_ELEMENT_CONFIG`)
+5. Drag du gizmo / panneau Inspecteur → `updateElementTransform()` / `updateElementProperties()`
 
-### Étape 2 — Sauvegarde
+### Étape 2 — Sauvegarde (création)
 
-1. Saisir un nom dans l'input → `setLevelName(name)`
-2. Clic "Sauvegarder" → `handleSave()`
-3. `captureRef.current()` → screenshot en JPEG base64 (vue overhead `y=70`)
-4. `POST /api/levels { name, elements, screenshot }`
-5. Backend : génère UUID, écrit `<id>.jpg`, insère en BDD → retourne `201`
-6. UI : `setSaveStatus("saved")` pendant 2s
+1. Saisir un nom → `setLevelName(name)`
+2. Clic "Sauvegarder" → `handleSave()` → `levelId === null` → `POST /api/levels { name, elements, screenshot }` (`credentials: include`)
+3. Backend : vérifie la session, valide `elements` (Zod), génère UUID, écrit le screenshot, insère avec `userId = session.user.id`
+4. Réponse `201` → `setLevelId(body.id)` (les sauvegardes suivantes deviendront des `PUT`)
 
-### Étape 3 — Liste et navigation
+### Étape 3 — Liste, modification, suppression
 
-1. `GET /api/levels` au chargement de `LevelList` → affiche les cards
-2. Miniature : `<img src={apiEndpoint(level.screenshotUrl)} />`
-3. Clic "Jouer" → `navigate(/playfield/${level.id})`
+1. `GET /api/levels` (`credentials: include`) → chaque niveau porte `isOwner`
+2. Niveau **dont je suis propriétaire** → boutons "Modifier"/"Supprimer" visibles
+   - "Modifier" → `navigate(id)` → `MakerEditorPage` (mode `edit`) → `GET /api/levels/:id` → `loadLevel(data)` → `handleSave()` fait désormais un `PUT`
+   - "Supprimer" → confirmation → `DELETE /api/levels/:id` → `204` → retiré de la liste
+3. Niveau **d'un autre utilisateur** → seul "Jouer" est visible ; un appel direct à l'API en `PUT`/`DELETE` recevrait `403 level_forbidden`
 
-### Étape 4 — Chargement et gameplay
+### Étape 4 — Jouer (public, sans connexion)
 
-1. `PlayfieldMaker` monte → extrait `levelId` de l'URL
-2. `GET /api/levels/:levelId` → `data.elements` → `setElements()`
-3. Canvas Rapier monte avec `gravity={[0, -80, 20]}`
-4. `PinballMVPMaker withPhysics` rend : plateau + gate sensor + flippers
-5. `PhysicsPlayfieldElement` pour chaque obstacle (RigidBody hull)
-6. `Ball` en attente (`isPlaying=false` → pas de RigidBody actif)
-
-### Étape 5 — Partie
-
-1. Joueur presse **S** → `startPressed=true` → `startGame(1)` → `isPlaying=true`, `ballInLauncher=true`
-2. `Ball` spawne à `[12.75, -2.3, 30.46]` (plunger)
-3. Joueur maintient **Space** → charge le lanceur → relâche → impulsion `{x:0, y:0, z:-force}`
-4. Bille remonte le plunger → touche le sensor gate → `setBallInLauncher(false)` (+500ms)
-5. Gate `coll_maker_gate` apparaît (visible + collider) → bille ne peut plus revenir
-6. **Q/D** → `left_flipper`/`right_flipper` → `Flipper` anime (lerp vers `Math.PI/3`)
-7. Bille touche un bumper (`isBumper=true`) → `applyImpulse` de répulsion
-8. Bille tombe → `loseBall()` (si `DeathZone` implémentée) ou sort du plateau
+1. Clic "Jouer" → `navigate(/playfield/:levelId)` (pas de garde d'authentification)
+2. `PlayfieldMaker` → `GET /api/levels/:levelId` → `elements[]`
+3. Canvas Rapier (`gravity: [0, -80, 20]`) → `PinballMVPMaker withPhysics` (plateau + gate + flippers) + `PhysicsPlayfieldElement` par obstacle
+4. **S** démarre la partie, **Q/D** les flippers, **Space** (maintenu) lance la bille ; bumpers = `applyImpulse` de répulsion à la collision
 
 ---
 
-*Document généré le 2026-06-30*
+*Document mis à jour le 2026-07-05 (refonte modularité/config/auth/CRUD du Maker).*

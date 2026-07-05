@@ -66,9 +66,15 @@ export default function BallAudio({
     }
 
     const surface = currentSurfaceRef.current;
-    const isOnPlayfield = surface === "coll_playfield_collision_left_hole";
+    const isInAir = surface === "RIEN (Vide/Air)";
     const isOnRockRamp = surface === "stone_ramp" || surface === "coll_faquir";
     const isOnRamps = surface === "coll_ramps";
+    // Son "plateau" par défaut : toute surface qui n'est ni l'air, ni une
+    // rampe pierre/métal identifiée. Le plateau contient une quinzaine de
+    // colliders distincts (sidewalls, cannon, verre, etc.) qu'il serait
+    // fragile d'énumérer un par un — un collider inconnu reste un collider,
+    // donc la bille roule dessus et doit faire du bruit.
+    const isOnPlayfield = !isInAir && !isOnRockRamp && !isOnRamps;
 
     // Mise à jour visuelle permanente du rayon de débug (en coordonnées locales du groupe)
     if (debugLineRef.current) {

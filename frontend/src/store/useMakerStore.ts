@@ -1,9 +1,10 @@
 import { create } from "zustand";
+import { MAKER_ELEMENT_CONFIG, type MakerElementType } from "@/config/makerElementConfig";
 
 export interface MakerElement {
   id: string;
   name: string;
-  type: "cylinder" | "box" | "sphere";
+  type: MakerElementType;
   position: [number, number, number];
   rotation: [number, number, number];
   scale: [number, number, number];
@@ -20,6 +21,7 @@ export interface LevelListItem {
   screenshotUrl: string | null;
   createdAt: string;
   updatedAt: string;
+  isOwner: boolean;
 }
 
 export interface LevelDetail extends LevelListItem {
@@ -31,7 +33,7 @@ interface MakerState {
   selectedElementId: string | null;
   levelName: string;
   levelId: string | null;
-  addElement: (type: "cylinder" | "box" | "sphere") => void;
+  addElement: (type: MakerElementType) => void;
   updateElementTransform: (
     id: string,
     position: [number, number, number],
@@ -42,6 +44,7 @@ interface MakerState {
   removeElement: (id: string) => void;
   setSelectedElementId: (id: string | null) => void;
   setLevelName: (name: string) => void;
+  setLevelId: (id: string) => void;
   loadLevel: (level: LevelDetail) => void;
   resetLevel: () => void;
 }
@@ -53,23 +56,17 @@ export const useMakerStore = create<MakerState>((set) => ({
   levelId: null,
   addElement: (type) =>
     set((state) => {
-      const typeLabel =
-        type === "cylinder" ? "Cylindre" : type === "box" ? "Cube" : "Sphère";
-      const name = typeLabel;
+      const config = MAKER_ELEMENT_CONFIG[type];
       const id = crypto.randomUUID();
 
       const newElement: MakerElement = {
         id,
-        name,
+        name: config.label,
         type,
         position: [0, 0, 0],
         rotation: [0, 0, 0],
         scale: [1, 1, 1],
-        color: type === "cylinder" ? "#3b82f6" : type === "box" ? "#ef4444" : "#10b981",
-        roughness: type === "cylinder" ? 0.2 : type === "box" ? 0.4 : 0.1,
-        metalness: type === "cylinder" ? 0.8 : type === "box" ? 0.1 : 0.9,
-        isBumper: false,
-        bumpStrength: 15,
+        ...config.defaults,
       };
 
       return {
@@ -97,8 +94,14 @@ export const useMakerStore = create<MakerState>((set) => ({
     })),
   setSelectedElementId: (id) => set({ selectedElementId: id }),
   setLevelName: (name) => set({ levelName: name }),
+  setLevelId: (id) => set({ levelId: id }),
   loadLevel: (level) =>
     set({
+      // `level.elements` reste un passe-plat tel quel : un élément dont le
+      // `type` n'est pas (encore) reconnu par MAKER_ELEMENT_CONFIG n'est
+      // jamais filtré ici, seul le rendu 3D l'ignore. Ça garantit que
+      // rouvrir puis re-sauvegarder un niveau ne supprime pas silencieusement
+      // un élément ajouté par une version plus récente du Maker.
       elements: level.elements,
       selectedElementId: null,
       levelName: level.name,

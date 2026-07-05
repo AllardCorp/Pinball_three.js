@@ -1,5 +1,6 @@
 import {
   boolean,
+  customType,
   doublePrecision,
   index,
   integer,
@@ -11,6 +12,15 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+
+// Pas de type `bytea` intégré à drizzle-orm/pg-core : on le définit nous-même.
+// Le driver `pg` mappe `bytea` <-> Buffer Node.js nativement, donc aucune
+// conversion supplémentaire n'est nécessaire ici.
+const bytea = customType<{ data: Buffer }>({
+  dataType() {
+    return "bytea";
+  },
+});
 
 // Better Auth devient la source de verite pour l'authentification.
 // Les tables métier continuent ensuite de se rattacher a l'utilisateur auth.
@@ -150,7 +160,12 @@ export const levels = pgTable(
     name: text("name").notNull(),
     userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
     elements: jsonb("elements").notNull().default([]),
-    screenshotUrl: text("screenshot_url"),
+    // Stocké directement en base (bytea) plutôt que sur le disque local du
+    // conteneur : les niveaux et leurs screenshots suivent alors la même
+    // source de vérité (Postgres), peu importe la machine qui exécute le
+    // backend. Servi via GET /api/levels/:id/screenshot, jamais inclus dans
+    // les réponses JSON de liste/détail (voir level-routes.ts).
+    screenshotData: bytea("screenshot_data"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
