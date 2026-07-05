@@ -3,15 +3,18 @@ name: Déploiement VPS Production
 # Se lance uniquement quand le workflow "Tests & Coverage" s'est terminé avec
 # succès. Cela évite de déployer un commit qui n'a pas passé les tests.
 on:
-  push:
+  workflow_run:
+    workflows: ["Tests & Coverage"]
+    types:
+      - completed
     branches:
-      - fix/#123-score-claim-mobile-auth-vps
+      - main
 
 
 jobs:
   deploy:
     # N'exécute le déploiement que si les tests ont réussi
-    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment: VPS_ENV
 
