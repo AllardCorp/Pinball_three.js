@@ -21,6 +21,8 @@ export default function Backglass() {
   // const currentScore = scores[currentPlayerIndex] || 0;
   // const currentBalls = ballsRemaining[currentPlayerIndex] || 0;
   const hasPlayed = scores.some((s) => s > 0);
+  const shouldShowScoreClaimQr =
+    snapshot.phase === "claim_pending" && Boolean(snapshot.claim?.verificationUrl);
 
 
   return (
@@ -103,7 +105,7 @@ export default function Backglass() {
                 </p>
               )}
 
-              {snapshot.claim?.verificationUrl && (
+              {shouldShowScoreClaimQr && snapshot.claim?.verificationUrl && (
                 <div className="mt-4 flex flex-col items-center">
                   <ScoreClaimQrCode
                     verificationUrl={snapshot.claim.verificationUrl}

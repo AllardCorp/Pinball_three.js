@@ -164,7 +164,7 @@ export function useScoreClaim({ claimCode }: UseScoreClaimOptions) {
       // confirmation, sans refresh et sans deuxième requête fragile.
       setClaim(payload);
       setStatus("approved");
-      setFeedback("Le score a bien été rattaché à votre compte.");
+      setFeedback(null);
     } finally {
       setIsApproving(false);
     }
