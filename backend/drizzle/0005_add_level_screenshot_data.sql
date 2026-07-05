@@ -1,0 +1,1 @@
+ALTER TABLE "levels" ADD COLUMN "screenshot_data" "bytea";

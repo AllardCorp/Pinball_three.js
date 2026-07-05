@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { PivotControls } from "@react-three/drei";
 import * as THREE from "three";
+import { getMakerElementConfig } from "@/config/makerElementConfig";
 import { type MakerElement, useMakerStore } from "@/store/useMakerStore";
+import { ElementGeometry } from "./ElementGeometry";
 
 /**
  * Fonction raycast no-op : retourne toujours null (aucune intersection).
@@ -68,7 +70,7 @@ export function PlayfieldElement({ element }: PlayfieldElementProps) {
   };
 
   /**
-   * Rendu de la géométrie de prévisualisation selon le type d'élément.
+   * Rendu de la géométrie de prévisualisation, piloté par MAKER_ELEMENT_CONFIG.
    *
    * @param disableRaycast — si true, le mesh ne réagit plus au raycaster.
    *   Activé quand l'élément est sélectionné (= PivotControls actif) pour
@@ -77,42 +79,24 @@ export function PlayfieldElement({ element }: PlayfieldElementProps) {
    *   la sélection au clic.
    */
   const renderGeometry = (disableRaycast = false) => {
+    const config = getMakerElementConfig(element.type);
+    // Type inconnu (niveau sauvegardé par une version plus récente du Maker) :
+    // on ne rend rien plutôt que de planter le Canvas.
+    if (!config) return null;
+
     const raycast = disableRaycast ? noopRaycast : undefined;
-    switch (element.type) {
-      case "cylinder":
-        return (
-          <mesh castShadow receiveShadow raycast={raycast}>
-            <cylinderGeometry args={[1.5, 1.5, 1, 32]} />
-            <meshStandardMaterial
-              color={element.color || "#3b82f6"}
-              roughness={element.roughness !== undefined ? element.roughness : 0.2}
-              metalness={element.metalness !== undefined ? element.metalness : 0.8}
-            />
-          </mesh>
-        );
-      case "box":
-        return (
-          <mesh castShadow receiveShadow raycast={raycast}>
-            <boxGeometry args={[2, 2, 2]} />
-            <meshStandardMaterial
-              color={isSelected ? "#ea580c" : (element.color || "#ef4444")}
-              roughness={element.roughness !== undefined ? element.roughness : 0.2}
-              metalness={element.metalness !== undefined ? element.metalness : 0.8}
-            />
-          </mesh>
-        );
-      case "sphere":
-        return (
-          <mesh castShadow receiveShadow raycast={raycast}>
-            <sphereGeometry args={[1.2, 32, 32]} />
-            <meshStandardMaterial
-              color={isSelected ? "#ea580c" : (element.color || "#10b981")}
-              roughness={element.roughness !== undefined ? element.roughness : 0.2}
-              metalness={element.metalness !== undefined ? element.metalness : 0.8}
-            />
-          </mesh>
-        );
-    }
+    const color = isSelected ? config.selectedColor : (element.color ?? config.defaults.color);
+
+    return (
+      <mesh castShadow receiveShadow raycast={raycast}>
+        <ElementGeometry type={element.type} />
+        <meshStandardMaterial
+          color={color}
+          roughness={element.roughness ?? config.defaults.roughness}
+          metalness={element.metalness ?? config.defaults.metalness}
+        />
+      </mesh>
+    );
   };
 
   // ─── Élément sélectionné : on affiche le gizmo PivotControls ───────────────

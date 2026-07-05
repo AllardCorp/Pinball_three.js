@@ -36,6 +36,20 @@
       "when": 1782328000159,
       "tag": "0004_square_shape",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1783256510329,
+      "tag": "0005_add_level_screenshot_data",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783256526775,
+      "tag": "0006_drop_level_screenshot_url",
+      "breakpoints": true
     }
   ]
 }
