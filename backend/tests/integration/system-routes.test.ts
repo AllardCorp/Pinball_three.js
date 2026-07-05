@@ -177,9 +177,27 @@ describe("system route behavior", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       entries: [
-        { rank: 1, score: 10000, name: "Player One" },
-        { rank: 2, score: 5000, name: "player2" },
-        { rank: 3, score: 2000, name: "Anonyme" },
+        {
+          rank: 1,
+          score: 10000,
+          name: "Player One",
+          username: "player1",
+          displayUsername: "Player One",
+        },
+        {
+          rank: 2,
+          score: 5000,
+          name: "player2",
+          username: "player2",
+          displayUsername: "player2",
+        },
+        {
+          rank: 3,
+          score: 2000,
+          name: "Anonyme",
+          username: null,
+          displayUsername: "Anonyme",
+        },
       ],
     });
   });

@@ -44,10 +44,12 @@ export function useScoreClaim({ claimCode }: UseScoreClaimOptions) {
 
   async function loadScoreClaim({
     clearFeedback = true,
+    preserveCurrentStateOnError = false,
     signal,
     showLoading = true,
   }: {
     clearFeedback?: boolean;
+    preserveCurrentStateOnError?: boolean;
     signal?: AbortSignal;
     showLoading?: boolean;
   } = {}) {
@@ -74,17 +76,23 @@ export function useScoreClaim({ claimCode }: UseScoreClaimOptions) {
       );
 
       if (response.status === 404) {
-        setStatus("not_found");
+        if (!preserveCurrentStateOnError) {
+          setStatus("not_found");
+        }
         return;
       }
 
       if (response.status === 410) {
-        setStatus("expired");
+        if (!preserveCurrentStateOnError) {
+          setStatus("expired");
+        }
         return;
       }
 
       if (!response.ok) {
-        setStatus("error");
+        if (!preserveCurrentStateOnError) {
+          setStatus("error");
+        }
         return;
       }
 
@@ -94,7 +102,9 @@ export function useScoreClaim({ claimCode }: UseScoreClaimOptions) {
     } catch (error) {
       if (!signal?.aborted) {
         console.error("Score claim lookup failed:", error);
-        setStatus("error");
+        if (!preserveCurrentStateOnError) {
+          setStatus("error");
+        }
       }
     }
   }
@@ -147,26 +157,14 @@ export function useScoreClaim({ claimCode }: UseScoreClaimOptions) {
         return;
       }
 
-      const payload = (await response.json()) as {
-        game: ScoreClaimGame;
-        status: "approved";
-      };
+      const payload = (await response.json()) as ScoreClaimPayload;
 
-      setClaim((currentClaim) =>
-        currentClaim
-          ? {
-              ...currentClaim,
-              game: payload.game,
-              status: payload.status,
-            }
-          : currentClaim,
-      );
+      // Le backend renvoie le même payload public que `/status/:code`.
+      // La page mobile peut donc remplacer immédiatement le bouton par la
+      // confirmation, sans refresh et sans deuxième requête fragile.
+      setClaim(payload);
       setStatus("approved");
-      setFeedback("Le score a bien été rattaché à votre compte.");
-
-      // On relit immédiatement le statut complet pour afficher le compte
-      // rattaché sans obliger l'utilisateur à rafraîchir la page mobile.
-      await loadScoreClaim({ clearFeedback: false, showLoading: false });
+      setFeedback(null);
     } finally {
       setIsApproving(false);
     }

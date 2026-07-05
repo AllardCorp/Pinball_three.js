@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import Home from "../pages/Home";
+import Home, { getHomeLinks } from "../pages/Home";
 
 const { signOutMock, useSessionMock, withModeMock } = vi.hoisted(() => ({
   signOutMock: vi.fn(),
@@ -51,6 +51,23 @@ describe("Page Home", () => {
     renderWithRouter(<Home />);
 
     expect(screen.getByText("Pinball Three.js")).toBeInTheDocument();
+  });
+
+  it("limite les liens d'accueil au portail public quand le build cible le VPS", () => {
+    expect(getHomeLinks(true)).toEqual([
+      { label: "Login", path: "/login" },
+      { label: "Dashboard", path: "/dashboard" },
+    ]);
+  });
+
+  it("conserve les liens flipper uniquement pour le build local de la borne", () => {
+    expect(getHomeLinks(false).map((link) => link.path)).toEqual([
+      "/login",
+      "/dashboard",
+      "/playfield",
+      "/backglass",
+      "/dmd",
+    ]);
   });
 
   it("affiche l'etat de chargement de session", () => {
