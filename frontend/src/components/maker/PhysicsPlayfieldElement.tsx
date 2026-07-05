@@ -1,6 +1,8 @@
 import { useRef } from "react";
 import { RigidBody, type RapierRigidBody, type CollisionEnterPayload } from "@react-three/rapier";
+import { getMakerElementConfig } from "@/config/makerElementConfig";
 import type { MakerElement } from "@/store/useMakerStore";
+import { ElementGeometry } from "./ElementGeometry";
 
 interface Props {
   element: MakerElement;
@@ -8,6 +10,7 @@ interface Props {
 
 export function PhysicsPlayfieldElement({ element }: Props) {
   const rigidBodyRef = useRef<RapierRigidBody>(null);
+  const config = getMakerElementConfig(element.type);
 
   const handleCollision = (e: CollisionEnterPayload) => {
     if (!element.isBumper) return;
@@ -20,13 +23,17 @@ export function PhysicsPlayfieldElement({ element }: Props) {
     const dy = ballPos.y - bumperPos.y;
     const dz = ballPos.z - bumperPos.z;
     const len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
-    const strength = element.bumpStrength ?? 15;
+    const strength = element.bumpStrength ?? config?.defaults.bumpStrength ?? 15;
 
     e.other.rigidBody.applyImpulse(
       { x: (dx / len) * strength, y: (dy / len) * strength, z: (dz / len) * strength },
       true,
     );
   };
+
+  // Type inconnu (niveau sauvegardé par une version plus récente du Maker) :
+  // pas de RigidBody plutôt que de planter la physique.
+  if (!config) return null;
 
   return (
     <RigidBody
@@ -40,13 +47,11 @@ export function PhysicsPlayfieldElement({ element }: Props) {
     >
       <group scale={element.scale}>
         <mesh castShadow receiveShadow>
-          {element.type === "cylinder" && <cylinderGeometry args={[1.5, 1.5, 1, 32]} />}
-          {element.type === "box" && <boxGeometry args={[2, 2, 2]} />}
-          {element.type === "sphere" && <sphereGeometry args={[1.2, 32, 32]} />}
+          <ElementGeometry type={element.type} />
           <meshStandardMaterial
-            color={element.color ?? "#ffffff"}
-            roughness={element.roughness ?? 0.3}
-            metalness={element.metalness ?? 0.5}
+            color={element.color ?? config.defaults.color}
+            roughness={element.roughness ?? config.defaults.roughness}
+            metalness={element.metalness ?? config.defaults.metalness}
           />
         </mesh>
       </group>

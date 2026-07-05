@@ -31,7 +31,14 @@ export default function FlipperApp() {
             </AuthGuard>
           }
         />
-        <Route path="/maker" element={<FlipperMaker />} />
+        <Route
+          path="/maker/*"
+          element={
+            <AuthGuard>
+              <FlipperMaker />
+            </AuthGuard>
+          }
+        />
         <Route path="/backglass" element={<Backglass />} />
         <Route path="/dmd" element={<DMD />} />
       </Routes>

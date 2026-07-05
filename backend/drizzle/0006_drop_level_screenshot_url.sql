@@ -1,0 +1,1 @@
+ALTER TABLE "levels" DROP COLUMN "screenshot_url";
