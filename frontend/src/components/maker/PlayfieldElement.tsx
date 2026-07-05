@@ -20,10 +20,12 @@ import { ElementGeometry } from "./ElementGeometry";
  */
 const noopRaycast = () => null;
 
+// Interface définissant la structure attendue par le composant de l'obstacle.
 interface PlayfieldElementProps {
   element: MakerElement;
 }
 
+// Composant gérant l'affichage 3D d'un élément, sa sélection et son outil de déplacement.
 export function PlayfieldElement({ element }: PlayfieldElementProps) {
   const selectedElementId = useMakerStore((state) => state.selectedElementId);
   const setSelectedElementId = useMakerStore((state) => state.setSelectedElementId);
@@ -43,9 +45,7 @@ export function PlayfieldElement({ element }: PlayfieldElementProps) {
     return m;
   }, [element.position, element.rotation, element.scale]);
 
-  // Callback appelé à chaque frame de drag du gizmo.
-  // Décompose la matrice locale en position/rotation/scale
-  // et met à jour le store Zustand.
+  // Extrait les coordonnées spatiales de la matrice du Gizmo pour mettre à jour le store Zustand.
   const handleDrag = (localMatrix: THREE.Matrix4) => {
     const pos = new THREE.Vector3();
     const quat = new THREE.Quaternion();
@@ -61,23 +61,13 @@ export function PlayfieldElement({ element }: PlayfieldElementProps) {
     );
   };
 
-  // Sélection de l'élément au clic complet (pointerDown + pointerUp).
-  // stopPropagation empêche le clic de se propager au Canvas
-  // (sinon onPointerMissed du Canvas désélectionnerait immédiatement).
+  // Gère la sélection de l'élément au clic et bloque la propagation pour éviter les bugs R3F.
   const handleClick = (e: THREE.Event & MouseEvent) => {
     e.stopPropagation();
     setSelectedElementId(element.id);
   };
 
-  /**
-   * Rendu de la géométrie de prévisualisation, piloté par MAKER_ELEMENT_CONFIG.
-   *
-   * @param disableRaycast — si true, le mesh ne réagit plus au raycaster.
-   *   Activé quand l'élément est sélectionné (= PivotControls actif) pour
-   *   éviter que le mesh intercepte les clics destinés aux flèches du gizmo.
-   *   Désactivé quand l'élément n'est pas sélectionné, pour permettre
-   *   la sélection au clic.
-   */
+  // Génère la forme 3D et le matériau PBR (couleur, rugosité, métal) de l'élément.
   const renderGeometry = (disableRaycast = false) => {
     const config = getMakerElementConfig(element.type);
     // Type inconnu (niveau sauvegardé par une version plus récente du Maker) :

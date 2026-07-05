@@ -12,6 +12,7 @@ interface EditorCanvasProps {
   onScreenshotReady: (fn: () => string) => void;
 }
 
+// Composant configurant la scène 3D (Canvas WebGL, caméra, lumières, contrôles) et listant les obstacles.
 export function EditorCanvas({ elements, onScreenshotReady }: EditorCanvasProps) {
   const setSelectedElementId = useMakerStore((state) => state.setSelectedElementId);
 

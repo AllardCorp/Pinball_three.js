@@ -19,6 +19,7 @@ export type MakerElementDefaults = {
   bumpStrength: number;
 };
 
+// Structure de configuration définissant l'affichage (palette, inspecteur) et la 3D d'une forme.
 export type MakerElementTypeConfig = {
   label: string;
   emoji: string;
@@ -28,6 +29,7 @@ export type MakerElementTypeConfig = {
   defaults: MakerElementDefaults;
 };
 
+// Configuration globale centralisant les libellés, dimensions 3D et constantes physiques par défaut.
 export const MAKER_ELEMENT_CONFIG: Record<MakerElementType, MakerElementTypeConfig> = {
   cylinder: {
     label: "Cylindre",
@@ -73,6 +75,7 @@ export const MAKER_ELEMENT_CONFIG: Record<MakerElementType, MakerElementTypeConf
   },
 };
 
+// Type-guard vérifiant de manière sûre qu'une valeur correspond bien à un type d'élément 3D géré.
 export function isMakerElementType(value: unknown): value is MakerElementType {
   return (
     typeof value === "string" &&
@@ -80,9 +83,7 @@ export function isMakerElementType(value: unknown): value is MakerElementType {
   );
 }
 
-// Retourne `undefined` pour un type inconnu (niveau sauvegardé par une
-// version plus récente du Maker) — c'est au rendu d'ignorer proprement
-// l'élément plutôt qu'à ce fichier de faire des suppositions.
+// Récupère de façon sécurisée la configuration d'un type d'élément (renvoie undefined si inconnu).
 export function getMakerElementConfig(type: string): MakerElementTypeConfig | undefined {
   return isMakerElementType(type) ? MAKER_ELEMENT_CONFIG[type] : undefined;
 }

@@ -7,6 +7,7 @@ import * as THREE from "three";
 const SCREENSHOT_W = 300;
 const SCREENSHOT_H = 480;
 
+// Composant réalisant un rendu hors-écran (off-screen) pour capturer une miniature JPEG de 300x480px du plateau.
 export function ScreenshotCapture({ onReady }: { onReady: (fn: () => string) => void }) {
   const { gl, scene } = useThree();
 

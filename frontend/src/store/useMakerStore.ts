@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { MAKER_ELEMENT_CONFIG, type MakerElementType } from "@/config/makerElementConfig";
 
+// Représente un obstacle 3D placé sur le plateau (coordonnées, apparence et propriétés de bumper).
 export interface MakerElement {
   id: string;
   name: string;
@@ -15,6 +16,7 @@ export interface MakerElement {
   bumpStrength?: number; // force de rebond physique
 }
 
+// Données légères de niveau utilisées pour afficher les cartes dans la liste de sélection.
 export interface LevelListItem {
   id: string;
   name: string;
@@ -24,6 +26,7 @@ export interface LevelListItem {
   isOwner: boolean;
 }
 
+// Données complètes d'un niveau (avec la liste de tous ses obstacles) chargé pour jouer ou éditer.
 export interface LevelDetail extends LevelListItem {
   elements: MakerElement[];
 }
@@ -49,11 +52,13 @@ interface MakerState {
   resetLevel: () => void;
 }
 
+// Store Zustand principal de l'éditeur gérant l'état en direct du niveau et des interactions 3D.
 export const useMakerStore = create<MakerState>((set) => ({
   elements: [],
   selectedElementId: null,
   levelName: "Mon niveau",
   levelId: null,
+  // Instancie un nouvel obstacle avec un identifiant unique et les propriétés par défaut de sa configuration.
   addElement: (type) =>
     set((state) => {
       const config = MAKER_ELEMENT_CONFIG[type];
@@ -74,18 +79,21 @@ export const useMakerStore = create<MakerState>((set) => ({
         selectedElementId: id,
       };
     }),
+  // Met à jour en continu les coordonnées spatiales de l'objet manipulé en 3D à 60 FPS.
   updateElementTransform: (id, position, rotation, scale) =>
     set((state) => ({
       elements: state.elements.map((el) =>
         el.id === id ? { ...el, position, rotation, scale } : el
       ),
     })),
+  // Modifie les propriétés de texture, couleur ou de physique de l'objet depuis l'Inspecteur 2D.
   updateElementProperties: (id, properties) =>
     set((state) => ({
       elements: state.elements.map((el) =>
         el.id === id ? { ...el, ...properties } : el
       ),
     })),
+  // Supprime un obstacle et désélectionne-le s'il était actif.
   removeElement: (id) =>
     set((state) => ({
       elements: state.elements.filter((el) => el.id !== id),
@@ -95,6 +103,7 @@ export const useMakerStore = create<MakerState>((set) => ({
   setSelectedElementId: (id) => set({ selectedElementId: id }),
   setLevelName: (name) => set({ levelName: name }),
   setLevelId: (id) => set({ levelId: id }),
+  // Charge un niveau complet depuis l'API en conservant les éléments inconnus (tolérance de version).
   loadLevel: (level) =>
     set({
       // `level.elements` reste un passe-plat tel quel : un élément dont le
@@ -107,6 +116,7 @@ export const useMakerStore = create<MakerState>((set) => ({
       levelName: level.name,
       levelId: level.id,
     }),
+  // Réinitialise tout le store pour démarrer un nouveau niveau vide.
   resetLevel: () =>
     set({
       elements: [],
