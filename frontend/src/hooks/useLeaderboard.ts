@@ -6,6 +6,7 @@ export type LeaderboardEntry = {
   rank: number;
   score: number;
   name: string;
+  username: string;
 };
 
 type LeaderboardState = {

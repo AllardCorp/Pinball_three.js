@@ -45,6 +45,7 @@ export function registerLeaderboardRoutes({
       rank: index + 1,
       score: game.finalScore,
       name: game.displayUsername ?? game.username ?? "Anonyme",
+      username: game.username
     }));
 
     response.json({ entries });
