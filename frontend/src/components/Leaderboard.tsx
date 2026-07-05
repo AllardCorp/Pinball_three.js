@@ -34,9 +34,8 @@ export default function Leaderboard({ entries, isLoading, error }: LeaderboardPr
             {entries.map((entry) => (
               <tr
                 key={entry.rank}
-                className={`border-t border-white/5 ${
-                  entry.rank === 1 ? "text-yellow-300" : "text-gray-200"
-                }`}
+                className={`border-t border-white/5 ${entry.rank === 1 ? "text-yellow-300" : "text-gray-200"
+                  }`}
               >
                 <td className="py-2 pl-6 font-mono text-sm font-bold">
                   #{entry.rank}

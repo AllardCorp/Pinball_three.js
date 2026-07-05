@@ -29,7 +29,7 @@ export default function SewerSystem({ nodes, materials }: SewerSystemProps) {
   const exitOpenTarget = useRef(0);
 
   // OUTIL DE LEVEL DESIGN (Leva)
-  // Pas de la config leva global car utile pour le debug et pas pour le gameplay
+  // Pas dans la config leva global car utile pour le debug et pas pour le gameplay
   const {
     debugMode,
     openDepth,

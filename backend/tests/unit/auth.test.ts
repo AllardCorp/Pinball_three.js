@@ -44,7 +44,11 @@ vi.mock("../../src/env.js", () => ({
   env: mocks.env,
 }));
 
-import { createAuth } from "../../src/auth.js";
+import {
+  createAuth,
+  createUsernameBaseFromUser,
+  normalizeUsernameCandidate,
+} from "../../src/auth.js";
 
 function buildAuthEnv(
   overrides: Partial<{
@@ -150,6 +154,152 @@ describe("auth configuration", () => {
       maxUsernameLength: 30,
       minUsernameLength: 3,
     });
+  });
+
+  it("normalizes missing OAuth profile fields before user creation", async () => {
+    const limitMock = vi.fn(async () => []);
+    const whereMock = vi.fn(() => ({ limit: limitMock }));
+    const fromMock = vi.fn(() => ({ where: whereMock }));
+    const selectMock = vi.fn(() => ({ from: fromMock }));
+
+    createAuth({
+      db: { select: selectMock } as never,
+      env: buildAuthEnv() as never,
+    });
+
+    const options = mocks.betterAuth.mock.calls.at(-1)?.[0] as {
+      databaseHooks: {
+        user: {
+          create: {
+            before: (
+              user: {
+                displayUsername?: string | null;
+                email?: string | null;
+                name?: string | null;
+                username?: string | null;
+              },
+              context: null,
+            ) => Promise<{
+              data: {
+                displayUsername: string;
+                name: string;
+                username: string;
+              };
+            }>;
+          };
+        };
+      };
+    };
+
+    const result = await options.databaseHooks.user.create.before(
+      {
+        email: "christopher@example.test",
+        name: "Christopher De Pasqual",
+      },
+      null,
+    );
+
+    expect(result.data).toMatchObject({
+      displayUsername: "christopher-de-pasqual",
+      name: "christopher-de-pasqual",
+      username: "christopher-de-pasqual",
+    });
+    expect(selectMock).toHaveBeenCalled();
+  });
+
+  it("normalizes a readable username candidate from profile values", () => {
+    expect(normalizeUsernameCandidate("Élodie Dragon Slayer !!!")).toBe(
+      "elodie-dragon-slayer",
+    );
+    expect(normalizeUsernameCandidate("ab")).toBe("joueur");
+    expect(createUsernameBaseFromUser({
+      email: "Player.One+Arcade@example.test",
+    })).toBe("player-one-arcade");
+    expect(createUsernameBaseFromUser({})).toBe("joueur");
+  });
+
+  it("uses a numbered suffix when the generated OAuth username is already taken", async () => {
+    const limitMock = vi
+      .fn()
+      .mockResolvedValueOnce([{ id: "existing-user" }])
+      .mockResolvedValueOnce([]);
+    const whereMock = vi.fn(() => ({ limit: limitMock }));
+    const fromMock = vi.fn(() => ({ where: whereMock }));
+    const selectMock = vi.fn(() => ({ from: fromMock }));
+
+    createAuth({
+      db: { select: selectMock } as never,
+      env: buildAuthEnv() as never,
+    });
+
+    const options = mocks.betterAuth.mock.calls.at(-1)?.[0] as {
+      databaseHooks: {
+        user: {
+          create: {
+            before: (
+              user: {
+                email?: string | null;
+                name?: string | null;
+                username?: string | null;
+              },
+              context: null,
+            ) => Promise<{
+              data: {
+                username: string;
+              };
+            }>;
+          };
+        };
+      };
+    };
+
+    const result = await options.databaseHooks.user.create.before(
+      {
+        email: "taken@example.test",
+        name: "Taken",
+      },
+      null,
+    );
+
+    expect(result.data.username).toBe("taken-1");
+    expect(limitMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("leaves complete user profiles unchanged", async () => {
+    createAuth({
+      db: { kind: "test-db" } as never,
+      env: buildAuthEnv() as never,
+    });
+
+    const options = mocks.betterAuth.mock.calls.at(-1)?.[0] as {
+      databaseHooks: {
+        user: {
+          create: {
+            before: (
+              user: {
+                displayUsername?: string | null;
+                email?: string | null;
+                name?: string | null;
+                username?: string | null;
+              },
+              context: null,
+            ) => Promise<unknown>;
+          };
+        };
+      };
+    };
+
+    await expect(
+      options.databaseHooks.user.create.before(
+        {
+          displayUsername: "alice",
+          email: "alice@example.test",
+          name: "Alice",
+          username: "alice",
+        },
+        null,
+      ),
+    ).resolves.toBeUndefined();
   });
 
   it("logs a success message when Better Auth initialization completes", () => {

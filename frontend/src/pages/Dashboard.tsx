@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAppMode } from "../hooks/useAppMode";
+import { isFlipperAppTarget } from "../lib/app-target";
 import { authClient, signOut, useSession } from "../lib/auth-client";
 
 type ProfileValues = {
@@ -521,9 +522,11 @@ export default function Dashboard() {
           <Link className="text-blue-600" to={withMode("/")}>
             Retour à l'accueil
           </Link>
-          <Link className="text-blue-600" to={withMode("/playfield")}>
-            Ouvrir le Playfield
-          </Link>
+          {isFlipperAppTarget && (
+            <Link className="text-blue-600" to={withMode("/playfield")}>
+              Ouvrir le Playfield
+            </Link>
+          )}
         </div>
       </section>
     </main>

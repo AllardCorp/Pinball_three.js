@@ -1,32 +1,53 @@
 import { Link } from "react-router-dom";
 
 import { useAppMode } from "../hooks/useAppMode";
+import { isPublicAppTarget } from "../lib/app-target";
 import { signOut, useSession } from "../lib/auth-client";
+
+type HomeLink = {
+  label: string;
+  path: string;
+};
+
+export function getHomeLinks(isPublicTarget = isPublicAppTarget): HomeLink[] {
+  const publicLinks: HomeLink[] = [
+    { label: "Login", path: "/login" },
+    { label: "Dashboard", path: "/dashboard" },
+  ];
+
+  if (isPublicTarget) {
+    return publicLinks;
+  }
+
+  // Ces écrans appartiennent au build flipper local. On ne les expose pas
+  // sur le portail VPS pour éviter des liens cassés ou inutiles côté mobile.
+  return [
+    ...publicLinks,
+    { label: "Playfield", path: "/playfield" },
+    { label: "Backglass", path: "/backglass" },
+    { label: "DMD", path: "/dmd" },
+  ];
+}
 
 export default function Home() {
   const { data: session, isPending } = useSession();
   const { withMode } = useAppMode();
+  const homeLinks = getHomeLinks();
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center gap-6 px-6">
       <h2 className="text-3xl font-semibold">Pinball Three.js</h2>
 
       <div className="flex flex-wrap items-center justify-center gap-4">
-        <Link className="hover:text-blue-600" to={withMode("/login")}>
-          Login
-        </Link>
-        <Link className="hover:text-blue-600" to={withMode("/dashboard")}>
-          Dashboard
-        </Link>
-        <Link className="hover:text-blue-600" to={withMode("/playfield")}>
-          Playfield
-        </Link>
-        <Link className="hover:text-blue-600" to={withMode("/backglass")}>
-          Backglass
-        </Link>
-        <Link className="hover:text-blue-600" to={withMode("/dmd")}>
-          DMD
-        </Link>
+        {homeLinks.map((link) => (
+          <Link
+            className="hover:text-blue-600"
+            key={link.path}
+            to={withMode(link.path)}
+          >
+            {link.label}
+          </Link>
+        ))}
       </div>
       <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
         {isPending && <p>Chargement de la session...</p>}

@@ -107,12 +107,19 @@ describe("score-claims integration - approve", () => {
       .send({ claimCode });
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({
+    expect(response.body).toMatchObject({
+      approvedAt: expect.any(String),
+      expiresAt: expect.any(String),
       game: {
         finalScore: 222222,
         id: gameId,
+        playedAt: expect.any(String),
+        playedDurationSeconds: 90,
       },
       status: "approved",
+      user: {
+        username: "player_ok",
+      },
     });
 
     const [persistedGame] = await db
@@ -158,12 +165,19 @@ describe("score-claims integration - approve", () => {
       .send({ claimCode });
 
     expect(secondResponse.status).toBe(200);
-    expect(secondResponse.body).toEqual({
+    expect(secondResponse.body).toMatchObject({
+      approvedAt: expect.any(String),
+      expiresAt: expect.any(String),
       game: {
         finalScore: 333333,
         id: gameId,
+        playedAt: expect.any(String),
+        playedDurationSeconds: 90,
       },
       status: "approved",
+      user: {
+        username: "player_idempotent",
+      },
     });
   });
 

@@ -54,7 +54,7 @@ export const LIVE_LAYOUT = {
     centerY: 29,
   },
   score: {
-    centerX: 110,
+    centerX: 96,
     eventMaxWidth: 96,
     eventPreferredScale: 2,
     eventY: 4,

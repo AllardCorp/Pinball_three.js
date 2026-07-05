@@ -1,10 +1,11 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGameStore } from "@/store/gameStore/useGameStore";
+import { SCORE_VALUES } from "@/config/gameBalancingConfig";
 
 export function useRampScoring(
-  currentSurfaceRef: React.MutableRefObject<string>,
-  isPlaying: boolean
+  currentSurfaceRef: React.RefObject<string>,
+  isPlaying: boolean,
 ) {
   const scoreTimerRef = useRef(0);
   const addScore = useGameStore((state) => state.addScore);
@@ -23,10 +24,10 @@ export function useRampScoring(
     if (isOnRockRamp || isOnRamps) {
       // Accumule le temps passé sur la rampe
       scoreTimerRef.current += delta;
-      
+
       // Si 0.5s se sont écoulées
       if (scoreTimerRef.current >= 0.5) {
-        addScore(100); // Ajoute 10 points
+        addScore(SCORE_VALUES.rampHabit); // Ajoute 10 points
         scoreTimerRef.current -= 0.5; // On retire 0.5 pour garder le reliquat (précision absolue)
       }
     } else {
