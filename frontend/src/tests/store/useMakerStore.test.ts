@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { MAKER_ELEMENT_CONFIG } from "@/config/makerElementConfig";
-import { type LevelDetail, useMakerStore } from "@/store/useMakerStore";
+import { type LevelDetail, type MakerElement, useMakerStore } from "@/store/useMakerStore";
 
 function get() {
   return useMakerStore.getState();
@@ -97,20 +97,23 @@ describe("useMakerStore", () => {
     });
 
     it("keeps an element with an unrecognized type intact (never filtered)", () => {
+      // Simule un élément JSON reçu de l'API avec un `type` que la version
+      // actuelle du frontend ne connaît pas encore (voir §5 MAKER_SYSTEM.md).
+      // Cast explicite plutôt que `@ts-expect-error` : ce dernier doit
+      // s'aligner exactement sur la ligne où TS remonte l'erreur, ce qui est
+      // fragile pour un littéral d'objet imbriqué dans un tableau typé.
+      const futureElement = {
+        id: "el-future",
+        name: "Rampe",
+        type: "future-ramp",
+        position: [1, 2, 3],
+        rotation: [0, 0, 0],
+        scale: [1, 1, 1],
+      } as unknown as MakerElement;
+
       const levelWithUnknownElement: LevelDetail = {
         ...level,
-        elements: [
-          ...level.elements,
-          {
-            id: "el-future",
-            name: "Rampe",
-            // @ts-expect-error - type volontairement absent de MAKER_ELEMENT_CONFIG
-            type: "future-ramp",
-            position: [1, 2, 3],
-            rotation: [0, 0, 0],
-            scale: [1, 1, 1],
-          },
-        ],
+        elements: [...level.elements, futureElement],
       };
 
       get().loadLevel(levelWithUnknownElement);
