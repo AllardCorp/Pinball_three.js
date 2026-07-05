@@ -33,6 +33,7 @@ export function registerLeaderboardRoutes({
     const topGames = await db
       .select({
         finalScore: games.finalScore,
+        name: users.name,
         username: users.username,
         displayUsername: users.displayUsername,
       })
@@ -44,8 +45,9 @@ export function registerLeaderboardRoutes({
     const entries = topGames.map((game, index) => ({
       rank: index + 1,
       score: game.finalScore,
-      name: game.displayUsername ?? game.username ?? "Anonyme",
-      username: game.username
+      displayUsername: game.displayUsername ?? game.username ?? "Anonyme",
+      username: game.username,
+      name: game.name ?? game.displayUsername ?? game.username ?? "Anonyme"
     }));
 
     response.json({ entries });
