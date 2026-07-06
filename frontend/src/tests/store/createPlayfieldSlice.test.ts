@@ -9,49 +9,10 @@ describe("createPlayfieldSlice", () => {
   beforeEach(() => {
     useGameStore.setState({
       isPlaying: true,
-      scoreMultiplier: 1,
       mineHits: 0,
       rubiesActive: [false, false, false],
       leftKickbackActive: true,
       rightKickbackActive: true,
-    });
-  });
-
-  describe("addScoreMultiplier", () => {
-    it("increments when playing", () => {
-      get().addScoreMultiplier();
-      expect(get().scoreMultiplier).toBe(2);
-    });
-
-    it("caps at 10", () => {
-      useGameStore.setState({ scoreMultiplier: 10 });
-      get().addScoreMultiplier();
-      expect(get().scoreMultiplier).toBe(10);
-    });
-
-    it("does nothing when not playing", () => {
-      useGameStore.setState({ isPlaying: false });
-      get().addScoreMultiplier();
-      expect(get().scoreMultiplier).toBe(1);
-    });
-  });
-
-  describe("removeScoreMultiplier", () => {
-    it("decrements when playing", () => {
-      useGameStore.setState({ scoreMultiplier: 5 });
-      get().removeScoreMultiplier();
-      expect(get().scoreMultiplier).toBe(4);
-    });
-
-    it("floors at 1", () => {
-      get().removeScoreMultiplier();
-      expect(get().scoreMultiplier).toBe(1);
-    });
-
-    it("does nothing when not playing", () => {
-      useGameStore.setState({ isPlaying: false, scoreMultiplier: 5 });
-      get().removeScoreMultiplier();
-      expect(get().scoreMultiplier).toBe(5);
     });
   });
 
@@ -100,7 +61,11 @@ describe("createPlayfieldSlice", () => {
     });
 
     it("resets all rubies and grants bonus when all three become active", () => {
-      useGameStore.setState({ rubiesActive: [true, true, false], scores: [0], currentPlayerIndex: 0 });
+      useGameStore.setState({
+        rubiesActive: [true, true, false],
+        scores: [0],
+        currentPlayerIndex: 0,
+      });
       get().toggleRuby(2);
       expect(get().rubiesActive).toEqual([false, false, false]);
     });

@@ -51,7 +51,6 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
         ballsRemaining: initialBalls,
         isPlaying: true,
         ballInLauncher: true,
-        scoreMultiplier: 1,
         mineHits: 0,
         rubiesActive: [false, false, false],
         leftKickbackActive: true,
@@ -121,7 +120,6 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
         activeBalls: [nextTurnBall], // Prépare la bille du prochain joueur
         rubiesActive: [false, false, false],
         mineHits: 0,
-        scoreMultiplier: 1,
         leftKickbackActive: true,
         rightKickbackActive: true,
       });

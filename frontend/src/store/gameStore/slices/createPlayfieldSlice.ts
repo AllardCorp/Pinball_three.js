@@ -3,14 +3,11 @@ import { type GameState, syncState } from "../gameStore.types";
 import { SCORE_VALUES } from "@/config/gameBalancingConfig";
 
 export interface PlayfieldSlice {
-  scoreMultiplier: number;
   mineHits: number;
   rubiesActive: [boolean, boolean, boolean];
   leftKickbackActive: boolean;
   rightKickbackActive: boolean;
   useKickback: (side: "left" | "right") => void;
-  addScoreMultiplier: () => void;
-  removeScoreMultiplier: () => void;
   incrementMine: () => void;
   setMineHits: (hits: number) => void;
   resetMine: () => void;
@@ -29,25 +26,10 @@ export const createPlayfieldSlice: StateCreator<
   };
 
   return {
-    scoreMultiplier: 1,
     mineHits: 0,
     rubiesActive: [false, false, false],
     leftKickbackActive: true,
     rightKickbackActive: true,
-
-    addScoreMultiplier: () => {
-      if (get().isPlaying) {
-        setAndSync({
-          scoreMultiplier: Math.min(10, get().scoreMultiplier + 1),
-        });
-      }
-    },
-
-    removeScoreMultiplier: () => {
-      if (get().isPlaying) {
-        setAndSync({ scoreMultiplier: Math.max(1, get().scoreMultiplier - 1) });
-      }
-    },
 
     incrementMine: () => {
       const currentHits = get().mineHits;

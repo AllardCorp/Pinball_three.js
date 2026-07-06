@@ -36,7 +36,6 @@ export const ELF_POWER_CONFIG = {
     "fakir",
     "rampHabitRight",
     "rampHabitLeft",
-    // "mine",
     "gems",
   ] as const,
 };
