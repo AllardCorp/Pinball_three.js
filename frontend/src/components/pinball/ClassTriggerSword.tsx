@@ -40,7 +40,7 @@ export default function ClassTriggerSword() {
       return new THREE.Vector3(0, -8, 0);
     }
     const pos = SWORD_POSITIONS[currentPositionIndex] || SWORD_POSITIONS[0];
-    return new THREE.Vector3(pos[0], pos[1] + 3.5, pos[2]);
+    return new THREE.Vector3(pos[0], pos[1], pos[2]);
   }, [isSwordActive, currentPositionIndex]);
 
   // Force la téléportation du rigidBody via la ref pour éviter les problèmes de synchronisation avec React Three Fiber
@@ -91,7 +91,6 @@ export default function ClassTriggerSword() {
       type="fixed"
       colliders={false}
       position={position}
-      scale={2}
     >
       <group
         name="visual_sword"
