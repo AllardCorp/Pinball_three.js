@@ -6,54 +6,6 @@ import * as THREE from "three";
 import PinballBase from "@/components/models/Pinball";
 
 export default function Experience() {
-  // LEVA
-  // const {
-  //   orbitControls,
-  //   useLookAt,
-  //   camX,
-  //   camY,
-  //   camZ,
-  //   targetX,
-  //   targetY,
-  //   targetZ,
-  //   rotX,
-  //   rotY,
-  //   rotZ,
-  //   fov,
-  //   near,
-  //   far,
-  //   filmGauge,
-  //   filmOffset,
-  // } = useControls("Camera & Controls", {
-  //   isOrthographic: false,
-  //   orbitControls: false,
-  //   useLookAt: true,
-  //
-  //   // Position de la caméra
-  //   camX: { value: -0.62, min: -400, max: 400, step: 0.1 },
-  //   camY: { value: 62.6, min: -400, max: 400, step: 0.1 },
-  //   camZ: { value: 30.93, min: -400, max: 400, step: 0.1 },
-  //
-  //   // Cible (Mets targetX à 0 pour centrer parfaitement si le flipper est au centre)
-  //   targetX: { value: 0, min: -400, max: 400, step: 0.1 },
-  //   targetY: { value: -3.76, min: -400, max: 400, step: 0.1 },
-  //   targetZ: { value: 2.55, min: -400, max: 400, step: 0.1 },
-  //
-  //   // Rotation
-  //   rotX: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-  //   rotY: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-  //   rotZ: { value: 0, min: -Math.PI, max: Math.PI, step: 0.01 },
-  //
-  //   // Paramètres spécifiques Perspective
-  //   fov: { value: 47.5, min: 10, max: 120, step: 1 },
-  //   filmGauge: { value: 35, min: 1, max: 100, step: 1 },
-  //   filmOffset: { value: 0, min: -400, max: 400, step: 0.1 },
-  //
-  //   // Paramètres partagés
-  //   near: { value: 0.1, min: 0.01, max: 10, step: 0.01 },
-  //   far: { value: 1000, min: 10, max: 5000, step: 1 },
-  // });
-
   const {
     orbitControls,
     useLookAt,

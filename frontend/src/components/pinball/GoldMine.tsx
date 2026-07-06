@@ -122,7 +122,7 @@ const DustEffect = forwardRef<DustEffectRef, { plankColor: string }>(
         tempMatrix.makeScale(currentScale, currentScale, currentScale);
         tempMatrix.setPosition(p.position);
 
-        // On ajoute une rotation aléatoire constante pour que le grain ne paraisse pas figé
+        // Ajoute une rotation aléatoire constante pour que le grain ne paraisse pas figé
         tempMatrix.multiply(new THREE.Matrix4().makeRotationZ(p.life * 2));
 
         instances.current.setMatrixAt(i, tempMatrix);
@@ -278,10 +278,7 @@ export default function GoldMine({ nodes, materials }: GoldMineProps) {
             ballRigidBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
             ballRigidBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
             setTimeout(() => {
-              ballRigidBody.setTranslation(
-                { x: 12.8, y: -1.3, z: -21 },
-                true,
-              );
+              ballRigidBody.setTranslation({ x: 12.8, y: -1.3, z: -21 }, true);
               // Impulsion de sortie
               ballRigidBody.applyImpulse({ x: 0, y: 58, z: 0 }, true);
             }, 50);

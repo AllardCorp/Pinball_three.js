@@ -1523,7 +1523,8 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             name="visual_multi2_off"
             geometry={nodes.visual_multi2_off.geometry}
             material={materials.M_multi2_off}
-            position={[-3.027, -2.826, 14.049]}
+            position={[-3.027, -2.816, 14.049]}
+            renderOrder={2}
           />
           {/* <mesh */}
           {/*   name="visual_multi2_on" */}
@@ -1535,7 +1536,8 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             name="visual_multi4_off"
             geometry={nodes.visual_multi4_off.geometry}
             material={materials.M_multi4_off}
-            position={[1.715, -2.826, 14.049]}
+            position={[1.715, -2.816, 14.049]}
+            renderOrder={2}
           />
           {/* <mesh */}
           {/*   name="visual_multi4_on" */}
@@ -1547,7 +1549,8 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             name="visual_multi6_off"
             geometry={nodes.visual_multi6_off.geometry}
             material={materials.M_multi6_off}
-            position={[-3.027, -2.826, 18.307]}
+            position={[-3.027, -2.816, 18.307]}
+            renderOrder={2}
           />
           {/* <mesh */}
           {/*   name="visual_multi6_on" */}
@@ -1559,7 +1562,8 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             name="visual_multi8_off"
             geometry={nodes.visual_multi8_off.geometry}
             material={materials.M_multi8_off}
-            position={[1.715, -2.826, 18.307]}
+            position={[1.715, -2.816, 18.307]}
+            renderOrder={2}
           />
           {/* <mesh */}
           {/*   name="visual_multi8_on" */}
@@ -1571,7 +1575,8 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             name="visual_multi12_off"
             geometry={nodes.visual_multi12_off.geometry}
             material={materials.M_multi12_off}
-            position={[-0.565, -2.826, 20.281]}
+            position={[-0.565, -2.816, 20.281]}
+            renderOrder={2}
           />
           {/* <mesh */}
           {/*   name="visual_multi12_on" */}
@@ -1583,7 +1588,8 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
             name="visual_multi50_off"
             geometry={nodes.visual_multi50_off.geometry}
             material={materials.M_multi50_off}
-            position={[-0.565, -2.826, 16.358]}
+            position={[-0.565, -2.816, 16.358]}
+            renderOrder={2}
           />
           {/* <mesh */}
           {/*   name="visual_multi50_on" */}
