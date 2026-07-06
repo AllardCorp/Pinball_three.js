@@ -74,6 +74,7 @@ export const createMultiplierSlice: StateCreator<
       const multipliers = get().activeMultipliers;
       let maxMult = 1;
 
+      // Récupère le multiplicateur le plus élevé parmi les multiplicateurs actifs
       for (const key in multipliers) {
         if (multipliers[key].expiresAt > now) {
           if (multipliers[key].value > maxMult) {

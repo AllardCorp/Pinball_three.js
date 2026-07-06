@@ -8,7 +8,7 @@ import { type ClassSlice } from "./slices/createClassSlice";
 export interface GameState
   extends PlayerSlice, PlayfieldSlice, CoreSlice, MultiplierSlice, ClassSlice {}
 
-// --- LOGIQUE DE SYNCHRONISATION (BroadcastChannel) ---
+// --- LOGIQUE DE SYNCHRONISATION (API BroadcastChannel) ---
 export const channel =
   typeof window !== "undefined" ? new BroadcastChannel("pinball-game") : null;
 

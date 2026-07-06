@@ -102,8 +102,12 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
         get().gameOver();
         return;
       }
-
+      // On commence par regarder le joueur suivant dans la liste.
+      // Le modulo (%) permet de revenir au joueur 0 quand on dépasse le dernier joueur.
       let nextPlayer = (state.currentPlayerIndex + 1) % state.playerCount;
+
+      // Tant que le joueur trouvé n'a plus de balles, on passe au joueur suivant.
+      // Le modulo permet encore une fois de boucler au début de la liste.
       while (newBallsRemaining[nextPlayer] <= 0) {
         nextPlayer = (nextPlayer + 1) % state.playerCount;
       }
