@@ -36,7 +36,6 @@ export const ELF_POWER_CONFIG = {
     "fakir",
     "rampHabitRight",
     "rampHabitLeft",
-    // "mine",
     "gems",
   ] as const,
 };
@@ -122,7 +121,6 @@ export type MultiplierSource =
   | "lightRoad"
   | "fakir"
   | "dwarfMultiplier"
-  // | "mine"
   | "gems"
   | "rampHabitRight"
   | "rampHabitLeft"
@@ -157,7 +155,6 @@ export const SUN_BONUS_REQUIRED_SOURCES: MultiplierSource[] = [
   "fakir",
   "rampHabitRight",
   "rampHabitLeft",
-  // "mine",
   "gems",
 ];
 

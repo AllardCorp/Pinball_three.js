@@ -7,7 +7,7 @@ import { createMultiplierSlice } from "./slices/createMultiplierSlice";
 import { createClassSlice } from "./slices/createClassSlice";
 
 export const useGameStore = create<GameState>()((...a) => {
-  const [set] = a; // On extrait 'set' pour l'écouteur du channel
+  const [set] = a; // On extrait 'set' pour l'écouteur du channel équivalenet à set = a[0]
 
   // Écoute des messages provenant des autres fenêtres (BroadcastChannel)
   if (channel) {

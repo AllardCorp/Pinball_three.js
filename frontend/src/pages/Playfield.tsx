@@ -97,8 +97,8 @@ export default function Playfield() {
             <Bloom
               intensity={1.2}
               luminanceSmoothing={0}
-              luminanceThreshold={2}
-              mipmapBlur
+              luminanceThreshold={2} // À partir de quelle luminosité un pixel produit du bloom
+              mipmapBlur // Halo de meilleure qualité, mais plus coûteux en performance car il utilise les différents niveaux de mipmap pour flouter le bloom
             />
             <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
           </EffectComposer>

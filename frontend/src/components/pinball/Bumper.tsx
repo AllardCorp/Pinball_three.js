@@ -65,6 +65,7 @@ export default function Bumper({
     if (e.other.rigidBodyObject?.name === "ball") {
       const now = performance.now();
 
+      // Êmpêche les multi-touches instantanées (moins de 250ms entre deux touches)
       if (now - lastHitTime.current < 250) {
         return;
       }
@@ -75,9 +76,10 @@ export default function Bumper({
       const ballPos = e.other.rigidBody.translation();
       const bumperPos = rigidBodyRef.current.translation();
 
+      // Calcul le vecteur entre la position de la bille et du bumper pour déterminer la direction de l'impulsion
       hitDirection
         .set(ballPos.x - bumperPos.x, 0, ballPos.z - bumperPos.z)
-        .normalize();
+        .normalize(); // normalise retire la notion de distance pour ne garder que la direction
 
       hitDirection.multiplyScalar(strength);
       e.other.rigidBody.applyImpulse(hitDirection, true);

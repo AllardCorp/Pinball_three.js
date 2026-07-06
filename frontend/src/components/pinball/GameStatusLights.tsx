@@ -59,6 +59,7 @@ export default function GameStatusLights({
         position={[-4.524, -2.849 + liftY, 15.309]}
         scale={5.467}
         visible={activeClass === "Elf"}
+        renderOrder={1}
       />
 
       <mesh
@@ -68,6 +69,7 @@ export default function GameStatusLights({
         position={[3.485, -2.849 + liftY, 14.396]}
         scale={3.012}
         visible={activeClass === "Necromancer"}
+        renderOrder={1}
       />
 
       <mesh
@@ -77,6 +79,7 @@ export default function GameStatusLights({
         position={[4.453, -2.849 + liftY, 10.669]}
         scale={3.662}
         visible={activeClass === "Dwarf"}
+        renderOrder={1}
       />
 
       <mesh
@@ -86,6 +89,7 @@ export default function GameStatusLights({
         position={[-5.37, -2.849 + liftY, 11.063]}
         scale={4.289}
         visible={activeClass === "Warrior"}
+        renderOrder={1}
       />
 
       {/* INDICATEURS DE MULTIPLICATEURS */}
@@ -94,7 +98,8 @@ export default function GameStatusLights({
         name="visual_multi2_on"
         geometry={nodes.visual_multi2_on.geometry}
         material={materials.M_mutli2_on}
-        position={[-3.027, -2.826 + liftY, 14.049]}
+        position={[-3.027, -2.816 + liftY, 14.049]}
+        renderOrder={2}
       />
 
       <mesh
@@ -102,7 +107,8 @@ export default function GameStatusLights({
         name="visual_multi4_on"
         geometry={nodes.visual_multi4_on.geometry}
         material={materials.M_multi4_on}
-        position={[1.715, -2.826 + liftY, 14.049]}
+        position={[1.715, -2.816 + liftY, 14.049]}
+        renderOrder={2}
       />
 
       <mesh
@@ -110,7 +116,8 @@ export default function GameStatusLights({
         name="visual_multi6_on"
         geometry={nodes.visual_multi6_on.geometry}
         material={materials.M_multi6_on}
-        position={[-3.027, -2.826 + liftY, 18.307]}
+        position={[-3.027, -2.816 + liftY, 18.307]}
+        renderOrder={2}
       />
 
       <mesh
@@ -118,7 +125,8 @@ export default function GameStatusLights({
         name="visual_multi8_on"
         geometry={nodes.visual_multi8_on.geometry}
         material={materials.M_multi8_on}
-        position={[1.715, -2.826 + liftY, 18.307]}
+        position={[1.715, -2.816 + liftY, 18.307]}
+        renderOrder={2}
       />
 
       <mesh
@@ -126,7 +134,8 @@ export default function GameStatusLights({
         name="visual_multi12_on"
         geometry={nodes.visual_multi12_on.geometry}
         material={materials.M_multi12_on}
-        position={[-0.565, -2.826 + liftY, 20.281]}
+        position={[-0.565, -2.816 + liftY, 20.281]}
+        renderOrder={2}
       />
 
       <mesh
@@ -134,7 +143,8 @@ export default function GameStatusLights({
         name="visual_multi50_on"
         geometry={nodes.visual_multi50_on.geometry}
         material={materials.M_multi50_on}
-        position={[-0.565, -2.826 + liftY, 16.358]}
+        position={[-0.565, -2.816 + liftY, 16.358]}
+        renderOrder={2}
       />
     </group>
   );

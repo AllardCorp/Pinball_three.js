@@ -48,7 +48,7 @@ export default function Flipper({
       delta * speed,
     );
 
-    const swingAngle = Math.PI / 3;
+    const swingAngle = Math.PI / 3; // Angle de rotation maximal du flipper (60 degrés)
     const direction = side === "left" ? 1 : -1;
     const currentAngleY =
       rotation[1] + animProgress.current * swingAngle * direction;
@@ -61,9 +61,10 @@ export default function Flipper({
     );
     const quaternion = new THREE.Quaternion().setFromEuler(euler);
 
+    // Dis à Rapier de mettre à jour la rotation du flipper pour le prochain frame
     flipperRef.current.setNextKinematicRotation(quaternion);
 
-    // On utilise la position initialisée plus haut
+    // On utilise la position initialisée plus haut pour éviter que le flipper ne "glisse" physiquement sur la table à cause de la rotation
     flipperRef.current.setNextKinematicTranslation(initialPosition);
   });
 
@@ -71,7 +72,7 @@ export default function Flipper({
     <RigidBody
       ref={flipperRef}
       type="kinematicPosition"
-      ccd={true}
+      ccd={true} // Continuous Collision Detection pour éviter que la bille traverse le flipper
       colliders="hull"
       position={position}
       restitution={0.2}
