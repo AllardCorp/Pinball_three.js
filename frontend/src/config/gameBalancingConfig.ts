@@ -121,7 +121,6 @@ export type MultiplierSource =
   | "lightRoad"
   | "fakir"
   | "dwarfMultiplier"
-  // | "mine"
   | "gems"
   | "rampHabitRight"
   | "rampHabitLeft"
@@ -156,7 +155,6 @@ export const SUN_BONUS_REQUIRED_SOURCES: MultiplierSource[] = [
   "fakir",
   "rampHabitRight",
   "rampHabitLeft",
-  // "mine",
   "gems",
 ];
 
