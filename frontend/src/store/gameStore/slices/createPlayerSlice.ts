@@ -1,5 +1,5 @@
 import { type StateCreator } from "zustand";
-import { type GameState, syncState } from "../gameStore.types";
+import { type GameState } from "../gameStore.types";
 import { type PlayfieldZone } from "@/config/gameBalancingConfig";
 
 export interface PlayerSlice {
@@ -20,11 +20,6 @@ export const createPlayerSlice: StateCreator<GameState, [], [], PlayerSlice> = (
   set,
   get,
 ) => {
-  const setAndSync = (newState: Partial<GameState>) => {
-    set(newState);
-    syncState(newState);
-  };
-
   return {
     playerCount: 1,
     currentPlayerIndex: 0,
@@ -38,7 +33,7 @@ export const createPlayerSlice: StateCreator<GameState, [], [], PlayerSlice> = (
         const currentMultiplier = get().getCurrentMultiplier();
 
         newScores[get().currentPlayerIndex] += points * currentMultiplier;
-        setAndSync({ scores: newScores });
+        set({ scores: newScores });
       }
     },
     addZoneScore: (basePoints, zone) => {
@@ -57,7 +52,7 @@ export const createPlayerSlice: StateCreator<GameState, [], [], PlayerSlice> = (
       const newScores = [...get().scores];
       newScores[get().currentPlayerIndex] += finalPoints;
 
-      setAndSync({ scores: newScores });
+      set({ scores: newScores });
     },
     removeScore: (points) => {
       if (get().isPlaying) {
@@ -66,11 +61,11 @@ export const createPlayerSlice: StateCreator<GameState, [], [], PlayerSlice> = (
           0,
           newScores[get().currentPlayerIndex] - points,
         );
-        setAndSync({ scores: newScores });
+        set({ scores: newScores });
       }
     },
     setPlayerCount: (count) => {
-      setAndSync({ playerCount: count });
+      set({ playerCount: count });
     },
   };
 };
