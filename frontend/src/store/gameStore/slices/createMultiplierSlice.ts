@@ -1,5 +1,5 @@
 import { type StateCreator } from "zustand";
-import { type GameState, syncState } from "../gameStore.types";
+import { type GameState } from "../gameStore.types";
 import {
   type MultiplierSource,
   MULTIPLIERS_CONFIG,
@@ -29,11 +29,6 @@ export const createMultiplierSlice: StateCreator<
   [],
   MultiplierSlice
 > = (set, get) => {
-  const setAndSync = (newState: Partial<GameState>) => {
-    set(newState);
-    syncState(newState);
-  };
-
   return {
     activeMultipliers: {},
     isUndeathActive: false,
@@ -61,7 +56,7 @@ export const createMultiplierSlice: StateCreator<
         },
       };
 
-      setAndSync({ activeMultipliers: newMultipliers });
+      set({ activeMultipliers: newMultipliers });
 
       // Ne vérifie pas le Sun Bonus si on est déjà en train de l'activer pour éviter une récursion infinie
       if (source !== "sunBonus") {
@@ -100,20 +95,20 @@ export const createMultiplierSlice: StateCreator<
         console.log("🌞 CONDITIONS DU SUN BONUS REMPLIES ! 🌞");
 
         // Passe à true AVANT d'activer le multiplicateur pour verrouiller l'état
-        setAndSync({ isUndeathActive: true });
+        set({ isUndeathActive: true });
 
         get().activateMultiplier("sunBonus");
         get().displayMessage("🌞 SUN BONUS ACTIVÉ ! x50 + UNDEATH 🌞", 4000);
 
         setTimeout(() => {
-          setAndSync({ isUndeathActive: false });
+          set({ isUndeathActive: false });
           get().displayMessage("Le pouvoir du Soleil s'estompe...", 2000);
         }, MULTIPLIERS_CONFIG["sunBonus"].durationMs);
       }
     },
 
     resetMultipliers: () => {
-      setAndSync({
+      set({
         activeMultipliers: {},
         isUndeathActive: false,
       });
