@@ -1,5 +1,5 @@
 import { type StateCreator } from "zustand";
-import { type GameState, syncState } from "../gameStore.types";
+import { type GameState } from "../gameStore.types";
 import { SCORE_VALUES } from "@/config/gameBalancingConfig";
 
 export interface PlayfieldSlice {
@@ -20,11 +20,6 @@ export const createPlayfieldSlice: StateCreator<
   [],
   PlayfieldSlice
 > = (set, get) => {
-  const setAndSync = (newState: Partial<GameState>) => {
-    set(newState);
-    syncState(newState);
-  };
-
   return {
     mineHits: 0,
     rubiesActive: [false, false, false],
@@ -34,15 +29,15 @@ export const createPlayfieldSlice: StateCreator<
     incrementMine: () => {
       const currentHits = get().mineHits;
       if (currentHits < 3) {
-        setAndSync({ mineHits: currentHits + 1 });
+        set({ mineHits: currentHits + 1 });
       }
     },
     setMineHits: (hits: number) => {
-      setAndSync({ mineHits: hits });
+      set({ mineHits: hits });
     },
 
     resetMine: () => {
-      setAndSync({ mineHits: 0 });
+      set({ mineHits: 0 });
     },
 
     toggleRuby: (id) => {
@@ -53,19 +48,19 @@ export const createPlayfieldSlice: StateCreator<
       ];
       currentRubies[id] = !currentRubies[id];
 
-      setAndSync({ rubiesActive: currentRubies });
+      set({ rubiesActive: currentRubies });
 
       if (currentRubies.every((ruby) => ruby === true)) {
         get().addScore(SCORE_VALUES.gemsToggle);
         get().activateMultiplier("gems");
-        setAndSync({ rubiesActive: [false, false, false] });
+        set({ rubiesActive: [false, false, false] });
         console.log("Tous les rubis activés");
       }
     },
 
     useKickback: (side) => {
-      if (side === "left") setAndSync({ leftKickbackActive: false });
-      if (side === "right") setAndSync({ rightKickbackActive: false });
+      if (side === "left") set({ leftKickbackActive: false });
+      if (side === "right") set({ rightKickbackActive: false });
     },
   };
 };

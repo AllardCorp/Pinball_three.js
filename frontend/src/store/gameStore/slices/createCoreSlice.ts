@@ -1,5 +1,5 @@
 import { type StateCreator } from "zustand";
-import { type GameState, syncState } from "../gameStore.types";
+import { type GameState } from "../gameStore.types";
 
 export type BallOrigin = "launcher" | "cannon";
 
@@ -29,11 +29,6 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
   set,
   get,
 ) => {
-  const setAndSync = (newState: Partial<GameState>) => {
-    set(newState);
-    syncState(newState);
-  };
-
   return {
     isPlaying: false,
     ballInLauncher: true,
@@ -44,7 +39,7 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
       const initialScores = Array(players).fill(0);
       const initialBalls = Array(players).fill(3);
 
-      setAndSync({
+      set({
         playerCount: players,
         currentPlayerIndex: 0,
         scores: initialScores,
@@ -61,13 +56,12 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
       console.log(`Début de la partie à ${players} joueur(s) !`);
     },
 
-    setBallInLauncher: (inLauncher) =>
-      setAndSync({ ballInLauncher: inLauncher }),
+    setBallInLauncher: (inLauncher) => set({ ballInLauncher: inLauncher }),
 
     addBall: (origin) => {
       nextBallId += 1;
       const newBall: ActiveBall = { id: `ball_${nextBallId}`, origin };
-      setAndSync({ activeBalls: [...get().activeBalls, newBall] });
+      set({ activeBalls: [...get().activeBalls, newBall] });
       console.log(`Nouvelle bille ajoutée depuis: ${origin}`);
     },
 
@@ -81,7 +75,7 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
 
       // Si c'était un Multiball et qu'il reste d'autres billes, le tour continue
       if (remainingBallsOnPlayfield.length > 0) {
-        setAndSync({ activeBalls: remainingBallsOnPlayfield });
+        set({ activeBalls: remainingBallsOnPlayfield });
         console.log(`Bille ${ballId} perdue, mais le Multiball continue !`);
         return;
       }
@@ -94,7 +88,7 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
 
       if (isGameOver) {
         nextBallId += 1;
-        setAndSync({
+        set({
           ballsRemaining: newBallsRemaining,
           // On prépare la bille de la prochaine partie (anti-crash)
           activeBalls: [{ id: `ball_${nextBallId}`, origin: "launcher" }],
@@ -117,7 +111,7 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
         id: `ball_${nextBallId}`,
         origin: "launcher",
       };
-      setAndSync({
+      set({
         ballsRemaining: newBallsRemaining,
         currentPlayerIndex: nextPlayer,
         ballInLauncher: true,
@@ -136,18 +130,18 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
 
     gameOver: () => {
       console.log("Game Over !");
-      setAndSync({ isPlaying: false });
+      set({ isPlaying: false });
     },
 
     displayMessage: (message, durationInMs = 2000) => {
-      setAndSync({ screenMessage: message });
+      set({ screenMessage: message });
 
       if (messageTimeoutId) {
         clearTimeout(messageTimeoutId);
       }
 
       messageTimeoutId = setTimeout(() => {
-        setAndSync({ screenMessage: null });
+        set({ screenMessage: null });
       }, durationInMs);
     },
   };
