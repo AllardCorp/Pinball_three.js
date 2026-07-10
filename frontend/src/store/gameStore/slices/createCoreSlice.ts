@@ -13,6 +13,7 @@ export interface CoreSlice {
   ballInLauncher: boolean;
   screenMessage: string | null;
   activeBalls: ActiveBall[]; // Registre des billes en jeu
+  cannonShotsCount: number;
 
   startGame: (players?: number) => void;
   loseBall: (ballId: string) => void; // Prend l'ID de la bille perdue
@@ -34,6 +35,7 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
     ballInLauncher: true,
     screenMessage: null,
     activeBalls: [{ id: `ball_${nextBallId}`, origin: "launcher" }],
+    cannonShotsCount: 0,
 
     startGame: (players = 1) => {
       const initialScores = Array(players).fill(0);
@@ -61,7 +63,13 @@ export const createCoreSlice: StateCreator<GameState, [], [], CoreSlice> = (
     addBall: (origin) => {
       nextBallId += 1;
       const newBall: ActiveBall = { id: `ball_${nextBallId}`, origin };
-      set({ activeBalls: [...get().activeBalls, newBall] });
+
+      const cannonShotsCount =
+        origin === "cannon"
+          ? get().cannonShotsCount + 1
+          : get().cannonShotsCount;
+
+      set({ activeBalls: [...get().activeBalls, newBall], cannonShotsCount });
       console.log(`Nouvelle bille ajoutée depuis: ${origin}`);
     },
 

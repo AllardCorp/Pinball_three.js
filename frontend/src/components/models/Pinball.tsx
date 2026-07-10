@@ -25,6 +25,8 @@ import SewerSystem from "@/components/pinball/SewerSystem";
 import GameStatusLight from "@/components/pinball/GameStatusLights";
 import ClassPerkCoin from "@/components/pinball/ClassPerkCoin";
 import OOBKillZone from "@/components/pinball/OOBKillZone";
+import SmokeEffect from "@/components/pinball/SmokeEffect";
+import SmokeRing from "@/components/pinball/SmokeRing";
 import { useGameStore } from "@/store/gameStore/useGameStore";
 
 type GLTFResult = GLTF & {
@@ -330,11 +332,15 @@ export default function Model(props: JSX.IntrinsicElements["group"]) {
   const { startingPosition } = useGameDebug();
   const { leftStrength, rightStrength } = useGameDebug();
   const activeBalls = useGameStore((state) => state.activeBalls);
+  // NOUVEAU : compteur de tirs canon, lu depuis le store pour déclencher l'effet de fumée
+  const cannonShotsCount = useGameStore((state) => state.cannonShotsCount);
 
   return (
     <>
       <GoldMine nodes={nodes} materials={materials} />
       <LauncherGate nodes={nodes} materials={materials} />
+      <SmokeEffect playTrigger={cannonShotsCount} />
+      <SmokeRing playTrigger={cannonShotsCount} />
       {activeBalls.map((ball) => (
         <Ball
           key={ball.id}
